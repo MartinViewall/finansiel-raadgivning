@@ -1,0 +1,26 @@
+{
+  "query": "SELECT id, name FROM investment_products ORDER BY id;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2EHrsXn1aoUpkwY.68200309840c --database 3cVu5yuXt8ENtYAZLcFt7i --execute SELECT id, name FROM investment_products ORDER BY id;",
+  "rows": [
+    {
+      "id": "2",
+      "name": "PFA Middel"
+    },
+    {
+      "id": "3",
+      "name": "PFA KlimA Plus"
+    },
+    {
+      "id": "4",
+      "name": "Nordea Mix Høj"
+    },
+    {
+      "id": "5",
+      "name": "Nordea 100% Aktier"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\n2\tPFA Middel\n3\tPFA KlimA Plus\n4\tNordea Mix Høj\n5\tNordea 100% Aktier\n",
+  "stderr": "",
+  "execution_time_ms": 52
+}

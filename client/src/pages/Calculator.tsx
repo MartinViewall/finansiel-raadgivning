@@ -1,0 +1,490 @@
+import { useState, useMemo } from "react";
+import { trpc } from "@/lib/trpc";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import { Slider } from "@/components/ui/slider";
+import { Badge } from "@/components/ui/badge";
+import {
+  LineChart,
+  Line,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
+import { TrendingUp, Info, CheckSquare, Square } from "lucide-react";
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+
+function formatDKK(value: number): string {
+  if (value >= 1_000_000) {
+    return (value / 1_000_000).toFixed(1).replace(".", ",") + " mio.";
+  }
+  return new Intl.NumberFormat("da-DK", { style: "decimal", maximumFractionDigits: 0 }).format(value) + " kr.";
+}
+
+function formatDKKFull(value: number): string {
+  return new Intl.NumberFormat("da-DK", { style: "decimal", maximumFractionDigits: 0 }).format(value) + " kr.";
+}
+
+function formatPct(value: number): string {
+  const sign = value >= 0 ? "+" : "";
+  return `${sign}${value.toFixed(1).replace(".", ",")}%`;
+}
+
+// ─── Custom Tooltip ───────────────────────────────────────────────────────────
+
+function CustomTooltip({ active, payload, label }: { active?: boolean; payload?: { name: string; value: number; color: string }[]; label?: string | number }) {
+  if (!active || !payload?.length) return null;
+  return (
+    <div className="bg-card border border-border rounded-xl shadow-lg p-4 min-w-[200px]">
+      <p className="text-xs font-semibold text-muted-foreground mb-3 uppercase tracking-wide">
+        {label === 0 ? "Start" : `År ${label}`}
+      </p>
+      <div className="space-y-2">
+        {payload.map((entry) => (
+          <div key={entry.name} className="flex items-center justify-between gap-4">
+            <div className="flex items-center gap-2">
+              <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: entry.color }} />
+              <span className="text-xs text-muted-foreground truncate max-w-[120px]">{entry.name}</span>
+            </div>
+            <span className="text-sm font-semibold tabular-nums text-foreground">
+              {formatDKKFull(entry.value)}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+}
+
+// ─── Summary Card ─────────────────────────────────────────────────────────────
+
+function SummaryCard({
+  name,
+  finalValue,
+  delta,
+  deltaPct,
+  color,
+  isBaseline,
+}: {
+  name: string;
+  finalValue: number;
+  delta: number | null;
+  deltaPct: number | null;
+  color: string;
+  isBaseline: boolean;
+}) {
+  return (
+    <div
+      className="rounded-xl p-5 border transition-all"
+      style={{
+        borderColor: isBaseline ? "var(--border)" : color + "40",
+        background: isBaseline ? "var(--card)" : color + "08",
+      }}
+    >
+      <div className="flex items-center gap-2 mb-3">
+        <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: color }} />
+        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide truncate">{name}</span>
+        {isBaseline && (
+          <Badge variant="secondary" className="text-xs ml-auto">Nuværende</Badge>
+        )}
+      </div>
+      <p className="text-2xl font-bold text-foreground tabular-nums" style={{ fontFamily: "'Inter', sans-serif" }}>
+        {formatDKKFull(finalValue)}
+      </p>
+      {delta !== null && deltaPct !== null && !isBaseline && (
+        <p className="text-sm mt-1.5 font-medium" style={{ color: delta >= 0 ? "#16a34a" : "#dc2626" }}>
+          {delta >= 0 ? "+" : ""}{formatDKKFull(delta)} ({formatPct(deltaPct)})
+        </p>
+      )}
+    </div>
+  );
+}
+
+// ─── Number Input ─────────────────────────────────────────────────────────────
+
+function NumberInput({
+  label,
+  value,
+  onChange,
+  suffix,
+  min = 0,
+  step = 100000,
+  hint,
+}: {
+  label: string;
+  value: number;
+  onChange: (v: number) => void;
+  suffix?: string;
+  min?: number;
+  step?: number;
+  hint?: string;
+}) {
+  const [raw, setRaw] = useState(String(value));
+
+  const handleBlur = () => {
+    const parsed = parseFloat(raw.replace(/\./g, "").replace(",", "."));
+    if (!isNaN(parsed) && parsed >= min) {
+      onChange(parsed);
+      setRaw(String(parsed));
+    } else {
+      setRaw(String(value));
+    }
+  };
+
+  return (
+    <div className="space-y-1.5">
+      <Label className="text-sm font-medium">{label}</Label>
+      {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
+      <div className="relative">
+        <Input
+          type="text"
+          value={raw}
+          onChange={(e) => setRaw(e.target.value)}
+          onBlur={handleBlur}
+          onFocus={(e) => e.target.select()}
+          className="pr-10"
+        />
+        {suffix && (
+          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground pointer-events-none">
+            {suffix}
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// ─── Main Page ────────────────────────────────────────────────────────────────
+
+export default function Calculator() {
+  const [initialCapital, setInitialCapital] = useState(2_000_000);
+  const [annualContribution, setAnnualContribution] = useState(100_000);
+  const [horizonYears, setHorizonYears] = useState(5);
+  const [selectedProductIds, setSelectedProductIds] = useState<number[]>([]);
+
+  const { data: products } = trpc.products.list.useQuery();
+
+  const canProject = selectedProductIds.length >= 1;
+
+  const { data: projectionData, isLoading: isProjecting } = trpc.calculator.project.useQuery(
+    {
+      initialCapital,
+      annualContribution,
+      horizonYears,
+      productIds: selectedProductIds,
+    },
+    {
+      enabled: canProject,
+    }
+  );
+
+  const toggleProduct = (id: number) => {
+    setSelectedProductIds((prev) => {
+      if (prev.includes(id)) return prev.filter((x) => x !== id);
+      if (prev.length >= 3) return prev; // max 3
+      return [...prev, id];
+    });
+  };
+
+  // Build chart data: array of { year: 0..N, [productName]: value }
+  const chartData = useMemo(() => {
+    if (!projectionData?.results.length) return [];
+    const maxLen = Math.max(...projectionData.results.map((r) => r.projection.length));
+    return Array.from({ length: maxLen }, (_, i) => {
+      const point: Record<string, number | string> = { year: i };
+      projectionData.results.forEach((r) => {
+        const p = r.projection[i];
+        if (p) point[r.productName] = p.value;
+      });
+      return point;
+    });
+  }, [projectionData]);
+
+  const baselineResult = projectionData?.results[0];
+  const otherResults = projectionData?.results.slice(1) ?? [];
+
+  return (
+    <div className="max-w-5xl mx-auto space-y-8">
+      {/* Page header */}
+      <div>
+        <h1 className="text-2xl font-semibold text-foreground">Afkastberegner</h1>
+        <p className="text-sm text-muted-foreground mt-1">
+          Sammenlign fremtidigt afkast på tværs af investeringsprodukter
+        </p>
+      </div>
+
+      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+        {/* ── Left: Inputs ─────────────────────────────────────────────────── */}
+        <div className="lg:col-span-1 space-y-6">
+          {/* Parameters card */}
+          <div className="bg-card rounded-xl border border-border p-5 space-y-5 shadow-sm">
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Parametre</h2>
+
+            <NumberInput
+              label="Nuværende opsparing"
+              value={initialCapital}
+              onChange={setInitialCapital}
+              suffix="kr."
+              hint="Startbeløb / depot"
+            />
+
+            <NumberInput
+              label="Årlig indbetaling"
+              value={annualContribution}
+              onChange={setAnnualContribution}
+              suffix="kr."
+              hint="Indbetaling pr. år"
+            />
+
+            <div className="space-y-3">
+              <div className="flex items-center justify-between">
+                <Label className="text-sm font-medium">Tidshorisont</Label>
+                <span className="text-sm font-semibold tabular-nums text-foreground">
+                  {horizonYears} {horizonYears === 1 ? "år" : "år"}
+                </span>
+              </div>
+              <Slider
+                min={1}
+                max={30}
+                step={1}
+                value={[horizonYears]}
+                onValueChange={([v]) => setHorizonYears(v)}
+                className="w-full"
+              />
+              <div className="flex justify-between text-xs text-muted-foreground">
+                <span>1 år</span>
+                <span>30 år</span>
+              </div>
+            </div>
+          </div>
+
+          {/* Product selection card */}
+          <div className="bg-card rounded-xl border border-border p-5 shadow-sm">
+            <div className="flex items-center justify-between mb-4">
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Produkter</h2>
+              <span className="text-xs text-muted-foreground">
+                {selectedProductIds.length}/3 valgt
+              </span>
+            </div>
+
+            {!products || products.length === 0 ? (
+              <div className="text-center py-6">
+                <p className="text-sm text-muted-foreground">Ingen produkter oprettet endnu.</p>
+                <p className="text-xs text-muted-foreground mt-1">Gå til "Produkter" for at tilføje.</p>
+              </div>
+            ) : (
+              <div className="space-y-2">
+                {products.map((p) => {
+                  const isSelected = selectedProductIds.includes(p.id);
+                  const isDisabled = !isSelected && selectedProductIds.length >= 3;
+                  const returns = p.returns ?? [];
+                  const avg = returns.length > 0
+                    ? returns.reduce((s: number, r: { returnPct: string | number }) => s + parseFloat(String(r.returnPct)), 0) / returns.length
+                    : null;
+
+                  return (
+                    <button
+                      key={p.id}
+                      type="button"
+                      onClick={() => !isDisabled && toggleProduct(p.id)}
+                      disabled={isDisabled}
+                      className={`w-full flex items-center gap-3 p-3 rounded-lg border text-left transition-all ${
+                        isSelected
+                          ? "border-primary/30 bg-primary/5"
+                          : isDisabled
+                          ? "border-border opacity-40 cursor-not-allowed"
+                          : "border-border hover:border-primary/20 hover:bg-muted/50"
+                      }`}
+                    >
+                      <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: p.color }} />
+                      <div className="flex-1 min-w-0">
+                        <p className="text-sm font-medium text-foreground truncate">{p.name}</p>
+                        {avg !== null && (
+                          <p className="text-xs text-muted-foreground">
+                            Ø {avg >= 0 ? "+" : ""}{avg.toFixed(1)}%/år · {returns.length} år
+                          </p>
+                        )}
+                      </div>
+                      {isSelected ? (
+                        <CheckSquare className="w-4 h-4 text-primary flex-shrink-0" />
+                      ) : (
+                        <Square className="w-4 h-4 text-muted-foreground flex-shrink-0" />
+                      )}
+                    </button>
+                  );
+                })}
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* ── Right: Results ────────────────────────────────────────────────── */}
+        <div className="lg:col-span-2 space-y-6">
+          {!canProject ? (
+            <div className="bg-card rounded-xl border border-dashed border-border flex flex-col items-center justify-center py-24 text-center">
+              <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center mb-4">
+                <TrendingUp className="w-7 h-7 text-muted-foreground" />
+              </div>
+              <h3 className="font-medium text-foreground mb-1">Vælg mindst ét produkt</h3>
+              <p className="text-sm text-muted-foreground max-w-xs">
+                Vælg 1–3 investeringsprodukter til venstre for at se en fremskrivning
+              </p>
+            </div>
+          ) : (
+            <>
+              {/* Summary cards */}
+              {projectionData && (
+                <div className={`grid gap-4 ${projectionData.results.length === 1 ? "grid-cols-1" : projectionData.results.length === 2 ? "grid-cols-2" : "grid-cols-3"}`}>
+                  {projectionData.results.map((r, idx) => (
+                    <SummaryCard
+                      key={r.productId}
+                      name={r.productName}
+                      finalValue={r.finalValue}
+                      color={r.color}
+                      isBaseline={idx === 0}
+                      delta={idx > 0 && baselineResult ? r.finalValue - baselineResult.finalValue : null}
+                      deltaPct={
+                        idx > 0 && baselineResult && baselineResult.finalValue > 0
+                          ? ((r.finalValue - baselineResult.finalValue) / baselineResult.finalValue) * 100
+                          : null
+                      }
+                    />
+                  ))}
+                </div>
+              )}
+
+              {/* Chart */}
+              <div className="bg-card rounded-xl border border-border p-5 shadow-sm">
+                <div className="flex items-center justify-between mb-6">
+                  <div>
+                    <h2 className="text-base font-semibold text-foreground">Fremskrevet opsparing</h2>
+                    <p className="text-xs text-muted-foreground mt-0.5">
+                      Baseret på historiske afkast fremskrevet {horizonYears} år
+                    </p>
+                  </div>
+                  {isProjecting && (
+                    <div className="w-4 h-4 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+                  )}
+                </div>
+
+                <ResponsiveContainer width="100%" height={320}>
+                  <LineChart data={chartData} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
+                    <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.88 0.008 240)" strokeOpacity={0.6} />
+                    <XAxis
+                      dataKey="year"
+                      tickFormatter={(v) => v === 0 ? "Start" : `År ${v}`}
+                      tick={{ fontSize: 11, fill: "oklch(0.52 0.018 240)" }}
+                      axisLine={{ stroke: "oklch(0.88 0.008 240)" }}
+                      tickLine={false}
+                    />
+                    <YAxis
+                      tickFormatter={(v) => formatDKK(v)}
+                      tick={{ fontSize: 11, fill: "oklch(0.52 0.018 240)" }}
+                      axisLine={false}
+                      tickLine={false}
+                      width={80}
+                    />
+                    <Tooltip content={<CustomTooltip />} />
+                    <Legend
+                      wrapperStyle={{ fontSize: "12px", paddingTop: "16px" }}
+                      formatter={(value) => <span style={{ color: "oklch(0.52 0.018 240)" }}>{value}</span>}
+                    />
+                    {projectionData?.results.map((r) => (
+                      <Line
+                        key={r.productId}
+                        type="monotone"
+                        dataKey={r.productName}
+                        stroke={r.color}
+                        strokeWidth={2.5}
+                        dot={{ r: 3, fill: r.color, strokeWidth: 0 }}
+                        activeDot={{ r: 5, fill: r.color, strokeWidth: 2, stroke: "white" }}
+                      />
+                    ))}
+                  </LineChart>
+                </ResponsiveContainer>
+              </div>
+
+              {/* Historical returns table */}
+              {projectionData && projectionData.results.length > 0 && (
+                <div className="bg-card rounded-xl border border-border p-5 shadow-sm">
+                  <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground mb-4">
+                    Historiske årsafkast (anvendt i beregning)
+                  </h2>
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-b border-border">
+                          <th className="text-left py-2 pr-4 font-medium text-muted-foreground text-xs">Produkt</th>
+                          {(() => {
+                            const allYears = Array.from(new Set(
+                              projectionData.results.flatMap((r) => r.historicalReturns.map((h) => h.year))
+                            )).sort();
+                            return allYears.map((y) => (
+                              <th key={y} className="text-right py-2 px-2 font-medium text-muted-foreground text-xs">{y}</th>
+                            ));
+                          })()}
+                          <th className="text-right py-2 pl-4 font-medium text-muted-foreground text-xs">Ø/år</th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {projectionData.results.map((r) => {
+                              const allYears = Array.from(new Set(
+                            projectionData.results.flatMap((res) => res.historicalReturns.map((h) => h.year))
+                          )).sort();
+                          const returnMap = Object.fromEntries(r.historicalReturns.map((h) => [h.year, h.returnPct]));
+                          return (
+                            <tr key={r.productId} className="border-b border-border/50 last:border-0">
+                              <td className="py-2.5 pr-4">
+                                <div className="flex items-center gap-2">
+                                  <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: r.color }} />
+                                  <span className="font-medium text-foreground">{r.productName}</span>
+                                </div>
+                              </td>
+                              {allYears.map((y) => {
+                                const val = returnMap[y];
+                                return (
+                                  <td key={y} className="text-right py-2.5 px-2 tabular-nums">
+                                    {val !== undefined ? (
+                                      <span className={`font-medium ${val >= 0 ? "text-emerald-600" : "text-red-500"}`}>
+                                        {val >= 0 ? "+" : ""}{val.toFixed(1)}%
+                                      </span>
+                                    ) : (
+                                      <span className="text-muted-foreground/40">–</span>
+                                    )}
+                                  </td>
+                                );
+                              })}
+                              <td className="text-right py-2.5 pl-4 tabular-nums">
+                                <span className={`font-semibold ${r.avgAnnualReturn >= 0 ? "text-emerald-600" : "text-red-500"}`}>
+                                  {r.avgAnnualReturn >= 0 ? "+" : ""}{r.avgAnnualReturn.toFixed(1)}%
+                                </span>
+                              </td>
+                            </tr>
+                          );
+                        })}
+                      </tbody>
+                    </table>
+                  </div>
+                </div>
+              )}
+
+              {/* Disclaimer */}
+              <div className="flex items-start gap-2.5 p-4 rounded-lg bg-muted/50 border border-border/50">
+                <Info className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-0.5" />
+                <p className="text-xs text-muted-foreground leading-relaxed">
+                  <strong className="text-foreground/70">Bemærk:</strong> Fremskrivningen er baseret på historiske afkast og er ikke en garanti for fremtidige afkast.
+                  Beregningen antager, at de historiske afkast gentages i den valgte periode. Kun til intern rådgivningsbrug.
+                </p>
+              </div>
+            </>
+          )}
+        </div>
+      </div>
+    </div>
+  );
+}

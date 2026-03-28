@@ -1,0 +1,60 @@
+{
+  "query": "\nSELECT p.name, ar.year, ar.returnPct \nFROM annual_returns ar \nJOIN investment_products p ON ar.productId = p.id \nWHERE p.id IN (4, 5) \nORDER BY p.id, ar.year;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2EHrsXn1aoUpkwY.68200309840c --database 3cVu5yuXt8ENtYAZLcFt7i --execute \nSELECT p.name, ar.year, ar.returnPct \nFROM annual_returns ar \nJOIN investment_products p ON ar.productId = p.id \nWHERE p.id IN (4, 5) \nORDER BY p.id, ar.year;\n",
+  "rows": [
+    {
+      "name": "Nordea Mix Høj",
+      "year": "2021",
+      "returnPct": "31.5500"
+    },
+    {
+      "name": "Nordea Mix Høj",
+      "year": "2022",
+      "returnPct": "-11.8000"
+    },
+    {
+      "name": "Nordea Mix Høj",
+      "year": "2023",
+      "returnPct": "26.0300"
+    },
+    {
+      "name": "Nordea Mix Høj",
+      "year": "2024",
+      "returnPct": "22.3800"
+    },
+    {
+      "name": "Nordea Mix Høj",
+      "year": "2025",
+      "returnPct": "8.8000"
+    },
+    {
+      "name": "Nordea 100% Aktier",
+      "year": "2021",
+      "returnPct": "31.5500"
+    },
+    {
+      "name": "Nordea 100% Aktier",
+      "year": "2022",
+      "returnPct": "-11.8000"
+    },
+    {
+      "name": "Nordea 100% Aktier",
+      "year": "2023",
+      "returnPct": "26.0300"
+    },
+    {
+      "name": "Nordea 100% Aktier",
+      "year": "2024",
+      "returnPct": "22.3800"
+    },
+    {
+      "name": "Nordea 100% Aktier",
+      "year": "2025",
+      "returnPct": "8.8000"
+    }
+  ],
+  "messages": [],
+  "stdout": "name\tyear\treturnPct\nNordea Mix Høj\t2021\t31.5500\nNordea Mix Høj\t2022\t-11.8000\nNordea Mix Høj\t2023\t26.0300\nNordea Mix Høj\t2024\t22.3800\nNordea Mix Høj\t2025\t8.8000\nNordea 100% Aktier\t2021\t31.5500\nNordea 100% Aktier\t2022\t-11.8000\nNordea 100% Aktier\t2023\t26.0300\nNordea 100% Aktier\t2024\t22.3800\nNordea 100% Aktier\t2025\t8.8000\n",
+  "stderr": "",
+  "execution_time_ms": 127
+}

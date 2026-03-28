@@ -1,0 +1,9 @@
+{
+  "query": "\nINSERT INTO annual_returns (productId, year, returnPct) VALUES\n  (5, 2021, 31.55),\n  (5, 2022, -11.8),\n  (5, 2023, 26.03),\n  (5, 2024, 22.38),\n  (5, 2025, 8.8);\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2EHrsXn1aoUpkwY.68200309840c --database 3cVu5yuXt8ENtYAZLcFt7i --execute \nINSERT INTO annual_returns (productId, year, returnPct) VALUES\n  (5, 2021, 31.55),\n  (5, 2022, -11.8),\n  (5, 2023, 26.03),\n  (5, 2024, 22.38),\n  (5, 2025, 8.8);\n",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 54
+}

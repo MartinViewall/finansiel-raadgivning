@@ -1,28 +1,197 @@
+import { TRPCError } from "@trpc/server";
+import { z } from "zod";
+import {
+  createProduct,
+  deleteAnnualReturn,
+  deleteProduct,
+  getAllProducts,
+  getProductsWithReturns,
+  updateProduct,
+  upsertAnnualReturn,
+} from "./db";
 import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router } from "./_core/trpc";
 
+// ─── Projection Engine ────────────────────────────────────────────────────────
+
+/**
+ * Projects future portfolio value given:
+ *  - initialCapital: starting amount in DKK
+ *  - annualContribution: yearly deposit in DKK
+ *  - returns: array of annual return percentages (e.g. [11.7, -10.8, 9.2])
+ *  - horizonYears: number of years to project forward
+ *
+ * For the projection period we repeat the historical returns cyclically.
+ * Returns an array of { year, value } objects starting from year 0 (initial).
+ */
+function projectPortfolio(
+  initialCapital: number,
+  annualContribution: number,
+  historicalReturns: number[],
+  horizonYears: number
+): { year: number; value: number }[] {
+  const points: { year: number; value: number }[] = [{ year: 0, value: initialCapital }];
+  let value = initialCapital;
+  const n = historicalReturns.length;
+
+  for (let i = 0; i < horizonYears; i++) {
+    // Contribution at start of year, then apply return
+    value = value + annualContribution;
+    const rate = n > 0 ? historicalReturns[i % n] / 100 : 0;
+    value = value * (1 + rate);
+    points.push({ year: i + 1, value: Math.round(value) });
+  }
+
+  return points;
+}
+
+// ─── App Router ───────────────────────────────────────────────────────────────
+
 export const appRouter = router({
-    // if you need to use socket.io, read and register route in server/_core/index.ts, all api should start with '/api/' so that the gateway can route correctly
   system: systemRouter,
+
   auth: router({
-    me: publicProcedure.query(opts => opts.ctx.user),
+    me: publicProcedure.query((opts) => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {
       const cookieOptions = getSessionCookieOptions(ctx.req);
       ctx.res.clearCookie(COOKIE_NAME, { ...cookieOptions, maxAge: -1 });
-      return {
-        success: true,
-      } as const;
+      return { success: true } as const;
     }),
   }),
 
-  // TODO: add feature routers here, e.g.
-  // todo: router({
-  //   list: protectedProcedure.query(({ ctx }) =>
-  //     db.getUserTodos(ctx.user.id)
-  //   ),
-  // }),
+  // ─── Password Gate ─────────────────────────────────────────────────────────
+  passwordGate: router({
+    verify: publicProcedure
+      .input(z.object({ password: z.string() }))
+      .mutation(({ input }) => {
+        const correct = process.env.APP_PASSWORD ?? "advisor2024";
+        if (input.password !== correct) {
+          throw new TRPCError({ code: "UNAUTHORIZED", message: "Forkert adgangskode" });
+        }
+        return { success: true };
+      }),
+  }),
+
+  // ─── Products ──────────────────────────────────────────────────────────────
+  products: router({
+    list: publicProcedure.query(async () => {
+      return getProductsWithReturns();
+    }),
+
+    create: publicProcedure
+      .input(
+        z.object({
+          name: z.string().min(1).max(128),
+          description: z.string().optional(),
+          color: z.string().regex(/^#[0-9a-fA-F]{6}$/, "Invalid hex color"),
+        })
+      )
+      .mutation(async ({ input }) => {
+        await createProduct(input);
+        return { success: true };
+      }),
+
+    update: publicProcedure
+      .input(
+        z.object({
+          id: z.number().int().positive(),
+          name: z.string().min(1).max(128).optional(),
+          description: z.string().optional(),
+          color: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
+        })
+      )
+      .mutation(async ({ input }) => {
+        const { id, ...data } = input;
+        await updateProduct(id, data);
+        return { success: true };
+      }),
+
+    delete: publicProcedure
+      .input(z.object({ id: z.number().int().positive() }))
+      .mutation(async ({ input }) => {
+        await deleteProduct(input.id);
+        return { success: true };
+      }),
+  }),
+
+  // ─── Annual Returns ────────────────────────────────────────────────────────
+  returns: router({
+    upsert: publicProcedure
+      .input(
+        z.object({
+          productId: z.number().int().positive(),
+          year: z.number().int().min(1900).max(2100),
+          returnPct: z.number().min(-100).max(1000),
+        })
+      )
+      .mutation(async ({ input }) => {
+        await upsertAnnualReturn(input.productId, input.year, input.returnPct);
+        return { success: true };
+      }),
+
+    delete: publicProcedure
+      .input(
+        z.object({
+          productId: z.number().int().positive(),
+          year: z.number().int(),
+        })
+      )
+      .mutation(async ({ input }) => {
+        await deleteAnnualReturn(input.productId, input.year);
+        return { success: true };
+      }),
+  }),
+
+  // ─── Calculator ────────────────────────────────────────────────────────────
+  calculator: router({
+    project: publicProcedure
+      .input(
+        z.object({
+          initialCapital: z.number().min(0),
+          annualContribution: z.number().min(0),
+          horizonYears: z.number().int().min(1).max(50),
+          productIds: z.array(z.number().int().positive()).min(1).max(5),
+        })
+      )
+      .query(async ({ input }) => {
+        const allProducts = await getProductsWithReturns();
+        const selected = allProducts.filter((p) => input.productIds.includes(p.id));
+
+        const results = selected.map((product) => {
+          const historicalReturns = product.returns
+            .sort((a, b) => a.year - b.year)
+            .map((r) => parseFloat(String(r.returnPct)));
+
+          const projection = projectPortfolio(
+            input.initialCapital,
+            input.annualContribution,
+            historicalReturns,
+            input.horizonYears
+          );
+
+          const avgReturn =
+            historicalReturns.length > 0
+              ? historicalReturns.reduce((s, r) => s + r, 0) / historicalReturns.length
+              : 0;
+
+          return {
+            productId: product.id,
+            productName: product.name,
+            color: product.color,
+            projection,
+            finalValue: projection[projection.length - 1]?.value ?? input.initialCapital,
+            avgAnnualReturn: Math.round(avgReturn * 100) / 100,
+            historicalReturns: product.returns
+              .sort((a, b) => a.year - b.year)
+              .map((r) => ({ year: r.year, returnPct: parseFloat(String(r.returnPct)) })),
+          };
+        });
+
+        return { results, horizonYears: input.horizonYears };
+      }),
+  }),
 });
 
 export type AppRouter = typeof appRouter;

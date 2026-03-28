@@ -1,17 +1,15 @@
-import { int, mysqlEnum, mysqlTable, text, timestamp, varchar } from "drizzle-orm/mysql-core";
+import {
+  decimal,
+  int,
+  mysqlEnum,
+  mysqlTable,
+  text,
+  timestamp,
+  varchar,
+} from "drizzle-orm/mysql-core";
 
-/**
- * Core user table backing auth flow.
- * Extend this file with additional tables as your product grows.
- * Columns use camelCase to match both database fields and generated types.
- */
 export const users = mysqlTable("users", {
-  /**
-   * Surrogate primary key. Auto-incremented numeric value managed by the database.
-   * Use this for relations between tables.
-   */
   id: int("id").autoincrement().primaryKey(),
-  /** Manus OAuth identifier (openId) returned from the OAuth callback. Unique per user. */
   openId: varchar("openId", { length: 64 }).notNull().unique(),
   name: text("name"),
   email: varchar("email", { length: 320 }),
@@ -25,4 +23,36 @@ export const users = mysqlTable("users", {
 export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 
-// TODO: Add your tables here
+/**
+ * Investment products (e.g. "PFA Middel", "Nordea Mix Høj")
+ */
+export const investmentProducts = mysqlTable("investment_products", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 128 }).notNull(),
+  description: text("description"),
+  /** Hex color for chart line, e.g. "#4f46e5" */
+  color: varchar("color", { length: 16 }).notNull().default("#4f46e5"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type InvestmentProduct = typeof investmentProducts.$inferSelect;
+export type InsertInvestmentProduct = typeof investmentProducts.$inferInsert;
+
+/**
+ * Annual return data per product per year.
+ * returnPct is stored as a decimal, e.g. 11.7 means 11.7%
+ */
+export const annualReturns = mysqlTable("annual_returns", {
+  id: int("id").autoincrement().primaryKey(),
+  productId: int("productId")
+    .notNull()
+    .references(() => investmentProducts.id, { onDelete: "cascade" }),
+  year: int("year").notNull(),
+  /** Return percentage, e.g. 11.7 for 11.7% */
+  returnPct: decimal("returnPct", { precision: 8, scale: 4 }).notNull(),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+});
+
+export type AnnualReturn = typeof annualReturns.$inferSelect;
+export type InsertAnnualReturn = typeof annualReturns.$inferInsert;

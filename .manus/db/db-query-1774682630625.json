@@ -1,0 +1,9 @@
+{
+  "query": "\n-- Fix Nordea Mix Høj (id=4) with correct values: 21.6, -9.0, 13.6, 18.7, 8.3\nUPDATE annual_returns SET returnPct = 21.6 WHERE productId = 4 AND year = 2021;\nUPDATE annual_returns SET returnPct = -9.0 WHERE productId = 4 AND year = 2022;\nUPDATE annual_returns SET returnPct = 13.6 WHERE productId = 4 AND year = 2023;\nUPDATE annual_returns SET returnPct = 18.7 WHERE productId = 4 AND year = 2024;\nUPDATE annual_returns SET returnPct = 8.3 WHERE productId = 4 AND year = 2025;\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2EHrsXn1aoUpkwY.68200309840c --database 3cVu5yuXt8ENtYAZLcFt7i --execute \n-- Fix Nordea Mix Høj (id=4) with correct values: 21.6, -9.0, 13.6, 18.7, 8.3\nUPDATE annual_returns SET returnPct = 21.6 WHERE productId = 4 AND year = 2021;\nUPDATE annual_returns SET returnPct = -9.0 WHERE productId = 4 AND year = 2022;\nUPDATE annual_returns SET returnPct = 13.6 WHERE productId = 4 AND year = 2023;\nUPDATE annual_returns SET returnPct = 18.7 WHERE productId = 4 AND year = 2024;\nUPDATE annual_returns SET returnPct = 8.3 WHERE productId = 4 AND year = 2025;\n",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 102
+}
