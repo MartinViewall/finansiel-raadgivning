@@ -20,30 +20,27 @@ import { publicProcedure, router } from "./_core/trpc";
  * Projects future portfolio value given:
  *  - initialCapital: starting amount in DKK
  *  - annualContribution: yearly deposit in DKK
- *  - returns: array of annual return percentages (e.g. [11.7, -10.8, 9.2])
+ *  - avgAnnualReturnPct: average annual return percentage to apply each year
  *  - horizonYears: number of years to project forward
  *
- * For the projection period we repeat the historical returns cyclically.
+ * Uses the average return as a fixed compound rate each year.
+ * Contribution is added at the start of each year, then the return is applied.
  * Returns an array of { year, value } objects starting from year 0 (initial).
  */
 function projectPortfolio(
   initialCapital: number,
   annualContribution: number,
-  historicalReturns: number[],
+  avgAnnualReturnPct: number,
   horizonYears: number
 ): { year: number; value: number }[] {
   const points: { year: number; value: number }[] = [{ year: 0, value: initialCapital }];
   let value = initialCapital;
-  const n = historicalReturns.length;
-
+  const rate = avgAnnualReturnPct / 100;
   for (let i = 0; i < horizonYears; i++) {
-    // Contribution at start of year, then apply return
-    value = value + annualContribution;
-    const rate = n > 0 ? historicalReturns[i % n] / 100 : 0;
-    value = value * (1 + rate);
+    // Add contribution at start of year, then apply fixed average return
+    value = (value + annualContribution) * (1 + rate);
     points.push({ year: i + 1, value: Math.round(value) });
   }
-
   return points;
 }
 
@@ -171,16 +168,10 @@ export const appRouter = router({
         const results = selected.map((product) => {
           const allSorted = product.returns.sort((a, b) => a.year - b.year);
 
-          // Returns used for projection: exclude current/incomplete year
-           const projectionReturns = allSorted
+          // All returns excluding current/incomplete year
+          const projectionReturns = allSorted
             .filter((r) => r.year < EXCLUDE_FROM_YEAR)
             .map((r) => parseFloat(String(r.returnPct)));
-          const projection = projectPortfolio(
-            input.initialCapital,
-            input.annualContribution,
-            projectionReturns,
-            input.horizonYears
-          );
           // Full-period average (all years excl. current)
           const avgReturn =
             projectionReturns.length > 0
@@ -192,6 +183,13 @@ export const appRouter = router({
             horizonReturns.length > 0
               ? horizonReturns.reduce((s, r) => s + r, 0) / horizonReturns.length
               : avgReturn;
+          // Project using the horizon-based average as a fixed compound rate
+          const projection = projectPortfolio(
+            input.initialCapital,
+            input.annualContribution,
+            avgReturnHorizon,
+            input.horizonYears
+          );
 
           return {
             productId: product.id,

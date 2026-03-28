@@ -47,3 +47,8 @@
 - [x] Venstre panel: tilføj "År til pension" og "Afkastforskel %" (forududfyldt med Ø/år-forskel, kan overskrives)
 - [x] Boblerne over grafen viser ekstra linje: "Ved pension om X år: +Y kr." baseret på pensionsparametrene
 - [x] Grafen ændres ikke – kun boblerne udvides
+
+## Fase 5 – Bugfix: Beregningsmotor
+
+- [x] Fix fremskrivningsmotor: brug horisontbaseret gennemsnitsafkast (Ø/Når) som fast rate fremfor cyklisk gentagelse af historiske år
+- [x] Verificer at graf og slutværdier nu matcher Ø/år*-tallene i tabellen
