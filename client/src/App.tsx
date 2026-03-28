@@ -8,6 +8,7 @@ import { PasswordGateProvider, usePasswordGate } from "./contexts/PasswordGateCo
 import PasswordGate from "./pages/PasswordGate";
 import Calculator from "./pages/Calculator";
 import Products from "./pages/Products";
+import CostCalculator from "./pages/CostCalculator";
 import DashboardLayout from "./components/DashboardLayout";
 
 function AuthenticatedApp() {
@@ -17,6 +18,7 @@ function AuthenticatedApp() {
         <Route path={"/"} component={Calculator} />
         <Route path={"/calculator"} component={Calculator} />
         <Route path={"/products"} component={Products} />
+        <Route path={"/cost-calculator"} component={CostCalculator} />
         <Route path={"/404"} component={NotFound} />
         <Route component={NotFound} />
       </Switch>
