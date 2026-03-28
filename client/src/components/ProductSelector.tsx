@@ -104,7 +104,7 @@ export function ProductSelector({ selectedIds, onToggle, maxSelections = 3 }: Pr
               }}
             >
               <ColorDot color={p.color} />
-              <span className="max-w-[140px] truncate">{p.name}</span>
+              <span className="break-words leading-tight">{p.name}</span>
               <button
                 type="button"
                 onClick={() => onToggle(p.id)}
@@ -250,7 +250,7 @@ export function ProductSelector({ selectedIds, onToggle, maxSelections = 3 }: Pr
                                   `}
                                 >
                                   <ColorDot color={p.color} />
-                                  <span className="text-xs text-foreground flex-1 truncate">{p.name}</span>
+                                  <span className="text-xs text-foreground flex-1 break-words leading-tight">{p.name}</span>
                                   {p.aop && (
                                     <span className="text-xs text-muted-foreground flex-shrink-0">
                                       ÅOP {parseFloat(p.aop).toFixed(2)}%

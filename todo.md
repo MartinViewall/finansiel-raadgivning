@@ -32,3 +32,10 @@
 - [x] Importer alle 498 produkter fra Excel inkl. årsafkast 2006–2026 (4.914 afkastpunkter)
 - [x] 3-trins kaskade produktvælger: Selskab → Risikoniveau → År til pension
 - [x] Opdater produktadministrationssiden til at vise de nye felter (company/risk/years visible in list)
+
+## Fase 3 – UX-forbedringer
+
+- [x] Udelad 2026 fra beregning og graf (ufuldstændigt år)
+- [x] År-fra/til filter på historisk afkasttabel i beregneren
+- [x] Vis fulde produktnavne i produktvælger (ingen afskæring)
+- [x] Reducer unødvendig luft i venstre/højre margen på beregnerside

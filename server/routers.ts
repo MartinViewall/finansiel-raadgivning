@@ -164,21 +164,28 @@ export const appRouter = router({
         const allProducts = await getProductsWithReturns();
         const selected = allProducts.filter((p) => input.productIds.includes(p.id));
 
+        // Current year — exclude incomplete years (2026 and beyond) from projection engine
+        const CURRENT_YEAR = new Date().getFullYear();
+        const EXCLUDE_FROM_YEAR = CURRENT_YEAR; // exclude current + future incomplete years
+
         const results = selected.map((product) => {
-          const historicalReturns = product.returns
-            .sort((a, b) => a.year - b.year)
+          const allSorted = product.returns.sort((a, b) => a.year - b.year);
+
+          // Returns used for projection: exclude current/incomplete year
+          const projectionReturns = allSorted
+            .filter((r) => r.year < EXCLUDE_FROM_YEAR)
             .map((r) => parseFloat(String(r.returnPct)));
 
           const projection = projectPortfolio(
             input.initialCapital,
             input.annualContribution,
-            historicalReturns,
+            projectionReturns,
             input.horizonYears
           );
 
           const avgReturn =
-            historicalReturns.length > 0
-              ? historicalReturns.reduce((s, r) => s + r, 0) / historicalReturns.length
+            projectionReturns.length > 0
+              ? projectionReturns.reduce((s, r) => s + r, 0) / projectionReturns.length
               : 0;
 
           return {
@@ -188,9 +195,12 @@ export const appRouter = router({
             projection,
             finalValue: projection[projection.length - 1]?.value ?? input.initialCapital,
             avgAnnualReturn: Math.round(avgReturn * 100) / 100,
-            historicalReturns: product.returns
-              .sort((a, b) => a.year - b.year)
-              .map((r) => ({ year: r.year, returnPct: parseFloat(String(r.returnPct)) })),
+            // All historical returns for the table (including current year for display)
+            historicalReturns: allSorted.map((r) => ({
+              year: r.year,
+              returnPct: parseFloat(String(r.returnPct)),
+              isIncomplete: r.year >= EXCLUDE_FROM_YEAR,
+            })),
           };
         });
 

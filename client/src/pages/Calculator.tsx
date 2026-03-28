@@ -48,8 +48,8 @@ function CustomTooltip({ active, payload, label }: { active?: boolean; payload?:
         {payload.map((entry) => (
           <div key={entry.name} className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-2">
-              <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: entry.color }} />
-              <span className="text-xs text-muted-foreground truncate max-w-[120px]">{entry.name}</span>
+              <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: entry.color }} />
+              <span className="text-xs text-muted-foreground">{entry.name}</span>
             </div>
             <span className="text-sm font-semibold tabular-nums text-foreground">
               {formatDKKFull(entry.value)}
@@ -87,13 +87,13 @@ function SummaryCard({
       }}
     >
       <div className="flex items-center gap-2 mb-3">
-        <div className="w-2.5 h-2.5 rounded-full" style={{ backgroundColor: color }} />
-        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide truncate">{name}</span>
+        <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
+        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide leading-tight">{name}</span>
         {isBaseline && (
-          <Badge variant="secondary" className="text-xs ml-auto">Nuværende</Badge>
+          <Badge variant="secondary" className="text-xs ml-auto flex-shrink-0">Nuværende</Badge>
         )}
       </div>
-      <p className="text-2xl font-bold text-foreground tabular-nums" style={{ fontFamily: "'Inter', sans-serif" }}>
+      <p className="text-2xl font-bold text-foreground tabular-nums">
         {formatDKKFull(finalValue)}
       </p>
       {delta !== null && deltaPct !== null && !isBaseline && (
@@ -111,7 +111,6 @@ function fmtThousands(n: number): string {
   return new Intl.NumberFormat("da-DK", { style: "decimal", maximumFractionDigits: 0 }).format(n);
 }
 function parseRaw(raw: string): number {
-  // Remove all dots (thousand separators in da-DK) and replace comma with dot
   return parseFloat(raw.replace(/\./g, "").replace(/,/g, "."));
 }
 
@@ -121,7 +120,6 @@ function NumberInput({
   onChange,
   suffix,
   min = 0,
-  step = 100000,
   hint,
 }: {
   label: string;
@@ -129,19 +127,11 @@ function NumberInput({
   onChange: (v: number) => void;
   suffix?: string;
   min?: number;
-  step?: number;
   hint?: string;
 }) {
   const [raw, setRaw] = useState(() => fmtThousands(value));
-  const [focused, setFocused] = useState(false);
-
-  const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
-    setFocused(true);
-    e.target.select();
-  };
 
   const handleBlur = () => {
-    setFocused(false);
     const parsed = parseRaw(raw);
     if (!isNaN(parsed) && parsed >= min) {
       onChange(parsed);
@@ -162,7 +152,7 @@ function NumberInput({
           value={raw}
           onChange={(e) => setRaw(e.target.value)}
           onBlur={handleBlur}
-          onFocus={handleFocus}
+          onFocus={(e) => e.target.select()}
           className="pr-10"
         />
         {suffix && (
@@ -183,6 +173,10 @@ export default function Calculator() {
   const [horizonYears, setHorizonYears] = useState(5);
   const [selectedProductIds, setSelectedProductIds] = useState<number[]>([]);
 
+  // Year range filter for the historical table
+  const [tableYearFrom, setTableYearFrom] = useState<number>(2010);
+  const [tableYearTo, setTableYearTo] = useState<number>(new Date().getFullYear() - 1);
+
   const canProject = selectedProductIds.length >= 1;
 
   const { data: projectionData, isLoading: isProjecting } = trpc.calculator.project.useQuery(
@@ -192,20 +186,18 @@ export default function Calculator() {
       horizonYears,
       productIds: selectedProductIds,
     },
-    {
-      enabled: canProject,
-    }
+    { enabled: canProject }
   );
 
   const toggleProduct = (id: number) => {
     setSelectedProductIds((prev) => {
       if (prev.includes(id)) return prev.filter((x) => x !== id);
-      if (prev.length >= 3) return prev; // max 3
+      if (prev.length >= 3) return prev;
       return [...prev, id];
     });
   };
 
-  // Build chart data: array of { year: 0..N, [productName]: value }
+  // Build chart data
   const chartData = useMemo(() => {
     if (!projectionData?.results.length) return [];
     const maxLen = Math.max(...projectionData.results.map((r) => r.projection.length));
@@ -219,11 +211,20 @@ export default function Calculator() {
     });
   }, [projectionData]);
 
+  // Filtered years for the historical table
+  const tableYears = useMemo(() => {
+    if (!projectionData?.results.length) return [];
+    const allYears = Array.from(new Set(
+      projectionData.results.flatMap((r) => r.historicalReturns.map((h) => h.year))
+    )).sort();
+    return allYears.filter((y) => y >= tableYearFrom && y <= tableYearTo);
+  }, [projectionData, tableYearFrom, tableYearTo]);
+
   const baselineResult = projectionData?.results[0];
   const otherResults = projectionData?.results.slice(1) ?? [];
 
   return (
-    <div className="max-w-5xl mx-auto space-y-8">
+    <div className="w-full max-w-[1400px] space-y-6 px-2">
       {/* Page header */}
       <div>
         <h1 className="text-2xl font-semibold text-foreground">Afkastberegner</h1>
@@ -232,9 +233,9 @@ export default function Calculator() {
         </p>
       </div>
 
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+      <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-5">
         {/* ── Left: Inputs ─────────────────────────────────────────────────── */}
-        <div className="lg:col-span-1 space-y-6">
+        <div className="space-y-5">
           {/* Parameters card */}
           <div className="bg-card rounded-xl border border-border p-5 space-y-5 shadow-sm">
             <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Parametre</h2>
@@ -259,7 +260,7 @@ export default function Calculator() {
               <div className="flex items-center justify-between">
                 <Label className="text-sm font-medium">Tidshorisont</Label>
                 <span className="text-sm font-semibold tabular-nums text-foreground">
-                  {horizonYears} {horizonYears === 1 ? "år" : "år"}
+                  {horizonYears} år
                 </span>
               </div>
               <Slider
@@ -289,7 +290,7 @@ export default function Calculator() {
         </div>
 
         {/* ── Right: Results ────────────────────────────────────────────────── */}
-        <div className="lg:col-span-2 space-y-6">
+        <div className="space-y-5 min-w-0">
           {!canProject ? (
             <div className="bg-card rounded-xl border border-dashed border-border flex flex-col items-center justify-center py-24 text-center">
               <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center mb-4">
@@ -329,7 +330,7 @@ export default function Calculator() {
                   <div>
                     <h2 className="text-base font-semibold text-foreground">Fremskrevet opsparing</h2>
                     <p className="text-xs text-muted-foreground mt-0.5">
-                      Baseret på historiske afkast fremskrevet {horizonYears} år
+                      Baseret på historiske afkast (ekskl. {new Date().getFullYear()}) fremskrevet {horizonYears} år
                     </p>
                   </div>
                   {isProjecting && (
@@ -377,46 +378,64 @@ export default function Calculator() {
               {/* Historical returns table */}
               {projectionData && projectionData.results.length > 0 && (
                 <div className="bg-card rounded-xl border border-border p-5 shadow-sm">
-                  <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground mb-4">
-                    Historiske årsafkast (anvendt i beregning)
-                  </h2>
+                  <div className="flex flex-wrap items-center justify-between gap-3 mb-4">
+                    <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                      Historiske årsafkast
+                    </h2>
+                    {/* Year range filter */}
+                    <div className="flex items-center gap-2 text-sm">
+                      <span className="text-xs text-muted-foreground">Fra</span>
+                      <input
+                        type="number"
+                        min={2000}
+                        max={tableYearTo}
+                        value={tableYearFrom}
+                        onChange={(e) => setTableYearFrom(Number(e.target.value))}
+                        className="w-16 h-7 text-xs text-center rounded-md border border-border bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-ring tabular-nums"
+                      />
+                      <span className="text-xs text-muted-foreground">til</span>
+                      <input
+                        type="number"
+                        min={tableYearFrom}
+                        max={new Date().getFullYear()}
+                        value={tableYearTo}
+                        onChange={(e) => setTableYearTo(Number(e.target.value))}
+                        className="w-16 h-7 text-xs text-center rounded-md border border-border bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-ring tabular-nums"
+                      />
+                    </div>
+                  </div>
                   <div className="overflow-x-auto">
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="border-b border-border">
-                          <th className="text-left py-2 pr-4 font-medium text-muted-foreground text-xs">Produkt</th>
-                          {(() => {
-                            const allYears = Array.from(new Set(
-                              projectionData.results.flatMap((r) => r.historicalReturns.map((h) => h.year))
-                            )).sort();
-                            return allYears.map((y) => (
-                              <th key={y} className="text-right py-2 px-2 font-medium text-muted-foreground text-xs">{y}</th>
-                            ));
-                          })()}
-                          <th className="text-right py-2 pl-4 font-medium text-muted-foreground text-xs">Ø/år</th>
+                          <th className="text-left py-2 pr-4 font-medium text-muted-foreground text-xs whitespace-nowrap">Produkt</th>
+                          {tableYears.map((y) => (
+                            <th key={y} className="text-right py-2 px-2 font-medium text-muted-foreground text-xs whitespace-nowrap">{y}</th>
+                          ))}
+                          <th className="text-right py-2 pl-4 font-medium text-muted-foreground text-xs whitespace-nowrap">Ø/år*</th>
                         </tr>
                       </thead>
                       <tbody>
                         {projectionData.results.map((r) => {
-                              const allYears = Array.from(new Set(
-                            projectionData.results.flatMap((res) => res.historicalReturns.map((h) => h.year))
-                          )).sort();
-                          const returnMap = Object.fromEntries(r.historicalReturns.map((h) => [h.year, h.returnPct]));
+                          const returnMap = Object.fromEntries(r.historicalReturns.map((h) => [h.year, h]));
                           return (
                             <tr key={r.productId} className="border-b border-border/50 last:border-0">
-                              <td className="py-2.5 pr-4">
+                              <td className="py-2.5 pr-4 whitespace-nowrap">
                                 <div className="flex items-center gap-2">
                                   <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: r.color }} />
                                   <span className="font-medium text-foreground">{r.productName}</span>
                                 </div>
                               </td>
-                              {allYears.map((y) => {
-                                const val = returnMap[y];
+                              {tableYears.map((y) => {
+                                const entry = returnMap[y];
+                                const val = entry?.returnPct;
+                                const isIncomplete = entry?.isIncomplete;
                                 return (
-                                  <td key={y} className="text-right py-2.5 px-2 tabular-nums">
+                                  <td key={y} className="text-right py-2.5 px-2 tabular-nums whitespace-nowrap">
                                     {val !== undefined ? (
-                                      <span className={`font-medium ${val >= 0 ? "text-emerald-600" : "text-red-500"}`}>
+                                      <span className={`font-medium ${isIncomplete ? "text-muted-foreground/60 italic" : val >= 0 ? "text-emerald-600" : "text-red-500"}`}>
                                         {val >= 0 ? "+" : ""}{val.toFixed(1)}%
+                                        {isIncomplete && <span className="text-xs ml-0.5">*</span>}
                                       </span>
                                     ) : (
                                       <span className="text-muted-foreground/40">–</span>
@@ -424,7 +443,7 @@ export default function Calculator() {
                                   </td>
                                 );
                               })}
-                              <td className="text-right py-2.5 pl-4 tabular-nums">
+                              <td className="text-right py-2.5 pl-4 tabular-nums whitespace-nowrap">
                                 <span className={`font-semibold ${r.avgAnnualReturn >= 0 ? "text-emerald-600" : "text-red-500"}`}>
                                   {r.avgAnnualReturn >= 0 ? "+" : ""}{r.avgAnnualReturn.toFixed(1)}%
                                 </span>
@@ -435,6 +454,9 @@ export default function Calculator() {
                       </tbody>
                     </table>
                   </div>
+                  <p className="text-xs text-muted-foreground mt-3">
+                    * Gennemsnit og fremskrivning er baseret på afkast t.o.m. {new Date().getFullYear() - 1}. Indeværende år ({new Date().getFullYear()}) vises kun til orientering.
+                  </p>
                 </div>
               )}
 
