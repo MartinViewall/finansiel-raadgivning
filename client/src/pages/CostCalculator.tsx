@@ -24,26 +24,38 @@ function fmtThousands(n: number): string {
 }
 
 function parseRaw(raw: string): number {
-  // Håndter dansk format: punktum som tusindtalsseparator, komma som decimal
+  // Dansk format: punktum som tusindtalsseparator, komma som decimal
   return parseFloat(raw.replace(/\./g, "").replace(/,/g, "."));
 }
 
 function parseDecimalRaw(raw: string): number {
-  // Tillad både komma og punktum som decimal
   return parseFloat(raw.replace(/,/g, "."));
 }
 
 /**
- * Beregner den fremtidige værdi af en løbende besparelse (annuitet)
- * med rentes rente over 'years' år ved afkastet ANNUAL_RETURN.
+ * Beregner depotets fremtidige værdi ved netto-afkast (afkast minus ÅOP).
  *
- * FV = PMT * ((1+r)^n - 1) / r
- * hvor PMT er den årlige besparelse.
+ * Annuity due: indbetaling tilføjes ved STARTEN af hvert år, derefter vokser
+ * hele beløbet med netto-afkastet resten af året.
+ *
+ *   Hvert år: value = (value + contribution) * (1 + netRate)
+ *
+ * Svarer til Excel: FV(netRate; n; -contribution; -depot; 1)
+ * hvor det sidste argument "1" angiver "beginning of period".
  */
-function futureValueOfSavings(annualSaving: number, years: number): number {
-  if (years <= 0 || annualSaving <= 0) return 0;
-  const r = ANNUAL_RETURN;
-  return annualSaving * (Math.pow(1 + r, years) - 1) / r;
+function futureValueWithCost(
+  depot: number,
+  annualContribution: number,
+  grossReturn: number,
+  costPct: number,
+  years: number
+): number {
+  const netRate = grossReturn - costPct / 100;
+  let value = depot;
+  for (let i = 0; i < years; i++) {
+    value = (value + annualContribution) * (1 + netRate);
+  }
+  return value;
 }
 
 // ─── NumberInput ──────────────────────────────────────────────────────────────
@@ -218,6 +230,13 @@ function ResultRow({
   );
 }
 
+// ─── Formatér procentsats til visning ─────────────────────────────────────────
+
+function fmtPct(raw: string): string {
+  // Normaliser til dansk komma-format
+  return raw.replace(".", ",");
+}
+
 // ─── Hovedside ────────────────────────────────────────────────────────────────
 
 export default function CostCalculator() {
@@ -227,15 +246,8 @@ export default function CostCalculator() {
   const [costTodayRaw, setCostTodayRaw] = useState("1,5");
   const [costNewRaw, setCostNewRaw] = useState("0,75");
 
-  // Parsed procentsatser
-  const costTodayPct = useMemo(
-    () => parseDecimalRaw(costTodayRaw),
-    [costTodayRaw]
-  );
-  const costNewPct = useMemo(
-    () => parseDecimalRaw(costNewRaw),
-    [costNewRaw]
-  );
+  const costTodayPct = useMemo(() => parseDecimalRaw(costTodayRaw), [costTodayRaw]);
+  const costNewPct   = useMemo(() => parseDecimalRaw(costNewRaw),   [costNewRaw]);
 
   const isValid =
     yearsToPension > 0 &&
@@ -248,24 +260,25 @@ export default function CostCalculator() {
   const results = useMemo(() => {
     if (!isValid) return null;
 
-    // Gennemsnitlig depotstørrelse i løbet af året:
-    // Depot ved årets start + halvdelen af årets indbetaling
-    const totalAssets = depot + annualContribution * 0.5;
+    // Årlige omkostninger i kr. i dag (baseret på depot + ½ indbetaling som
+    // approksimation for gennemsnitlig depotstørrelse i løbet af år 1)
+    const avgAssets      = depot + annualContribution * 0.5;
+    const annualCostToday = avgAssets * (costTodayPct / 100);
+    const annualCostNew   = avgAssets * (costNewPct   / 100);
+    const annualSaving    = annualCostToday - annualCostNew;
 
-    // Årlige omkostninger i kr. (baseret på gennemsnitlig depotstørrelse)
-    const annualCostToday = totalAssets * (costTodayPct / 100);
-    const annualCostNew = totalAssets * (costNewPct / 100);
-    const annualSaving = annualCostToday - annualCostNew;
+    // Depotets slutværdi i hvert scenarie.
+    // Indbetaling tilføjes ved STARTEN af hvert år (annuity due /
+    // "begyndelse af perioden"), svarende til Excel FV(...; type=1).
+    const fvToday = futureValueWithCost(
+      depot, annualContribution, ANNUAL_RETURN, costTodayPct, yearsToPension
+    );
+    const fvNew = futureValueWithCost(
+      depot, annualContribution, ANNUAL_RETURN, costNewPct, yearsToPension
+    );
+    const compoundValue = fvNew - fvToday;
 
-    // Fremtidig værdi af den løbende besparelse med rentes rente
-    const compoundValue = futureValueOfSavings(annualSaving, yearsToPension);
-
-    return {
-      annualCostToday,
-      annualCostNew,
-      annualSaving,
-      compoundValue,
-    };
+    return { annualCostToday, annualCostNew, annualSaving, fvToday, fvNew, compoundValue };
   }, [isValid, depot, annualContribution, costTodayPct, costNewPct, yearsToPension]);
 
   return (
@@ -353,7 +366,7 @@ export default function CostCalculator() {
             <p className="text-xs text-muted-foreground leading-relaxed">
               Beregningen anvender et fast afkast på{" "}
               <span className="font-semibold text-foreground">6,5% p.a.</span>{" "}
-              og viser effekten af besparelsen med rentes rente frem til pension.
+              Indbetalinger tilføjes ved årets begyndelse.
             </p>
           </div>
         </div>
@@ -400,23 +413,18 @@ export default function CostCalculator() {
               <ResultCard
                 title="Effekt af besparelse med rentes rente"
                 icon={PiggyBank}
-                accent={results.annualSaving > 0}
+                accent={results.compoundValue > 0}
               >
-                <div className="mb-2">
-                  <p className="text-xs text-muted-foreground mb-3">
-                    Hvad er den årlige besparelse på{" "}
-                    <span className="font-semibold text-foreground">
-                      {formatDKK(results.annualSaving)}
-                    </span>{" "}
-                    værd om{" "}
-                    <span className="font-semibold text-foreground">
-                      {yearsToPension} år
-                    </span>{" "}
-                    ved 6,5% p.a.?
-                  </p>
-                </div>
                 <ResultRow
-                  label={`Værdi af årlig besparelse om ${yearsToPension} år`}
+                  label={`Depotværdi om ${yearsToPension} år (ÅOP ${fmtPct(costTodayRaw)}%)`}
+                  value={formatDKK(results.fvToday)}
+                />
+                <ResultRow
+                  label={`Depotværdi om ${yearsToPension} år (ÅOP ${fmtPct(costNewRaw)}%)`}
+                  value={formatDKK(results.fvNew)}
+                />
+                <ResultRow
+                  label={`Værdi af besparelse om ${yearsToPension} år`}
                   value={
                     results.compoundValue >= 0
                       ? formatDKK(results.compoundValue)
@@ -427,7 +435,7 @@ export default function CostCalculator() {
                 />
 
                 {/* Visuel fremhævning */}
-                {results.annualSaving > 0 && (
+                {results.compoundValue > 0 && (
                   <div
                     className="mt-4 rounded-lg p-4 text-center"
                     style={{
@@ -445,9 +453,7 @@ export default function CostCalculator() {
                       {formatDKK(results.compoundValue)}
                     </p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      ved at reducere ÅOP fra{" "}
-                      {costTodayRaw.replace(".", ",")}% til{" "}
-                      {costNewRaw.replace(".", ",")}%
+                      ved at reducere ÅOP fra {fmtPct(costTodayRaw)}% til {fmtPct(costNewRaw)}%
                     </p>
                   </div>
                 )}

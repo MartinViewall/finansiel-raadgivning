@@ -79,3 +79,9 @@
 - [x] Beregning 2 – Effekt med rentes rente: Fremtidig værdi af den akkumulerede besparelse over pensionshorisonten
 - [x] Tusindtalsseparator på alle talindtastninger og resultater
 - [x] Tilføj rute i App.tsx og navigationspunkt "Omkostningsberegner" i sidebar
+
+## Fase 8b – Rettelse af beregningsmodel i Omkostningsberegner
+
+- [x] Ret beregning til Excel-model: FV(netto-afkast_ny) − FV(netto-afkast_i_dag), dvs. depot × (1 + r − cost)^n for hvert scenarie
+- [x] Vis depotets slutværdi i begge scenarier i resultatkortene
+- [x] Opdater "Effekt med rentes rente"-kortet til at vise forskel i slutværdi (ikke annuitetsformel)
