@@ -248,11 +248,11 @@ export default function CostCalculator() {
   const results = useMemo(() => {
     if (!isValid) return null;
 
-    // Totalt depot til beregning af omkostninger
-    // Vi bruger depot + halvt af årets indbetalinger som approksimation for gennemsnitlig depotstørrelse i år 1
-    const totalAssets = depot + annualContribution;
+    // Gennemsnitlig depotstørrelse i løbet af året:
+    // Depot ved årets start + halvdelen af årets indbetaling
+    const totalAssets = depot + annualContribution * 0.5;
 
-    // Årlige omkostninger i kr. (baseret på det samlede depot inkl. indbetaling)
+    // Årlige omkostninger i kr. (baseret på gennemsnitlig depotstørrelse)
     const annualCostToday = totalAssets * (costTodayPct / 100);
     const annualCostNew = totalAssets * (costNewPct / 100);
     const annualSaving = annualCostToday - annualCostNew;

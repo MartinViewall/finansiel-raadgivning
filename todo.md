@@ -69,3 +69,13 @@
 - [x] Frontend: Vis importresultat-opsummering efter upload (tabel med ændringer)
 - [x] Frontend: Fejlhåndtering — vis tydelig besked hvis fil har forkert format
 - [x] Test: Verificer at upsert ikke sletter eksisterende data der ikke er i den nye fil
+
+## Fase 8 – Omkostningsberegner
+
+- [x] Opret ny side: `client/src/pages/CostCalculator.tsx`
+- [x] Inputfelter: År til Pension, Depot (kr.), Årlig indbetaling (kr.), Omkostning i dag (%), Omkostning ny (%)
+- [x] Fast afkast 6,5% (ikke vist i UI)
+- [x] Beregning 1 – Årlig besparelse (i dag): Årlige omkostninger i kr. i dag, Årlige omkostninger i kr. fremadrettet, Årlig besparelse
+- [x] Beregning 2 – Effekt med rentes rente: Fremtidig værdi af den akkumulerede besparelse over pensionshorisonten
+- [x] Tusindtalsseparator på alle talindtastninger og resultater
+- [x] Tilføj rute i App.tsx og navigationspunkt "Omkostningsberegner" i sidebar
