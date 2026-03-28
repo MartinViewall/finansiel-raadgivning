@@ -13,13 +13,14 @@ import {
 } from "@/components/ui/sidebar";
 import { useIsMobile } from "@/hooks/useMobile";
 import { usePasswordGate } from "@/contexts/PasswordGateContext";
-import { Calculator, Database, Lock, PanelLeft, TrendingUp, PieChart } from "lucide-react";
+import { Calculator, Database, Lock, PanelLeft, TrendingUp, PieChart, Target } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 
 const menuItems = [
   { icon: Calculator, label: "Afkastberegner", path: "/" },
   { icon: PieChart, label: "Omkostningsberegner", path: "/cost-calculator" },
+  { icon: Target, label: "Målberegner", path: "/goal-calculator" },
   { icon: Database, label: "Produkter", path: "/products" },
 ];
 

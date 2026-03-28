@@ -115,3 +115,14 @@
 - [x] Afkastberegneren initialiserer sin state fra context (ikke hardkodede defaults)
 - [x] Omkostningsberegneren initialiserer sin state fra context (ikke hardkodede defaults)
 - [x] Begge sider skriver ændringer løbende til context så state bevares ved navigation
+
+## Fase 12 – Målberegner
+
+- [x] Opret ny side: `client/src/pages/GoalCalculator.tsx`
+- [x] Mode 1 – Opsparing til engangsmål: Inputfelter: Mål v. pension (kr.), Depot i dag (kr.), År til pension, Afkast (%). Resultat: Krævet årlig indbetaling for at nå målet
+- [x] Mode 2 – Opsparing til løbende udbetaling: Inputfelter: Ønsket årlig udbetaling (kr.), Udbetalingsperiode (år), Depot i dag (kr.), År til pension, Afkast (%). Resultat: Krævet kapital ved pension + krævet årlig indbetaling
+- [x] Viser supplerende info: Hvad depot i dag vokser til, manglende beløb, og krævet månedlig indbetaling
+- [x] Tusindtalsseparator på alle tal-inputs og resultater
+- [x] Tilføj rute `/goal-calculator` i App.tsx og navigationspunkt "Målberegner" i sidebar
+- [x] Udvid CalculatorContext med state for GoalCalculator (alle inputs bevares ved navigation)
+- [ ] PDF-modal understøtter GoalCalculator-data som valgbar sektion

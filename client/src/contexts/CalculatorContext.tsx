@@ -1,13 +1,12 @@
 /**
  * CalculatorContext
  *
- * Persists all inputs for both Afkastberegneren and Omkostningsberegneren
+ * Persists all inputs for Afkastberegneren, Omkostningsberegneren, and Målberegneren
  * so that navigating between pages does not reset any values.
- *
- * Both pages read their initial state from this context and write back
- * on every change, so the values survive unmount/remount.
  */
 import { createContext, useContext, useState } from "react";
+
+type GoalMode = "lumpsum" | "payout";
 
 // ─── Shared state shape ───────────────────────────────────────────────────────
 
@@ -43,11 +42,29 @@ interface CalculatorSharedState {
   setCostYearsToPension: (v: number) => void;
   setCostTodayRaw: (v: string) => void;
   setCostNewRaw: (v: string) => void;
+
+  // ── Målberegner ─────────────────────────────────────────────────────────────
+  goalMode: GoalMode;
+  goalDepot: number;
+  goalYears: number;
+  goalReturnRaw: string;
+  goalTargetAmount: number;
+  goalAnnualPayout: number;
+  goalPayoutYears: number;
+
+  setGoalMode: (v: GoalMode) => void;
+  setGoalDepot: (v: number) => void;
+  setGoalYears: (v: number) => void;
+  setGoalReturnRaw: (v: string) => void;
+  setGoalTargetAmount: (v: number) => void;
+  setGoalAnnualPayout: (v: number) => void;
+  setGoalPayoutYears: (v: number) => void;
 }
 
 // ─── Defaults ─────────────────────────────────────────────────────────────────
 
 const DEFAULTS = {
+  // Afkastberegner
   depot: 2_000_000,
   annualContribution: 100_000,
   horizonYears: 5,
@@ -56,11 +73,20 @@ const DEFAULTS = {
   pensionReturnOverride: "",
   tableYearFrom: 2010,
   tableYearTo: new Date().getFullYear() - 1,
+  // Omkostningsberegner
   costDepot: 2_000_000,
   costAnnualContribution: 100_000,
   costYearsToPension: 5,
   costTodayRaw: "1,5",
   costNewRaw: "0,75",
+  // Målberegner
+  goalMode: "lumpsum" as GoalMode,
+  goalDepot: 500_000,
+  goalYears: 20,
+  goalReturnRaw: "6,5",
+  goalTargetAmount: 3_000_000,
+  goalAnnualPayout: 200_000,
+  goalPayoutYears: 20,
 };
 
 // ─── Context ──────────────────────────────────────────────────────────────────
@@ -80,6 +106,13 @@ const CalculatorContext = createContext<CalculatorSharedState>({
   setCostYearsToPension: () => {},
   setCostTodayRaw: () => {},
   setCostNewRaw: () => {},
+  setGoalMode: () => {},
+  setGoalDepot: () => {},
+  setGoalYears: () => {},
+  setGoalReturnRaw: () => {},
+  setGoalTargetAmount: () => {},
+  setGoalAnnualPayout: () => {},
+  setGoalPayoutYears: () => {},
 });
 
 // ─── Provider ─────────────────────────────────────────────────────────────────
@@ -102,6 +135,15 @@ export function CalculatorProvider({ children }: { children: React.ReactNode }) 
   const [costTodayRaw, setCostTodayRaw] = useState(DEFAULTS.costTodayRaw);
   const [costNewRaw, setCostNewRaw] = useState(DEFAULTS.costNewRaw);
 
+  // Målberegner
+  const [goalMode, setGoalMode] = useState<GoalMode>(DEFAULTS.goalMode);
+  const [goalDepot, setGoalDepot] = useState(DEFAULTS.goalDepot);
+  const [goalYears, setGoalYears] = useState(DEFAULTS.goalYears);
+  const [goalReturnRaw, setGoalReturnRaw] = useState(DEFAULTS.goalReturnRaw);
+  const [goalTargetAmount, setGoalTargetAmount] = useState(DEFAULTS.goalTargetAmount);
+  const [goalAnnualPayout, setGoalAnnualPayout] = useState(DEFAULTS.goalAnnualPayout);
+  const [goalPayoutYears, setGoalPayoutYears] = useState(DEFAULTS.goalPayoutYears);
+
   return (
     <CalculatorContext.Provider
       value={{
@@ -118,6 +160,13 @@ export function CalculatorProvider({ children }: { children: React.ReactNode }) 
         costYearsToPension, setCostYearsToPension,
         costTodayRaw, setCostTodayRaw,
         costNewRaw, setCostNewRaw,
+        goalMode, setGoalMode,
+        goalDepot, setGoalDepot,
+        goalYears, setGoalYears,
+        goalReturnRaw, setGoalReturnRaw,
+        goalTargetAmount, setGoalTargetAmount,
+        goalAnnualPayout, setGoalAnnualPayout,
+        goalPayoutYears, setGoalPayoutYears,
       }}
     >
       {children}
