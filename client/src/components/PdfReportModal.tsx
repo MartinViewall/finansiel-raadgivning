@@ -38,6 +38,21 @@ export interface ReturnProduct {
   aop: number;
 }
 
+export interface GoalData {
+  mode: "lumpsum" | "payout";
+  depot: number;
+  years: number;
+  annualReturn: number;
+  targetAmount?: number;
+  annualPayout?: number;
+  payoutYears?: number;
+  depotFV: number;
+  requiredAnnual: number;
+  requiredMonthly: number;
+  capitalNeeded?: number;
+  gap: number;
+}
+
 export interface ReturnData {
   initialCapital: number;
   annualContribution: number;
@@ -51,8 +66,9 @@ interface Props {
   onClose: () => void;
   costData?: CostData;
   returnData?: ReturnData;
+  goalData?: GoalData;
   /** Which section the user is currently on — pre-selects that section */
-  defaultSection?: "cost" | "return";
+  defaultSection?: "cost" | "return" | "goal";
 }
 
 // ─── Component ────────────────────────────────────────────────────────────────
@@ -62,6 +78,7 @@ export default function PdfReportModal({
   onClose,
   costData,
   returnData,
+  goalData,
   defaultSection,
 }: Props) {
   const [clientName, setClientName] = useState("");
@@ -72,22 +89,26 @@ export default function PdfReportModal({
   const [includeReturn, setIncludeReturn] = useState(
     defaultSection === "return" || defaultSection === undefined
   );
+  const [includeGoal, setIncludeGoal] = useState(
+    defaultSection === "goal" || defaultSection === undefined
+  );
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   if (!open) return null;
 
   const canGenerate =
-    (includeCost && !!costData) || (includeReturn && !!returnData);
+    (includeCost && !!costData) || (includeReturn && !!returnData) || (includeGoal && !!goalData);
 
   const handleGenerate = async () => {
     if (!canGenerate) return;
     setLoading(true);
     setError(null);
 
-    const sections: ("cost" | "return")[] = [];
+    const sections: ("cost" | "return" | "goal")[] = [];
     if (includeCost && costData) sections.push("cost");
     if (includeReturn && returnData) sections.push("return");
+    if (includeGoal && goalData) sections.push("goal");
 
     try {
       const res = await fetch("/api/generate-pdf", {
@@ -100,6 +121,7 @@ export default function PdfReportModal({
           sections,
           cost: includeCost ? costData : undefined,
           return: includeReturn ? returnData : undefined,
+          goal: includeGoal ? goalData : undefined,
         }),
       });
 
@@ -210,6 +232,14 @@ export default function PdfReportModal({
                 description={returnData ? `${returnData.products.length} produkt(er) valgt` : "Ingen data — vælg produkter i Afkastberegneren først"}
                 disabled={!returnData}
                 color="oklch(0.65 0.18 255)"
+              />
+              <SectionToggle
+                checked={includeGoal}
+                onChange={setIncludeGoal}
+                label="Målberegner"
+                description={goalData ? (goalData.mode === "lumpsum" ? `Mål: ${new Intl.NumberFormat("da-DK").format(Math.round(goalData.targetAmount ?? 0))} kr.` : `Udbetaling: ${new Intl.NumberFormat("da-DK").format(Math.round(goalData.annualPayout ?? 0))} kr./år`) : "Ingen data — åbn Målberegneren først"}
+                disabled={!goalData}
+                color="oklch(0.72 0.18 155)"
               />
             </div>
           </div>

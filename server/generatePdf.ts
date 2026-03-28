@@ -45,12 +45,31 @@ export interface ReturnSection {
   projections: { year: number; values: Record<string, number> }[];
 }
 
+export interface GoalSection {
+  mode: "lumpsum" | "payout";
+  depot: number;
+  years: number;
+  annualReturn: number;   // as percentage, e.g. 6.5
+  // lumpsum mode
+  targetAmount?: number;
+  // payout mode
+  annualPayout?: number;
+  payoutYears?: number;
+  // computed results
+  depotFV: number;
+  requiredAnnual: number;
+  requiredMonthly: number;
+  capitalNeeded?: number;  // payout mode only
+  gap: number;
+}
+
 export interface PdfPayload {
   clientName: string;
   advisorName: string;
-  sections: ("cost" | "return")[];
+  sections: ("cost" | "return" | "goal")[];
   cost?: CostSection;
   return?: ReturnSection;
+  goal?: GoalSection;
 }
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -153,6 +172,13 @@ export function buildPdf(payload: PdfPayload): Promise<Buffer> {
       doc.rect(badgeX, badgeY, 3, 22).fill(GOLD);
       doc.fontSize(9).fillColor(GOLD).font("Helvetica-Bold")
         .text("AFKASTSAMMENLIGNING", badgeX + 8, badgeY + 7);
+      badgeX += 150;
+    }
+    if (payload.sections.includes("goal")) {
+      doc.rect(badgeX, badgeY, 140, 22).fill(NAVY3);
+      doc.rect(badgeX, badgeY, 3, 22).fill(GOLD);
+      doc.fontSize(9).fillColor(GOLD).font("Helvetica-Bold")
+        .text("MÅLBEREGNER", badgeX + 8, badgeY + 7);
     }
 
     // Decorative bottom strip
@@ -372,6 +398,109 @@ export function buildPdf(payload: PdfPayload): Promise<Buffer> {
           });
           pRowY += 16;
         });
+      }
+    }
+
+    // ── Goal section ──────────────────────────────────────────────────────────
+    if (payload.sections.includes("goal") && payload.goal) {
+      const g = payload.goal;
+      doc.addPage();
+      doc.rect(0, 0, W, H).fill(NAVY);
+      doc.rect(0, 0, W, 6).fill(GOLD);
+
+      // Section header
+      doc.rect(ML, 30, 4, 28).fill(GOLD);
+      doc.fontSize(20).fillColor(WHITE).font("Helvetica-Bold")
+        .text("Målberegner", ML + 12, 32);
+      doc.fontSize(9).fillColor(MUTED).font("Helvetica")
+        .text(`${payload.clientName}  ·  ${dateStr}`, ML + 12, 54);
+
+      // Mode badge
+      const modeLabel = g.mode === "lumpsum" ? "Opsparing til engangsmål" : "Opsparing til løbende udbetaling";
+      doc.rect(ML, 70, 220, 20).fill(NAVY3);
+      doc.rect(ML, 70, 3, 20).fill(GOLD);
+      doc.fontSize(8).fillColor(GOLD).font("Helvetica-Bold")
+        .text(modeLabel.toUpperCase(), ML + 8, 77);
+
+      // Parameters row
+      const gParamY = 106;
+      const gParams: [string, string][] = [
+        ["Depot i dag", dkk(g.depot)],
+        ["År til pension", `${g.years} år`],
+        ["Forventet afkast", pct(g.annualReturn)],
+        ...(g.mode === "lumpsum"
+          ? [["Mål ved pension", dkk(g.targetAmount ?? 0)] as [string, string]]
+          : [
+              ["Ønsket udbetaling/år", dkk(g.annualPayout ?? 0)] as [string, string],
+              ["Udbetalingsperiode", `${g.payoutYears ?? 0} år`] as [string, string],
+            ]),
+      ];
+      const gParamW = CW / gParams.length;
+      gParams.forEach(([label, value], i) => {
+        const x = ML + i * gParamW;
+        doc.rect(x, gParamY, gParamW - 4, 44).fill(NAVY2);
+        doc.rect(x, gParamY, 3, 44).fill(GOLD);
+        doc.fontSize(7).fillColor(MUTED).font("Helvetica").text(label.toUpperCase(), x + 8, gParamY + 8);
+        doc.fontSize(11).fillColor(WHITE).font("Helvetica-Bold").text(value, x + 8, gParamY + 20, { width: gParamW - 16 });
+      });
+
+      // Depot growth card
+      const gCard1Y = gParamY + 60;
+      doc.rect(ML, gCard1Y, CW, 100).fill(NAVY2);
+      doc.rect(ML, gCard1Y, 4, 100).fill(GOLD);
+      doc.fontSize(11).fillColor(GOLD).font("Helvetica-Bold")
+        .text("Depotets vækst", ML + 12, gCard1Y + 12);
+
+      const growthRows: [string, string, boolean][] = [
+        ["Depot i dag", dkk(g.depot), false],
+        [`Depot om ${g.years} år (${pct(g.annualReturn)} afkast)`, dkk(g.depotFV), false],
+        ...(g.mode === "lumpsum"
+          ? [
+              ["Mål ved pension", dkk(g.targetAmount ?? 0), false] as [string, string, boolean],
+              ["Manglende beløb", g.gap > 0 ? dkk(g.gap) : "Målet nås allerede", g.gap <= 0] as [string, string, boolean],
+            ]
+          : [
+              [`Krævet kapital (${dkk(g.annualPayout ?? 0)}/år i ${g.payoutYears ?? 0} år)`, dkk(g.capitalNeeded ?? 0), false] as [string, string, boolean],
+              ["Manglende beløb", g.gap > 0 ? dkk(g.gap) : "Kapitalen nås allerede", g.gap <= 0] as [string, string, boolean],
+            ]),
+      ];
+
+      growthRows.forEach(([label, value, isPositive], i) => {
+        const ry = gCard1Y + 34 + i * 20;
+        doc.fontSize(9).fillColor(MUTED).font("Helvetica").text(label, ML + 12, ry);
+        doc.fontSize(9).fillColor(isPositive ? GREEN : TEXT).font("Helvetica-Bold")
+          .text(value, ML + 12, ry, { width: CW - 24, align: "right" });
+      });
+
+      // Required savings card
+      const gCard2Y = gCard1Y + 116;
+      doc.rect(ML, gCard2Y, CW, 110).fill(NAVY2);
+      doc.rect(ML, gCard2Y, 4, 110).fill(GREEN);
+      doc.fontSize(11).fillColor(GREEN).font("Helvetica-Bold")
+        .text("Krævet opsparing", ML + 12, gCard2Y + 12);
+
+      if (g.requiredAnnual <= 0) {
+        doc.fontSize(11).fillColor(GREEN).font("Helvetica-Bold")
+          .text("Ingen ekstra opsparing nødvendig", ML + 12, gCard2Y + 40, { width: CW - 24, align: "center" });
+        doc.fontSize(9).fillColor(MUTED).font("Helvetica")
+          .text("Dit nuværende depot vokser til mere end målet", ML + 12, gCard2Y + 58, { width: CW - 24, align: "center" });
+      } else {
+        const savingRows: [string, string, boolean][] = [
+          ["Krævet årlig indbetaling", dkk(g.requiredAnnual), true],
+          ["Krævet månedlig indbetaling", dkk(g.requiredMonthly), false],
+        ];
+        savingRows.forEach(([label, value, highlight], i) => {
+          const ry = gCard2Y + 34 + i * 20;
+          doc.fontSize(9).fillColor(MUTED).font("Helvetica").text(label, ML + 12, ry);
+          doc.fontSize(9).fillColor(highlight ? GREEN : TEXT).font("Helvetica-Bold")
+            .text(value, ML + 12, ry, { width: CW - 24, align: "right" });
+        });
+
+        // Big highlight number
+        doc.fontSize(9).fillColor(MUTED).font("Helvetica")
+          .text("KRÆVET MÅNEDLIG INDBETALING", ML + 12, gCard2Y + 76, { align: "center", width: CW - 24 });
+        doc.fontSize(26).fillColor(GREEN).font("Helvetica-Bold")
+          .text(dkk(g.requiredMonthly), ML + 12, gCard2Y + 88, { align: "center", width: CW - 24 });
       }
     }
 

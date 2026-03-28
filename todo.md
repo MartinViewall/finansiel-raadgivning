@@ -126,3 +126,11 @@
 - [x] Tilføj rute `/goal-calculator` i App.tsx og navigationspunkt "Målberegner" i sidebar
 - [x] Udvid CalculatorContext med state for GoalCalculator (alle inputs bevares ved navigation)
 - [ ] PDF-modal understøtter GoalCalculator-data som valgbar sektion
+
+## Fase 13 – Målberegner i PDF-rapport
+
+- [x] Udvid `server/generatePdf.ts` med en `goalSection` der viser mode, inputs og resultater
+- [x] Opdater `server/pdfRouter.ts` til at modtage og videresende `goalData` payload
+- [x] Opdater `client/src/components/PdfReportModal.tsx` med "Målberegner" som valgbar sektion
+- [x] Opdater `client/src/pages/GoalCalculator.tsx` til at sende goalData til modalen
+- [x] Opdater `client/src/pages/Calculator.tsx` og `CostCalculator.tsx` til at sende goalData fra context

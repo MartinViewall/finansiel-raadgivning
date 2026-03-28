@@ -3,7 +3,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { TrendingDown, PiggyBank, Info, ChevronDown, ChevronUp, ArrowRightLeft, FileDown } from "lucide-react";
 import { useCalculatorContext } from "@/contexts/CalculatorContext";
-import PdfReportModal from "@/components/PdfReportModal";
+import PdfReportModal, { GoalData } from "@/components/PdfReportModal";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -275,6 +275,27 @@ export default function CostCalculator() {
   const [tableOpen, setTableOpen] = useState(false);
   const [pdfOpen, setPdfOpen] = useState(false);
 
+  // Build goalData from context (populated by GoalCalculator) for PDF modal
+  const goalDataFromCtx: GoalData | undefined = useMemo(() => {
+    const r = parseFloat(ctx.goalReturnRaw.replace(/,/g, ".")) / 100;
+    if (isNaN(r) || ctx.goalYears <= 0) return undefined;
+    const depotFV = ctx.goalDepot * Math.pow(1 + r, ctx.goalYears);
+    if (ctx.goalMode === "lumpsum") {
+      if (ctx.goalTargetAmount <= 0) return undefined;
+      const gap = Math.max(0, ctx.goalTargetAmount - depotFV);
+      const af = r === 0 ? ctx.goalYears : (1 + r) * (Math.pow(1 + r, ctx.goalYears) - 1) / r;
+      const req = gap <= 0 ? 0 : gap / af;
+      return { mode: "lumpsum" as const, depot: ctx.goalDepot, years: ctx.goalYears, annualReturn: r * 100, targetAmount: ctx.goalTargetAmount, depotFV, requiredAnnual: req, requiredMonthly: req / 12, gap };
+    } else {
+      if (ctx.goalAnnualPayout <= 0 || ctx.goalPayoutYears <= 0) return undefined;
+      const cap = r === 0 ? ctx.goalAnnualPayout * ctx.goalPayoutYears : ctx.goalAnnualPayout * (1 - Math.pow(1 + r, -ctx.goalPayoutYears)) / r * (1 + r);
+      const gap = Math.max(0, cap - depotFV);
+      const af = r === 0 ? ctx.goalYears : (1 + r) * (Math.pow(1 + r, ctx.goalYears) - 1) / r;
+      const req = gap <= 0 ? 0 : gap / af;
+      return { mode: "payout" as const, depot: ctx.goalDepot, years: ctx.goalYears, annualReturn: r * 100, annualPayout: ctx.goalAnnualPayout, payoutYears: ctx.goalPayoutYears, capitalNeeded: cap, depotFV, requiredAnnual: req, requiredMonthly: req / 12, gap };
+    }
+  }, [ctx.goalMode, ctx.goalDepot, ctx.goalYears, ctx.goalReturnRaw, ctx.goalTargetAmount, ctx.goalAnnualPayout, ctx.goalPayoutYears]);
+
   // Write back to context on every change
   const handleSetDepot = (v: number) => { setDepot(v); ctx.setCostDepot(v); };
   const handleSetAnnualContribution = (v: number) => { setAnnualContribution(v); ctx.setCostAnnualContribution(v); };
@@ -350,6 +371,7 @@ export default function CostCalculator() {
       open={pdfOpen}
       onClose={() => setPdfOpen(false)}
       costData={costDataForPdf}
+      goalData={goalDataFromCtx}
       defaultSection="cost"
     />
     <div className="max-w-5xl mx-auto space-y-6">

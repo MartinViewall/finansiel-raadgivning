@@ -1,7 +1,8 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Target, PiggyBank, TrendingUp, Banknote } from "lucide-react";
+import { Target, PiggyBank, TrendingUp, Banknote, FileDown } from "lucide-react";
+import PdfReportModal, { GoalData } from "@/components/PdfReportModal";
 import { useCalculatorContext } from "@/contexts/CalculatorContext";
 
 // ─── Helpers ──────────────────────────────────────────────────────────────────
@@ -349,16 +350,58 @@ export default function GoalCalculator() {
 
   const isValid = results !== null;
 
+  // ── PDF data ─────────────────────────────────────────────────────────────
+  const [pdfOpen, setPdfOpen] = useState(false);
+
+  const goalDataForPdf: GoalData | undefined = results
+    ? {
+        mode: results.mode,
+        depot,
+        years,
+        annualReturn: annualReturn * 100,
+        targetAmount: results.mode === "lumpsum" ? results.targetAmount : undefined,
+        annualPayout: results.mode === "payout" ? results.annualPayout : undefined,
+        payoutYears: results.mode === "payout" ? results.payoutYears : undefined,
+        depotFV: results.depotFV,
+        requiredAnnual: results.requiredAnnual,
+        requiredMonthly: results.requiredMonthly,
+        capitalNeeded: results.mode === "payout" ? results.capitalNeeded : undefined,
+        gap: results.gap,
+      }
+    : undefined;
+
   return (
     <div className="p-6 max-w-5xl mx-auto">
+      <PdfReportModal
+        open={pdfOpen}
+        onClose={() => setPdfOpen(false)}
+        goalData={goalDataForPdf}
+        defaultSection="goal"
+      />
+
       {/* Header */}
-      <div className="mb-6">
-        <h1 className="text-2xl font-bold text-foreground" style={{ fontFamily: "var(--font-display, serif)" }}>
-          Målberegner
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Beregn hvad der kræves for at nå dit pensionsmål
-        </p>
+      <div className="mb-6 flex items-start justify-between gap-4">
+        <div>
+          <h1 className="text-2xl font-bold text-foreground" style={{ fontFamily: "var(--font-display, serif)" }}>
+            Målberegner
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Beregn hvad der kræves for at nå dit pensionsmål
+          </p>
+        </div>
+        <button
+          onClick={() => setPdfOpen(true)}
+          disabled={!isValid}
+          className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all flex-shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
+          style={{
+            background: "oklch(0.82 0.12 85 / 0.15)",
+            border: "1px solid oklch(0.82 0.12 85 / 0.35)",
+            color: "oklch(0.82 0.12 85)",
+          }}
+        >
+          <FileDown className="h-4 w-4" />
+          Rapport
+        </button>
       </div>
 
       {/* Mode toggle */}

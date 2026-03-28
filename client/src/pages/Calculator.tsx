@@ -17,7 +17,7 @@ import {
 import { TrendingUp, Info, FileDown } from "lucide-react";
 import { ProductSelector } from "@/components/ProductSelector";
 import { useCalculatorContext } from "@/contexts/CalculatorContext";
-import PdfReportModal from "@/components/PdfReportModal";
+import PdfReportModal, { GoalData } from "@/components/PdfReportModal";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -403,6 +403,27 @@ export default function Calculator() {
 
   const [pdfOpen, setPdfOpen] = useState(false);
 
+  // Build goalData from context (populated by GoalCalculator) for PDF modal
+  const goalDataFromCtx: GoalData | undefined = useMemo(() => {
+    const r = parseFloat(ctx.goalReturnRaw.replace(/,/g, ".")) / 100;
+    if (isNaN(r) || ctx.goalYears <= 0) return undefined;
+    const depotFV = ctx.goalDepot * Math.pow(1 + r, ctx.goalYears);
+    if (ctx.goalMode === "lumpsum") {
+      if (ctx.goalTargetAmount <= 0) return undefined;
+      const gap = Math.max(0, ctx.goalTargetAmount - depotFV);
+      const annuityFactor = r === 0 ? ctx.goalYears : (1 + r) * (Math.pow(1 + r, ctx.goalYears) - 1) / r;
+      const req = gap <= 0 ? 0 : gap / annuityFactor;
+      return { mode: "lumpsum", depot: ctx.goalDepot, years: ctx.goalYears, annualReturn: r * 100, targetAmount: ctx.goalTargetAmount, depotFV, requiredAnnual: req, requiredMonthly: req / 12, gap };
+    } else {
+      if (ctx.goalAnnualPayout <= 0 || ctx.goalPayoutYears <= 0) return undefined;
+      const capitalNeeded = r === 0 ? ctx.goalAnnualPayout * ctx.goalPayoutYears : ctx.goalAnnualPayout * (1 - Math.pow(1 + r, -ctx.goalPayoutYears)) / r * (1 + r);
+      const gap = Math.max(0, capitalNeeded - depotFV);
+      const annuityFactor = r === 0 ? ctx.goalYears : (1 + r) * (Math.pow(1 + r, ctx.goalYears) - 1) / r;
+      const req = gap <= 0 ? 0 : gap / annuityFactor;
+      return { mode: "payout", depot: ctx.goalDepot, years: ctx.goalYears, annualReturn: r * 100, annualPayout: ctx.goalAnnualPayout, payoutYears: ctx.goalPayoutYears, capitalNeeded, depotFV, requiredAnnual: req, requiredMonthly: req / 12, gap };
+    }
+  }, [ctx.goalMode, ctx.goalDepot, ctx.goalYears, ctx.goalReturnRaw, ctx.goalTargetAmount, ctx.goalAnnualPayout, ctx.goalPayoutYears]);
+
   // Build returnData payload for PDF modal
   const returnDataForPdf = projectionData?.results.length
     ? {
@@ -430,6 +451,7 @@ export default function Calculator() {
       open={pdfOpen}
       onClose={() => setPdfOpen(false)}
       returnData={returnDataForPdf}
+      goalData={goalDataFromCtx}
       defaultSection="return"
     />
     <div className="w-full max-w-[1400px] space-y-6 px-2">
