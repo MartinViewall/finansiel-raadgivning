@@ -34,6 +34,11 @@ type ProductWithReturns = {
   name: string;
   description: string | null;
   color: string;
+  company: string | null;
+  productLine: string | null;
+  riskLevel: string | null;
+  yearsToPension: number | null;
+  aop: string | null;
   returns: { id: number; productId: number; year: number; returnPct: string; createdAt: Date }[];
 };
 
@@ -208,6 +213,22 @@ function ProductCard({ product, onEdit, onDelete }: { product: ProductWithReturn
             <div className="w-3 h-3 rounded-full flex-shrink-0 mt-0.5" style={{ backgroundColor: product.color }} />
             <div>
               <h3 className="font-semibold text-foreground text-base leading-tight">{product.name}</h3>
+              <div className="flex flex-wrap items-center gap-1.5 mt-1">
+                {product.company && (
+                  <span className="text-xs text-muted-foreground font-medium">{product.company}</span>
+                )}
+                {product.riskLevel && (
+                  <span className="text-xs px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground border border-border">
+                    {product.riskLevel}
+                  </span>
+                )}
+                {product.yearsToPension != null && (
+                  <span className="text-xs text-muted-foreground">{product.yearsToPension} år til pension</span>
+                )}
+                {product.aop && (
+                  <span className="text-xs text-muted-foreground">ÅOP {parseFloat(product.aop).toFixed(2)}%</span>
+                )}
+              </div>
               {product.description && (
                 <p className="text-xs text-muted-foreground mt-0.5">{product.description}</p>
               )}

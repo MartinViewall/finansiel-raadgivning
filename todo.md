@@ -24,3 +24,11 @@
 ## Testing
 - [x] Vitest: projection engine calculation correctness
 - [x] Vitest: password gate + projection engine (10 tests passing)
+
+## Fase 2 – Excel-import og forbedringer
+
+- [x] Tusindtalsseparator "." i alle talindtastninger (2.000.000 kr.)
+- [x] Udvid databaseskema med company, riskLevel, yearsToPension, aop, nhmId felter
+- [x] Importer alle 498 produkter fra Excel inkl. årsafkast 2006–2026 (4.914 afkastpunkter)
+- [x] 3-trins kaskade produktvælger: Selskab → Risikoniveau → År til pension
+- [x] Opdater produktadministrationssiden til at vise de nye felter (company/risk/years visible in list)

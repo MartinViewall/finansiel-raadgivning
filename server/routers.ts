@@ -74,16 +74,21 @@ export const appRouter = router({
       }),
   }),
 
-  // ─── Products ──────────────────────────────────────────────────────────────
+  // ─── Products ─────────────────────────────────────────────────────────────
   products: router({
     list: publicProcedure.query(async () => {
       return getProductsWithReturns();
     }),
 
+    /** Lightweight list for the cascade selector — no return data, just metadata */
+    listMeta: publicProcedure.query(async () => {
+      return getAllProducts();
+    }),
+
     create: publicProcedure
       .input(
         z.object({
-          name: z.string().min(1).max(128),
+          name: z.string().min(1).max(256),
           description: z.string().optional(),
           color: z.string().regex(/^#[0-9a-fA-F]{6}$/, "Invalid hex color"),
         })

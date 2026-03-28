@@ -1,6 +1,5 @@
 import { useState, useMemo } from "react";
 import { trpc } from "@/lib/trpc";
-import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Slider } from "@/components/ui/slider";
@@ -15,7 +14,8 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import { TrendingUp, Info, CheckSquare, Square } from "lucide-react";
+import { TrendingUp, Info } from "lucide-react";
+import { ProductSelector } from "@/components/ProductSelector";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -107,6 +107,14 @@ function SummaryCard({
 
 // ─── Number Input ─────────────────────────────────────────────────────────────
 
+function fmtThousands(n: number): string {
+  return new Intl.NumberFormat("da-DK", { style: "decimal", maximumFractionDigits: 0 }).format(n);
+}
+function parseRaw(raw: string): number {
+  // Remove all dots (thousand separators in da-DK) and replace comma with dot
+  return parseFloat(raw.replace(/\./g, "").replace(/,/g, "."));
+}
+
 function NumberInput({
   label,
   value,
@@ -124,15 +132,22 @@ function NumberInput({
   step?: number;
   hint?: string;
 }) {
-  const [raw, setRaw] = useState(String(value));
+  const [raw, setRaw] = useState(() => fmtThousands(value));
+  const [focused, setFocused] = useState(false);
+
+  const handleFocus = (e: React.FocusEvent<HTMLInputElement>) => {
+    setFocused(true);
+    e.target.select();
+  };
 
   const handleBlur = () => {
-    const parsed = parseFloat(raw.replace(/\./g, "").replace(",", "."));
+    setFocused(false);
+    const parsed = parseRaw(raw);
     if (!isNaN(parsed) && parsed >= min) {
       onChange(parsed);
-      setRaw(String(parsed));
+      setRaw(fmtThousands(parsed));
     } else {
-      setRaw(String(value));
+      setRaw(fmtThousands(value));
     }
   };
 
@@ -143,10 +158,11 @@ function NumberInput({
       <div className="relative">
         <Input
           type="text"
+          inputMode="numeric"
           value={raw}
           onChange={(e) => setRaw(e.target.value)}
           onBlur={handleBlur}
-          onFocus={(e) => e.target.select()}
+          onFocus={handleFocus}
           className="pr-10"
         />
         {suffix && (
@@ -166,8 +182,6 @@ export default function Calculator() {
   const [annualContribution, setAnnualContribution] = useState(100_000);
   const [horizonYears, setHorizonYears] = useState(5);
   const [selectedProductIds, setSelectedProductIds] = useState<number[]>([]);
-
-  const { data: products } = trpc.products.list.useQuery();
 
   const canProject = selectedProductIds.length >= 1;
 
@@ -265,61 +279,12 @@ export default function Calculator() {
 
           {/* Product selection card */}
           <div className="bg-card rounded-xl border border-border p-5 shadow-sm">
-            <div className="flex items-center justify-between mb-4">
-              <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Produkter</h2>
-              <span className="text-xs text-muted-foreground">
-                {selectedProductIds.length}/3 valgt
-              </span>
-            </div>
-
-            {!products || products.length === 0 ? (
-              <div className="text-center py-6">
-                <p className="text-sm text-muted-foreground">Ingen produkter oprettet endnu.</p>
-                <p className="text-xs text-muted-foreground mt-1">Gå til "Produkter" for at tilføje.</p>
-              </div>
-            ) : (
-              <div className="space-y-2">
-                {products.map((p) => {
-                  const isSelected = selectedProductIds.includes(p.id);
-                  const isDisabled = !isSelected && selectedProductIds.length >= 3;
-                  const returns = p.returns ?? [];
-                  const avg = returns.length > 0
-                    ? returns.reduce((s: number, r: { returnPct: string | number }) => s + parseFloat(String(r.returnPct)), 0) / returns.length
-                    : null;
-
-                  return (
-                    <button
-                      key={p.id}
-                      type="button"
-                      onClick={() => !isDisabled && toggleProduct(p.id)}
-                      disabled={isDisabled}
-                      className={`w-full flex items-center gap-3 p-3 rounded-lg border text-left transition-all ${
-                        isSelected
-                          ? "border-primary/30 bg-primary/5"
-                          : isDisabled
-                          ? "border-border opacity-40 cursor-not-allowed"
-                          : "border-border hover:border-primary/20 hover:bg-muted/50"
-                      }`}
-                    >
-                      <div className="w-3 h-3 rounded-full flex-shrink-0" style={{ backgroundColor: p.color }} />
-                      <div className="flex-1 min-w-0">
-                        <p className="text-sm font-medium text-foreground truncate">{p.name}</p>
-                        {avg !== null && (
-                          <p className="text-xs text-muted-foreground">
-                            Ø {avg >= 0 ? "+" : ""}{avg.toFixed(1)}%/år · {returns.length} år
-                          </p>
-                        )}
-                      </div>
-                      {isSelected ? (
-                        <CheckSquare className="w-4 h-4 text-primary flex-shrink-0" />
-                      ) : (
-                        <Square className="w-4 h-4 text-muted-foreground flex-shrink-0" />
-                      )}
-                    </button>
-                  );
-                })}
-              </div>
-            )}
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground mb-4">Produkter</h2>
+            <ProductSelector
+              selectedIds={selectedProductIds}
+              onToggle={toggleProduct}
+              maxSelections={3}
+            />
           </div>
         </div>
 

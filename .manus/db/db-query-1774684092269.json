@@ -1,0 +1,9 @@
+{
+  "query": "\nALTER TABLE `investment_products` MODIFY COLUMN `name` varchar(256) NOT NULL;\nALTER TABLE `investment_products` ADD `company` varchar(128);\nALTER TABLE `investment_products` ADD `productLine` varchar(128);\nALTER TABLE `investment_products` ADD `riskLevel` varchar(64);\nALTER TABLE `investment_products` ADD `yearsToPension` int;\nALTER TABLE `investment_products` ADD `aop` decimal(6,4);\nALTER TABLE `investment_products` ADD `nhmId` varchar(32);\n",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2EHrsXn1aoUpkwY.68200309840c --database 3cVu5yuXt8ENtYAZLcFt7i --execute \nALTER TABLE `investment_products` MODIFY COLUMN `name` varchar(256) NOT NULL;\nALTER TABLE `investment_products` ADD `company` varchar(128);\nALTER TABLE `investment_products` ADD `productLine` varchar(128);\nALTER TABLE `investment_products` ADD `riskLevel` varchar(64);\nALTER TABLE `investment_products` ADD `yearsToPension` int;\nALTER TABLE `investment_products` ADD `aop` decimal(6,4);\nALTER TABLE `investment_products` ADD `nhmId` varchar(32);\n",
+  "rows": [],
+  "messages": [],
+  "stdout": "",
+  "stderr": "",
+  "execution_time_ms": 1571
+}

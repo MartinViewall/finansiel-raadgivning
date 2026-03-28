@@ -15,6 +15,13 @@
       "when": 1774681176065,
       "tag": "0001_steep_karnak",
       "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "5",
+      "when": 1774684083137,
+      "tag": "0002_curved_talon",
+      "breakpoints": true
     }
   ]
 }

@@ -24,14 +24,32 @@ export type User = typeof users.$inferSelect;
 export type InsertUser = typeof users.$inferInsert;
 
 /**
- * Investment products (e.g. "PFA Middel", "Nordea Mix Høj")
+ * Investment products (e.g. "PFA Profil Middel 15 år")
+ * company     = Produktudbyder, e.g. "PFA"
+ * productLine = Produkt, e.g. "LivsCyklus"
+ * riskLevel   = Risikoniveau, e.g. "Moderat"
+ * yearsToPension = År til pension, e.g. 15
+ * aop         = Årlige omkostninger i procent
+ * nhmId       = Unique NHM identifier from the data source
  */
 export const investmentProducts = mysqlTable("investment_products", {
   id: int("id").autoincrement().primaryKey(),
-  name: varchar("name", { length: 128 }).notNull(),
+  name: varchar("name", { length: 256 }).notNull(),
   description: text("description"),
   /** Hex color for chart line, e.g. "#4f46e5" */
   color: varchar("color", { length: 16 }).notNull().default("#4f46e5"),
+  /** Produktudbyder / company name */
+  company: varchar("company", { length: 128 }),
+  /** Product line name */
+  productLine: varchar("productLine", { length: 128 }),
+  /** Risk level: Konservativ, Moderat, Aggressiv */
+  riskLevel: varchar("riskLevel", { length: 64 }),
+  /** Years to pension */
+  yearsToPension: int("yearsToPension"),
+  /** Annual cost percentage (ÅOP) */
+  aop: decimal("aop", { precision: 6, scale: 4 }),
+  /** NHM identifier from data source */
+  nhmId: varchar("nhmId", { length: 32 }),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
   updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
 });
