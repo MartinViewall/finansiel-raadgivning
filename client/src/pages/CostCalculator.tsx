@@ -1,11 +1,14 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { TrendingDown, PiggyBank, Info } from "lucide-react";
+import { TrendingDown, PiggyBank, Info, ChevronDown, ChevronUp, ArrowRightLeft } from "lucide-react";
+import { useCalculatorContext } from "@/contexts/CalculatorContext";
 
-// ─── Helpers ─────────────────────────────────────────────────────────────────
+// ─── Constants ────────────────────────────────────────────────────────────────
 
 const ANNUAL_RETURN = 0.065; // 6,5% fast afkast (vises ikke i UI)
+
+// ─── Helpers ─────────────────────────────────────────────────────────────────
 
 function formatDKK(value: number): string {
   return (
@@ -24,7 +27,6 @@ function fmtThousands(n: number): string {
 }
 
 function parseRaw(raw: string): number {
-  // Dansk format: punktum som tusindtalsseparator, komma som decimal
   return parseFloat(raw.replace(/\./g, "").replace(/,/g, "."));
 }
 
@@ -32,16 +34,14 @@ function parseDecimalRaw(raw: string): number {
   return parseFloat(raw.replace(/,/g, "."));
 }
 
+function fmtPct(raw: string): string {
+  return raw.replace(".", ",");
+}
+
 /**
  * Beregner depotets fremtidige værdi ved netto-afkast (afkast minus ÅOP).
- *
- * Annuity due: indbetaling tilføjes ved STARTEN af hvert år, derefter vokser
- * hele beløbet med netto-afkastet resten af året.
- *
- *   Hvert år: value = (value + contribution) * (1 + netRate)
- *
+ * Indbetaling tilføjes ved STARTEN af hvert år (annuity due / "begyndelse af perioden").
  * Svarer til Excel: FV(netRate; n; -contribution; -depot; 1)
- * hvor det sidste argument "1" angiver "beginning of period".
  */
 function futureValueWithCost(
   depot: number,
@@ -56,6 +56,29 @@ function futureValueWithCost(
     value = (value + annualContribution) * (1 + netRate);
   }
   return value;
+}
+
+/**
+ * Bygger en år-for-år tabel med depotværdi i begge scenarier.
+ */
+function buildYearTable(
+  depot: number,
+  annualContribution: number,
+  costTodayPct: number,
+  costNewPct: number,
+  years: number
+): { year: number; fvToday: number; fvNew: number; diff: number }[] {
+  const netToday = ANNUAL_RETURN - costTodayPct / 100;
+  const netNew   = ANNUAL_RETURN - costNewPct   / 100;
+  const rows = [];
+  let valToday = depot;
+  let valNew   = depot;
+  for (let i = 1; i <= years; i++) {
+    valToday = (valToday + annualContribution) * (1 + netToday);
+    valNew   = (valNew   + annualContribution) * (1 + netNew);
+    rows.push({ year: i, fvToday: valToday, fvNew: valNew, diff: valNew - valToday });
+  }
+  return rows;
 }
 
 // ─── NumberInput ──────────────────────────────────────────────────────────────
@@ -76,6 +99,15 @@ function NumberInput({
   hint?: string;
 }) {
   const [raw, setRaw] = useState(() => fmtThousands(value));
+
+  // Sync if parent value changes (e.g. from context transfer)
+  const prevValue = useRef(value);
+  useEffect(() => {
+    if (prevValue.current !== value) {
+      setRaw(fmtThousands(value));
+      prevValue.current = value;
+    }
+  }, [value]);
 
   const handleBlur = () => {
     const parsed = parseRaw(raw);
@@ -111,7 +143,7 @@ function NumberInput({
   );
 }
 
-// ─── DecimalInput (til procentsatser) ────────────────────────────────────────
+// ─── DecimalInput ─────────────────────────────────────────────────────────────
 
 function DecimalInput({
   label,
@@ -230,21 +262,31 @@ function ResultRow({
   );
 }
 
-// ─── Formatér procentsats til visning ─────────────────────────────────────────
-
-function fmtPct(raw: string): string {
-  // Normaliser til dansk komma-format
-  return raw.replace(".", ",");
-}
-
 // ─── Hovedside ────────────────────────────────────────────────────────────────
 
 export default function CostCalculator() {
-  const [yearsToPension, setYearsToPension] = useState(20);
-  const [depot, setDepot] = useState(500_000);
-  const [annualContribution, setAnnualContribution] = useState(60_000);
+  const ctx = useCalculatorContext();
+
+  // Initialise from shared context (values set by Afkastberegneren)
+  const [depot, setDepot] = useState(ctx.depot);
+  const [annualContribution, setAnnualContribution] = useState(ctx.annualContribution);
+  const [yearsToPension, setYearsToPension] = useState(ctx.horizonYears);
   const [costTodayRaw, setCostTodayRaw] = useState("1,5");
   const [costNewRaw, setCostNewRaw] = useState("0,75");
+  const [tableOpen, setTableOpen] = useState(false);
+
+  // Track whether values were transferred from the return calculator
+  const [transferred, setTransferred] = useState(
+    ctx.depot !== 2_000_000 || ctx.annualContribution !== 100_000 || ctx.horizonYears !== 5
+  );
+
+  // Allow user to pull latest values from context on demand
+  const handleTransfer = () => {
+    setDepot(ctx.depot);
+    setAnnualContribution(ctx.annualContribution);
+    setYearsToPension(ctx.horizonYears);
+    setTransferred(true);
+  };
 
   const costTodayPct = useMemo(() => parseDecimalRaw(costTodayRaw), [costTodayRaw]);
   const costNewPct   = useMemo(() => parseDecimalRaw(costNewRaw),   [costNewRaw]);
@@ -260,25 +302,24 @@ export default function CostCalculator() {
   const results = useMemo(() => {
     if (!isValid) return null;
 
-    // Årlige omkostninger i kr. i dag (baseret på depot + ½ indbetaling som
-    // approksimation for gennemsnitlig depotstørrelse i løbet af år 1)
-    const avgAssets      = depot + annualContribution * 0.5;
+    // Årlige omkostninger i kr. (depot + ½ indbetaling som gennemsnitlig depotstørrelse i år 1)
+    const avgAssets       = depot + annualContribution * 0.5;
     const annualCostToday = avgAssets * (costTodayPct / 100);
     const annualCostNew   = avgAssets * (costNewPct   / 100);
     const annualSaving    = annualCostToday - annualCostNew;
 
-    // Depotets slutværdi i hvert scenarie.
-    // Indbetaling tilføjes ved STARTEN af hvert år (annuity due /
-    // "begyndelse af perioden"), svarende til Excel FV(...; type=1).
-    const fvToday = futureValueWithCost(
-      depot, annualContribution, ANNUAL_RETURN, costTodayPct, yearsToPension
-    );
-    const fvNew = futureValueWithCost(
-      depot, annualContribution, ANNUAL_RETURN, costNewPct, yearsToPension
-    );
+    // Slutværdi i hvert scenarie (annuity due: indbetaling ved årets start)
+    const fvToday = futureValueWithCost(depot, annualContribution, ANNUAL_RETURN, costTodayPct, yearsToPension);
+    const fvNew   = futureValueWithCost(depot, annualContribution, ANNUAL_RETURN, costNewPct,   yearsToPension);
     const compoundValue = fvNew - fvToday;
 
     return { annualCostToday, annualCostNew, annualSaving, fvToday, fvNew, compoundValue };
+  }, [isValid, depot, annualContribution, costTodayPct, costNewPct, yearsToPension]);
+
+  // ── År-for-år tabel ──────────────────────────────────────────────────────────
+  const yearTable = useMemo(() => {
+    if (!isValid) return [];
+    return buildYearTable(depot, annualContribution, costTodayPct, costNewPct, yearsToPension);
   }, [isValid, depot, annualContribution, costTodayPct, costNewPct, yearsToPension]);
 
   return (
@@ -299,32 +340,48 @@ export default function CostCalculator() {
       <div className="grid grid-cols-1 lg:grid-cols-[380px_1fr] gap-6 items-start">
         {/* ── Venstre: Input ───────────────────────────────────────────────────── */}
         <div className="bg-card rounded-xl border border-border p-5 shadow-sm space-y-5">
-          <div>
-            <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground mb-4">
+
+          {/* Overførselsknap */}
+          <div className="flex items-center justify-between">
+            <h2 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
               Dine oplysninger
             </h2>
-            <div className="space-y-4">
-              <NumberInput
-                label="År til pension"
-                value={yearsToPension}
-                onChange={setYearsToPension}
-                suffix="år"
-                min={1}
-              />
-              <NumberInput
-                label="Depot"
-                value={depot}
-                onChange={setDepot}
-                suffix="kr."
-                hint="Nuværende depotstørrelse"
-              />
-              <NumberInput
-                label="Årlig indbetaling"
-                value={annualContribution}
-                onChange={setAnnualContribution}
-                suffix="kr."
-              />
-            </div>
+            <button
+              onClick={handleTransfer}
+              className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-md border transition-colors"
+              style={{
+                background: transferred ? "oklch(0.82 0.12 85 / 0.1)" : "var(--card)",
+                borderColor: transferred ? "oklch(0.82 0.12 85 / 0.35)" : "var(--border)",
+                color: transferred ? "oklch(0.52 0.12 85)" : "var(--muted-foreground)",
+              }}
+              title="Hent depot, indbetaling og horisont fra Afkastberegneren"
+            >
+              <ArrowRightLeft className="h-3 w-3" />
+              {transferred ? "Overført fra Afkastberegner" : "Hent fra Afkastberegner"}
+            </button>
+          </div>
+
+          <div className="space-y-4">
+            <NumberInput
+              label="År til pension"
+              value={yearsToPension}
+              onChange={setYearsToPension}
+              suffix="år"
+              min={1}
+            />
+            <NumberInput
+              label="Depot"
+              value={depot}
+              onChange={setDepot}
+              suffix="kr."
+              hint="Nuværende depotstørrelse"
+            />
+            <NumberInput
+              label="Årlig indbetaling"
+              value={annualContribution}
+              onChange={setAnnualContribution}
+              suffix="kr."
+            />
           </div>
 
           <div className="border-t border-border pt-5">
@@ -378,9 +435,7 @@ export default function CostCalculator() {
               <div className="w-14 h-14 rounded-full bg-muted flex items-center justify-center mb-4">
                 <TrendingDown className="w-7 h-7 text-muted-foreground" />
               </div>
-              <h3 className="font-medium text-foreground mb-1">
-                Udfyld oplysningerne
-              </h3>
+              <h3 className="font-medium text-foreground mb-1">Udfyld oplysningerne</h3>
               <p className="text-sm text-muted-foreground max-w-xs">
                 Angiv gyldige omkostningsprocenter for at se beregningen
               </p>
@@ -434,7 +489,6 @@ export default function CostCalculator() {
                   large
                 />
 
-                {/* Visuel fremhævning */}
                 {results.compoundValue > 0 && (
                   <div
                     className="mt-4 rounded-lg p-4 text-center"
@@ -443,9 +497,7 @@ export default function CostCalculator() {
                       border: "1px solid oklch(0.75 0.12 145 / 0.25)",
                     }}
                   >
-                    <p className="text-xs text-muted-foreground mb-1">
-                      Samlet merværdi ved pension
-                    </p>
+                    <p className="text-xs text-muted-foreground mb-1">Samlet merværdi ved pension</p>
                     <p
                       className="text-3xl font-bold tabular-nums"
                       style={{ color: "oklch(0.45 0.14 145)" }}
@@ -458,6 +510,72 @@ export default function CostCalculator() {
                   </div>
                 )}
               </ResultCard>
+
+              {/* Sammenklappelig år-for-år tabel */}
+              <div className="rounded-xl border border-border overflow-hidden shadow-sm">
+                <button
+                  onClick={() => setTableOpen((o) => !o)}
+                  className="w-full flex items-center justify-between px-5 py-3.5 bg-card hover:bg-muted/40 transition-colors"
+                >
+                  <span className="text-sm font-semibold text-foreground">
+                    År-for-år oversigt
+                  </span>
+                  {tableOpen
+                    ? <ChevronUp className="h-4 w-4 text-muted-foreground" />
+                    : <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                  }
+                </button>
+
+                {tableOpen && (
+                  <div className="overflow-x-auto">
+                    <table className="w-full text-sm">
+                      <thead>
+                        <tr className="border-t border-border bg-muted/30">
+                          <th className="text-left px-4 py-2.5 font-semibold text-muted-foreground w-16">År</th>
+                          <th className="text-right px-4 py-2.5 font-semibold text-muted-foreground">
+                            Depot (ÅOP {fmtPct(costTodayRaw)}%)
+                          </th>
+                          <th className="text-right px-4 py-2.5 font-semibold text-muted-foreground">
+                            Depot (ÅOP {fmtPct(costNewRaw)}%)
+                          </th>
+                          <th className="text-right px-4 py-2.5 font-semibold text-muted-foreground">
+                            Forskel
+                          </th>
+                        </tr>
+                      </thead>
+                      <tbody>
+                        {yearTable.map((row, i) => (
+                          <tr
+                            key={row.year}
+                            className="border-t border-border/50"
+                            style={{
+                              background: i % 2 === 0 ? "var(--card)" : "oklch(0.97 0.005 240 / 0.5)",
+                            }}
+                          >
+                            <td className="px-4 py-2 tabular-nums text-muted-foreground font-medium">
+                              {row.year}
+                            </td>
+                            <td className="px-4 py-2 tabular-nums text-right text-foreground">
+                              {formatDKK(row.fvToday)}
+                            </td>
+                            <td className="px-4 py-2 tabular-nums text-right text-foreground">
+                              {formatDKK(row.fvNew)}
+                            </td>
+                            <td
+                              className="px-4 py-2 tabular-nums text-right font-semibold"
+                              style={{ color: row.diff >= 0 ? "#16a34a" : "#dc2626" }}
+                            >
+                              {row.diff >= 0
+                                ? formatDKK(row.diff)
+                                : "−" + formatDKK(Math.abs(row.diff))}
+                            </td>
+                          </tr>
+                        ))}
+                      </tbody>
+                    </table>
+                  </div>
+                )}
+              </div>
             </>
           ) : null}
         </div>

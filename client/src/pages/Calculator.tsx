@@ -16,6 +16,7 @@ import {
 } from "recharts";
 import { TrendingUp, Info } from "lucide-react";
 import { ProductSelector } from "@/components/ProductSelector";
+import { useCalculatorContext } from "@/contexts/CalculatorContext";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -298,9 +299,16 @@ function DecimalInput({
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function Calculator() {
-  const [initialCapital, setInitialCapital] = useState(2_000_000);
-  const [annualContribution, setAnnualContribution] = useState(100_000);
-  const [horizonYears, setHorizonYears] = useState(5);
+  const ctx = useCalculatorContext();
+
+  const [initialCapital, setInitialCapital] = useState(ctx.depot);
+  const [annualContribution, setAnnualContribution] = useState(ctx.annualContribution);
+  const [horizonYears, setHorizonYears] = useState(ctx.horizonYears);
+
+  // Keep shared context in sync so CostCalculator can pick up the latest values
+  const handleSetInitialCapital = (v: number) => { setInitialCapital(v); ctx.setDepot(v); };
+  const handleSetAnnualContribution = (v: number) => { setAnnualContribution(v); ctx.setAnnualContribution(v); };
+  const handleSetHorizonYears = (v: number) => { setHorizonYears(v); ctx.setHorizonYears(v); };
   const [selectedProductIds, setSelectedProductIds] = useState<number[]>([]);
 
   // Year range filter for the historical table
@@ -411,7 +419,7 @@ export default function Calculator() {
             <NumberInput
               label="Nuværende opsparing"
               value={initialCapital}
-              onChange={setInitialCapital}
+              onChange={handleSetInitialCapital}
               suffix="kr."
               hint="Startbeløb / depot"
             />
@@ -419,7 +427,7 @@ export default function Calculator() {
             <NumberInput
               label="Årlig indbetaling"
               value={annualContribution}
-              onChange={setAnnualContribution}
+              onChange={handleSetAnnualContribution}
               suffix="kr."
               hint="Indbetaling pr. år"
             />
@@ -436,7 +444,7 @@ export default function Calculator() {
                 max={30}
                 step={1}
                 value={[horizonYears]}
-                onValueChange={([v]) => setHorizonYears(v)}
+                onValueChange={([v]) => handleSetHorizonYears(v)}
                 className="w-full"
               />
               <div className="flex justify-between text-xs text-muted-foreground">

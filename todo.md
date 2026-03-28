@@ -85,3 +85,13 @@
 - [x] Ret beregning til Excel-model: FV(netto-afkast_ny) − FV(netto-afkast_i_dag), dvs. depot × (1 + r − cost)^n for hvert scenarie
 - [x] Vis depotets slutværdi i begge scenarier i resultatkortene
 - [x] Opdater "Effekt med rentes rente"-kortet til at vise forskel i slutværdi (ikke annuitetsformel)
+
+## Fase 9 – Overførsel og år-for-år tabel i Omkostningsberegner
+
+- [x] Opret delt React context (CalculatorContext) med depot, årlig indbetaling og år til pension
+- [x] Afkastberegneren skriver sine værdier til contexten når de ændres
+- [x] Omkostningsberegneren læser fra contexten som startværdier (kan overskrives lokalt)
+- [x] Vis lille "Overført fra Afkastberegner"-badge når værdier er hentet fra context
+- [x] Tilføj sammenklappelig år-for-år tabel under resultatkort 2
+- [x] Tabellen viser: År, Depotværdi (ÅOP i dag), Depotværdi (ÅOP ny), Forskel
+- [x] Tusindtalsseparator i tabellen, alternerende rækkefarver

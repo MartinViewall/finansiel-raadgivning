@@ -5,6 +5,7 @@ import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import { PasswordGateProvider, usePasswordGate } from "./contexts/PasswordGateContext";
+import { CalculatorProvider } from "./contexts/CalculatorContext";
 import PasswordGate from "./pages/PasswordGate";
 import Calculator from "./pages/Calculator";
 import Products from "./pages/Products";
@@ -37,10 +38,12 @@ function App() {
     <ErrorBoundary>
       <ThemeProvider defaultTheme="light">
         <PasswordGateProvider>
-          <TooltipProvider>
-            <Toaster />
-            <Router />
-          </TooltipProvider>
+          <CalculatorProvider>
+            <TooltipProvider>
+              <Toaster />
+              <Router />
+            </TooltipProvider>
+          </CalculatorProvider>
         </PasswordGateProvider>
       </ThemeProvider>
     </ErrorBoundary>
