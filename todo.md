@@ -95,3 +95,15 @@
 - [x] Tilføj sammenklappelig år-for-år tabel under resultatkort 2
 - [x] Tabellen viser: År, Depotværdi (ÅOP i dag), Depotværdi (ÅOP ny), Forskel
 - [x] Tusindtalsseparator i tabellen, alternerende rækkefarver
+
+## Fase 10 – Navy farvetema og PDF-rapport
+
+- [x] Opdater global farvepalette til mørk navy (sidebar, kort, accenter) i index.css
+- [x] Tilpas DashboardLayout sidebar til navy baggrund med lyse tekster
+- [x] Backend: Installer pdfkit og byg /api/generate-pdf endpoint
+- [x] Backend: PDF-sektioner: forside (klientnavn, rådgivernavn, dato), omkostningsanalyse, afkastsammenligning
+- [x] Backend: Endpoint modtager JSON-payload med valgte sektioner og beregningsdata
+- [x] Frontend: "Generer rapport"-knap tilgængelig fra begge beregnersider
+- [x] Frontend: Modal med felter til klientnavn, rådgivernavn og valg af sektioner (Omkostningsberegner / Afkastberegner / Begge)
+- [x] Frontend: PDF downloades direkte i browseren ved klik
+- [x] Test: Verificer at PDF genereres korrekt med begge sektioner

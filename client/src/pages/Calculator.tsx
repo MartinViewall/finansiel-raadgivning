@@ -14,9 +14,10 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import { TrendingUp, Info } from "lucide-react";
+import { TrendingUp, Info, FileDown } from "lucide-react";
 import { ProductSelector } from "@/components/ProductSelector";
 import { useCalculatorContext } from "@/contexts/CalculatorContext";
+import PdfReportModal from "@/components/PdfReportModal";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 
@@ -397,14 +398,59 @@ export default function Calculator() {
 
   const baselineResult = projectionData?.results[0];
 
+  const [pdfOpen, setPdfOpen] = useState(false);
+
+  // Build returnData payload for PDF modal
+  const returnDataForPdf = projectionData?.results.length
+    ? {
+        initialCapital,
+        annualContribution,
+        horizonYears,
+        products: projectionData.results.map((r) => ({
+          name: r.productName,
+          company: r.company ?? "",
+          avgReturn: r.avgAnnualReturnHorizon,
+          aop: r.aop ?? 0,
+        })),
+        projections: chartData.map((pt, i) => ({
+          year: i + 1,
+          values: Object.fromEntries(
+            projectionData.results.map((r) => [r.productName, pt[r.productName] as number])
+          ),
+        })),
+      }
+    : undefined;
+
   return (
+    <>
+    <PdfReportModal
+      open={pdfOpen}
+      onClose={() => setPdfOpen(false)}
+      returnData={returnDataForPdf}
+      defaultSection="return"
+    />
     <div className="w-full max-w-[1400px] space-y-6 px-2">
       {/* Page header */}
-      <div>
-        <h1 className="text-2xl font-semibold text-foreground">Afkastberegner</h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Sammenlign fremtidigt afkast på tværs af investeringsprodukter
-        </p>
+      <div className="flex items-start justify-between">
+        <div>
+          <h1 className="text-2xl font-semibold text-foreground">Afkastberegner</h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Sammenlign fremtidigt afkast på tværs af investeringsprodukter
+          </p>
+        </div>
+        <button
+          onClick={() => setPdfOpen(true)}
+          disabled={!returnDataForPdf}
+          className="flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
+          style={{
+            background: returnDataForPdf ? "oklch(0.82 0.12 85)" : "oklch(0.82 0.12 85 / 0.3)",
+            color: "oklch(0.13 0.04 255)",
+          }}
+          title={returnDataForPdf ? "Generer PDF-rapport" : "Vælg produkter for at generere rapport"}
+        >
+          <FileDown className="h-4 w-4" />
+          Rapport
+        </button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-[320px_1fr] gap-5">
@@ -805,5 +851,6 @@ export default function Calculator() {
         </div>
       </div>
     </div>
+    </>
   );
 }

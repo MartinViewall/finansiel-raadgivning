@@ -8,6 +8,7 @@ import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
 import { uploadExcelRouter } from "../uploadExcel";
+import { pdfRouter } from "../pdfRouter";
 
 function isPortAvailable(port: number): Promise<boolean> {
   return new Promise(resolve => {
@@ -38,6 +39,8 @@ async function startServer() {
   registerOAuthRoutes(app);
   // Excel upload route (multipart/form-data, must be registered before tRPC)
   app.use(uploadExcelRouter);
+  // PDF generation route
+  app.use(pdfRouter);
 
   // tRPC API
   app.use(

@@ -193,6 +193,8 @@ export const appRouter = router({
           return {
             productId: product.id,
             productName: product.name,
+            company: product.company ?? null,
+            aop: product.aop != null ? parseFloat(String(product.aop)) : null,
             color: product.color,
             projection,
             finalValue: projection[projection.length - 1]?.value ?? input.initialCapital,

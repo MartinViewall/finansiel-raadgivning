@@ -1,8 +1,9 @@
 import { useState, useMemo, useRef, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { TrendingDown, PiggyBank, Info, ChevronDown, ChevronUp, ArrowRightLeft } from "lucide-react";
+import { TrendingDown, PiggyBank, Info, ChevronDown, ChevronUp, ArrowRightLeft, FileDown } from "lucide-react";
 import { useCalculatorContext } from "@/contexts/CalculatorContext";
+import PdfReportModal from "@/components/PdfReportModal";
 
 // ─── Constants ────────────────────────────────────────────────────────────────
 
@@ -201,8 +202,8 @@ function ResultCard({
     <div
       className="rounded-xl border p-5 shadow-sm"
       style={{
-        background: accent ? "oklch(0.97 0.02 145 / 0.4)" : "var(--card)",
-        borderColor: accent ? "oklch(0.75 0.12 145 / 0.4)" : "var(--border)",
+      background: accent ? "oklch(0.20 0.05 155 / 0.6)" : "var(--card)",
+      borderColor: accent ? "oklch(0.55 0.16 155 / 0.45)" : "var(--border)",
       }}
     >
       <div className="flex items-center gap-2 mb-4">
@@ -210,16 +211,14 @@ function ResultCard({
           className="h-7 w-7 rounded-lg flex items-center justify-center flex-shrink-0"
           style={{
             background: accent
-              ? "oklch(0.75 0.12 145 / 0.15)"
-              : "oklch(0.82 0.12 85 / 0.12)",
-            border: `1px solid ${accent ? "oklch(0.75 0.12 145 / 0.3)" : "oklch(0.82 0.12 85 / 0.25)"}`,
+              ? "oklch(0.55 0.16 155 / 0.18)"
+              : "oklch(0.82 0.12 85 / 0.15)",
+            border: `1px solid ${accent ? "oklch(0.55 0.16 155 / 0.4)" : "oklch(0.82 0.12 85 / 0.3)"}`,
           }}
         >
           <Icon
             className="h-3.5 w-3.5"
-            style={{
-              color: accent ? "oklch(0.55 0.14 145)" : "oklch(0.62 0.12 85)",
-            }}
+            style={{ color: accent ? "oklch(0.72 0.18 155)" : "oklch(0.82 0.12 85)" }}
           />
         </div>
         <h3 className="text-sm font-semibold text-foreground">{title}</h3>
@@ -274,6 +273,7 @@ export default function CostCalculator() {
   const [costTodayRaw, setCostTodayRaw] = useState("1,5");
   const [costNewRaw, setCostNewRaw] = useState("0,75");
   const [tableOpen, setTableOpen] = useState(false);
+  const [pdfOpen, setPdfOpen] = useState(false);
 
   // Track whether values were transferred from the return calculator
   const [transferred, setTransferred] = useState(
@@ -322,19 +322,56 @@ export default function CostCalculator() {
     return buildYearTable(depot, annualContribution, costTodayPct, costNewPct, yearsToPension);
   }, [isValid, depot, annualContribution, costTodayPct, costNewPct, yearsToPension]);
 
+  const costDataForPdf = results && isValid ? {
+    depot,
+    annualContribution,
+    yearsToPension,
+    costTodayPct,
+    costNewPct,
+    annualCostToday: results.annualCostToday,
+    annualCostNew: results.annualCostNew,
+    annualSaving: results.annualSaving,
+    fvToday: results.fvToday,
+    fvNew: results.fvNew,
+    compoundValue: results.compoundValue,
+    yearTable,
+  } : undefined;
+
   return (
+    <>
+    <PdfReportModal
+      open={pdfOpen}
+      onClose={() => setPdfOpen(false)}
+      costData={costDataForPdf}
+      defaultSection="cost"
+    />
     <div className="max-w-5xl mx-auto space-y-6">
       {/* Overskrift */}
-      <div>
-        <h1
-          className="text-2xl font-bold tracking-tight text-foreground"
-          style={{ fontFamily: "'Playfair Display', serif" }}
+      <div className="flex items-start justify-between">
+        <div>
+          <h1
+            className="text-2xl font-bold tracking-tight text-foreground"
+            style={{ fontFamily: "'Playfair Display', serif" }}
+          >
+            Omkostningsberegner
+          </h1>
+          <p className="text-sm text-muted-foreground mt-1">
+            Se hvad forskellen i omkostninger betyder for din opsparing over tid
+          </p>
+        </div>
+        <button
+          onClick={() => setPdfOpen(true)}
+          disabled={!costDataForPdf}
+          className="flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
+          style={{
+            background: costDataForPdf ? "oklch(0.82 0.12 85)" : "oklch(0.82 0.12 85 / 0.3)",
+            color: "oklch(0.13 0.04 255)",
+          }}
+          title={costDataForPdf ? "Generer PDF-rapport" : "Udfyld beregneren for at generere rapport"}
         >
-          Omkostningsberegner
-        </h1>
-        <p className="text-sm text-muted-foreground mt-1">
-          Se hvad forskellen i omkostninger betyder for din opsparing over tid
-        </p>
+          <FileDown className="h-4 w-4" />
+          Rapport
+        </button>
       </div>
 
       <div className="grid grid-cols-1 lg:grid-cols-[380px_1fr] gap-6 items-start">
@@ -493,14 +530,14 @@ export default function CostCalculator() {
                   <div
                     className="mt-4 rounded-lg p-4 text-center"
                     style={{
-                      background: "oklch(0.75 0.12 145 / 0.1)",
-                      border: "1px solid oklch(0.75 0.12 145 / 0.25)",
+                      background: "oklch(0.55 0.16 155 / 0.15)",
+                      border: "1px solid oklch(0.55 0.16 155 / 0.35)",
                     }}
                   >
                     <p className="text-xs text-muted-foreground mb-1">Samlet merværdi ved pension</p>
                     <p
                       className="text-3xl font-bold tabular-nums"
-                      style={{ color: "oklch(0.45 0.14 145)" }}
+                      style={{ color: "oklch(0.75 0.18 155)" }}
                     >
                       {formatDKK(results.compoundValue)}
                     </p>
@@ -581,5 +618,6 @@ export default function CostCalculator() {
         </div>
       </div>
     </div>
+    </>
   );
 }
