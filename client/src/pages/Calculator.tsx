@@ -35,9 +35,35 @@ function formatPct(value: number): string {
   return `${sign}${value.toFixed(1).replace(".", ",")}%`;
 }
 
+/**
+ * Project a portfolio forward using a fixed annual return rate (simple compound).
+ * Used for the pension projection in summary cards.
+ */
+function projectWithRate(
+  initialCapital: number,
+  annualContribution: number,
+  annualReturnPct: number,
+  years: number
+): number {
+  const r = annualReturnPct / 100;
+  let value = initialCapital;
+  for (let i = 0; i < years; i++) {
+    value = value * (1 + r) + annualContribution;
+  }
+  return Math.round(value);
+}
+
 // ─── Custom Tooltip ───────────────────────────────────────────────────────────
 
-function CustomTooltip({ active, payload, label }: { active?: boolean; payload?: { name: string; value: number; color: string }[]; label?: string | number }) {
+function CustomTooltip({
+  active,
+  payload,
+  label,
+}: {
+  active?: boolean;
+  payload?: { name: string; value: number; color: string }[];
+  label?: string | number;
+}) {
   if (!active || !payload?.length) return null;
   return (
     <div className="bg-card border border-border rounded-xl shadow-lg p-4 min-w-[200px]">
@@ -48,7 +74,10 @@ function CustomTooltip({ active, payload, label }: { active?: boolean; payload?:
         {payload.map((entry) => (
           <div key={entry.name} className="flex items-center justify-between gap-4">
             <div className="flex items-center gap-2">
-              <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: entry.color }} />
+              <div
+                className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                style={{ backgroundColor: entry.color }}
+              />
               <span className="text-xs text-muted-foreground">{entry.name}</span>
             </div>
             <span className="text-sm font-semibold tabular-nums text-foreground">
@@ -70,6 +99,11 @@ function SummaryCard({
   deltaPct,
   color,
   isBaseline,
+  pensionYears,
+  pensionReturnPct,
+  initialCapital,
+  annualContribution,
+  baselinePensionValue,
 }: {
   name: string;
   finalValue: number;
@@ -77,7 +111,19 @@ function SummaryCard({
   deltaPct: number | null;
   color: string;
   isBaseline: boolean;
+  pensionYears: number | null;
+  pensionReturnPct: number | null;
+  initialCapital: number;
+  annualContribution: number;
+  baselinePensionValue: number | null;
 }) {
+  // Pension projection: project from current finalValue (end of horizon) forward to pension
+  const pensionValue =
+    pensionYears !== null && pensionReturnPct !== null && pensionYears > 0
+      ? projectWithRate(finalValue, annualContribution, pensionReturnPct, pensionYears)
+      : null;
+  void initialCapital; // used via finalValue (which is projected from it)
+
   return (
     <div
       className="rounded-xl p-5 border transition-all"
@@ -86,20 +132,60 @@ function SummaryCard({
         background: isBaseline ? "var(--card)" : color + "08",
       }}
     >
+      {/* Product name + badge */}
       <div className="flex items-center gap-2 mb-3">
-        <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: color }} />
-        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide leading-tight">{name}</span>
+        <div
+          className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+          style={{ backgroundColor: color }}
+        />
+        <span className="text-xs font-medium text-muted-foreground uppercase tracking-wide leading-tight">
+          {name}
+        </span>
         {isBaseline && (
-          <Badge variant="secondary" className="text-xs ml-auto flex-shrink-0">Nuværende</Badge>
+          <Badge variant="secondary" className="text-xs ml-auto flex-shrink-0">
+            Nuværende
+          </Badge>
         )}
       </div>
+
+      {/* Final value after horizon */}
       <p className="text-2xl font-bold text-foreground tabular-nums">
         {formatDKKFull(finalValue)}
       </p>
+
+      {/* Delta vs baseline */}
       {delta !== null && deltaPct !== null && !isBaseline && (
-        <p className="text-sm mt-1.5 font-medium" style={{ color: delta >= 0 ? "#16a34a" : "#dc2626" }}>
-          {delta >= 0 ? "+" : ""}{formatDKKFull(delta)} ({formatPct(deltaPct)})
+        <p
+          className="text-sm mt-1 font-medium"
+          style={{ color: delta >= 0 ? "#16a34a" : "#dc2626" }}
+        >
+          {delta >= 0 ? "+" : ""}
+          {formatDKKFull(delta)} ({formatPct(deltaPct)})
         </p>
+      )}
+
+      {/* Pension projection */}
+      {pensionValue !== null && pensionYears !== null && (
+        <div className="mt-3 pt-3 border-t border-border/60">
+          <p className="text-xs text-muted-foreground mb-0.5">
+            Ved pension om {pensionYears} år
+          </p>
+          <p className="text-base font-semibold text-foreground tabular-nums">
+            {formatDKKFull(pensionValue)}
+          </p>
+          {baselinePensionValue !== null && !isBaseline && (
+            <p
+              className="text-sm mt-0.5 font-medium"
+              style={{
+                color:
+                  pensionValue - baselinePensionValue >= 0 ? "#16a34a" : "#dc2626",
+              }}
+            >
+              {pensionValue - baselinePensionValue >= 0 ? "+" : ""}
+              {formatDKKFull(pensionValue - baselinePensionValue)} vs. nuværende
+            </p>
+          )}
+        </div>
       )}
     </div>
   );
@@ -108,7 +194,10 @@ function SummaryCard({
 // ─── Number Input ─────────────────────────────────────────────────────────────
 
 function fmtThousands(n: number): string {
-  return new Intl.NumberFormat("da-DK", { style: "decimal", maximumFractionDigits: 0 }).format(n);
+  return new Intl.NumberFormat("da-DK", {
+    style: "decimal",
+    maximumFractionDigits: 0,
+  }).format(n);
 }
 function parseRaw(raw: string): number {
   return parseFloat(raw.replace(/\./g, "").replace(/,/g, "."));
@@ -165,6 +254,47 @@ function NumberInput({
   );
 }
 
+// ─── Decimal Input (for percentages) ─────────────────────────────────────────
+
+function DecimalInput({
+  label,
+  value,
+  onChange,
+  suffix,
+  hint,
+  placeholder,
+}: {
+  label: string;
+  value: string;
+  onChange: (v: string) => void;
+  suffix?: string;
+  hint?: string;
+  placeholder?: string;
+}) {
+  return (
+    <div className="space-y-1.5">
+      <Label className="text-sm font-medium">{label}</Label>
+      {hint && <p className="text-xs text-muted-foreground">{hint}</p>}
+      <div className="relative">
+        <Input
+          type="text"
+          inputMode="decimal"
+          value={value}
+          placeholder={placeholder}
+          onChange={(e) => onChange(e.target.value)}
+          onFocus={(e) => e.target.select()}
+          className="pr-10"
+        />
+        {suffix && (
+          <span className="absolute right-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground pointer-events-none">
+            {suffix}
+          </span>
+        )}
+      </div>
+    </div>
+  );
+}
+
 // ─── Main Page ────────────────────────────────────────────────────────────────
 
 export default function Calculator() {
@@ -177,17 +307,23 @@ export default function Calculator() {
   const [tableYearFrom, setTableYearFrom] = useState<number>(2010);
   const [tableYearTo, setTableYearTo] = useState<number>(new Date().getFullYear() - 1);
 
+  // Pension projection parameters
+  const [pensionYearsRaw, setPensionYearsRaw] = useState<string>("");
+  // Manual override for return rate — empty means "use auto from data"
+  const [pensionReturnOverride, setPensionReturnOverride] = useState<string>("");
+
   const canProject = selectedProductIds.length >= 1;
 
-  const { data: projectionData, isLoading: isProjecting } = trpc.calculator.project.useQuery(
-    {
-      initialCapital,
-      annualContribution,
-      horizonYears,
-      productIds: selectedProductIds,
-    },
-    { enabled: canProject }
-  );
+  const { data: projectionData, isLoading: isProjecting } =
+    trpc.calculator.project.useQuery(
+      {
+        initialCapital,
+        annualContribution,
+        horizonYears,
+        productIds: selectedProductIds,
+      },
+      { enabled: canProject }
+    );
 
   const toggleProduct = (id: number) => {
     setSelectedProductIds((prev) => {
@@ -196,6 +332,19 @@ export default function Calculator() {
       return [...prev, id];
     });
   };
+
+  // Derived pension parameters
+  const pensionYears = pensionYearsRaw !== "" ? parseInt(pensionYearsRaw) : null;
+  const validPensionYears =
+    pensionYears !== null && !isNaN(pensionYears) && pensionYears > 0 ? pensionYears : null;
+
+  // For each product, compute the effective pension return rate:
+  // - if override is set, use that for all products
+  // - otherwise use the horizon-based avg for each product individually
+  const pensionReturnOverrideNum =
+    pensionReturnOverride !== ""
+      ? parseFloat(pensionReturnOverride.replace(",", "."))
+      : null;
 
   // Build chart data
   const chartData = useMemo(() => {
@@ -211,17 +360,34 @@ export default function Calculator() {
     });
   }, [projectionData]);
 
+  // Y-axis domain: lowest value * 0.9 (10% buffer below minimum)
+  const yAxisDomain = useMemo((): [number, number] | undefined => {
+    if (!chartData.length || !projectionData?.results.length) return undefined;
+    const allValues = chartData
+      .flatMap((pt) =>
+        projectionData.results.map((r) => (pt[r.productName] as number) ?? Infinity)
+      )
+      .filter((v) => isFinite(v) && v > 0);
+    if (!allValues.length) return undefined;
+    const minVal = Math.min(...allValues);
+    const maxVal = Math.max(...allValues);
+    const lower = Math.max(0, Math.floor((minVal * 0.9) / 100_000) * 100_000);
+    const upper = Math.ceil((maxVal * 1.02) / 100_000) * 100_000;
+    return [lower, upper];
+  }, [chartData, projectionData]);
+
   // Filtered years for the historical table
   const tableYears = useMemo(() => {
     if (!projectionData?.results.length) return [];
-    const allYears = Array.from(new Set(
-      projectionData.results.flatMap((r) => r.historicalReturns.map((h) => h.year))
-    )).sort();
+    const allYears = Array.from(
+      new Set(
+        projectionData.results.flatMap((r) => r.historicalReturns.map((h) => h.year))
+      )
+    ).sort();
     return allYears.filter((y) => y >= tableYearFrom && y <= tableYearTo);
   }, [projectionData, tableYearFrom, tableYearTo]);
 
   const baselineResult = projectionData?.results[0];
-  const otherResults = projectionData?.results.slice(1) ?? [];
 
   return (
     <div className="w-full max-w-[1400px] space-y-6 px-2">
@@ -238,7 +404,9 @@ export default function Calculator() {
         <div className="space-y-5">
           {/* Parameters card */}
           <div className="bg-card rounded-xl border border-border p-5 space-y-5 shadow-sm">
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">Parametre</h2>
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+              Parametre
+            </h2>
 
             <NumberInput
               label="Nuværende opsparing"
@@ -278,9 +446,53 @@ export default function Calculator() {
             </div>
           </div>
 
+          {/* Pension projection card */}
+          <div className="bg-card rounded-xl border border-border p-5 space-y-4 shadow-sm">
+            <div>
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                Pensionsfremskrivning
+              </h2>
+              <p className="text-xs text-muted-foreground mt-1">
+                Valgfrit — viser pensionsværdi i boblerne
+              </p>
+            </div>
+
+            <div className="space-y-1.5">
+              <Label className="text-sm font-medium">År til pension</Label>
+              <p className="text-xs text-muted-foreground">F.eks. 22 hvis kunden er 45 år</p>
+              <Input
+                type="number"
+                min={1}
+                max={60}
+                value={pensionYearsRaw}
+                placeholder="F.eks. 22"
+                onChange={(e) => setPensionYearsRaw(e.target.value)}
+                className="tabular-nums"
+              />
+            </div>
+
+            <DecimalInput
+              label="Afkastforskel % (valgfri)"
+              hint={
+                projectionData && projectionData.results.length >= 2
+                  ? `Auto: ${(
+                      projectionData.results[1].avgAnnualReturnHorizon -
+                      projectionData.results[0].avgAnnualReturnHorizon
+                    ).toFixed(1).replace(".", ",")}% (seneste ${horizonYears} år)`
+                  : "Lad stå tom for at bruge Ø/år automatisk"
+              }
+              value={pensionReturnOverride}
+              onChange={setPensionReturnOverride}
+              suffix="%"
+              placeholder="F.eks. 2,5"
+            />
+          </div>
+
           {/* Product selection card */}
           <div className="bg-card rounded-xl border border-border p-5 shadow-sm">
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground mb-4">Produkter</h2>
+            <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground mb-4">
+              Produkter
+            </h2>
             <ProductSelector
               selectedIds={selectedProductIds}
               onToggle={toggleProduct}
@@ -305,22 +517,72 @@ export default function Calculator() {
             <>
               {/* Summary cards */}
               {projectionData && (
-                <div className={`grid gap-4 ${projectionData.results.length === 1 ? "grid-cols-1" : projectionData.results.length === 2 ? "grid-cols-2" : "grid-cols-3"}`}>
-                  {projectionData.results.map((r, idx) => (
-                    <SummaryCard
-                      key={r.productId}
-                      name={r.productName}
-                      finalValue={r.finalValue}
-                      color={r.color}
-                      isBaseline={idx === 0}
-                      delta={idx > 0 && baselineResult ? r.finalValue - baselineResult.finalValue : null}
-                      deltaPct={
-                        idx > 0 && baselineResult && baselineResult.finalValue > 0
-                          ? ((r.finalValue - baselineResult.finalValue) / baselineResult.finalValue) * 100
-                          : null
+                <div
+                  className={`grid gap-4 ${
+                    projectionData.results.length === 1
+                      ? "grid-cols-1"
+                      : projectionData.results.length === 2
+                      ? "grid-cols-2"
+                      : "grid-cols-3"
+                  }`}
+                >
+                  {projectionData.results.map((r, idx) => {
+                    // Pension return rate for this card:
+                    // If override is set and valid, use it as a differential applied to baseline
+                    // Otherwise use each product's own horizon-based avg
+                    let pensionRate: number | null = null;
+                    if (validPensionYears !== null) {
+                      if (
+                        pensionReturnOverrideNum !== null &&
+                        !isNaN(pensionReturnOverrideNum)
+                      ) {
+                        // Override is the differential — baseline uses its own avg,
+                        // others use baseline avg + override
+                        const baseAvg = projectionData.results[0].avgAnnualReturnHorizon;
+                        pensionRate = idx === 0 ? baseAvg : baseAvg + pensionReturnOverrideNum;
+                      } else {
+                        pensionRate = r.avgAnnualReturnHorizon;
                       }
-                    />
-                  ))}
+                    }
+
+                    return (
+                      <SummaryCard
+                        key={r.productId}
+                        name={r.productName}
+                        finalValue={r.finalValue}
+                        color={r.color}
+                        isBaseline={idx === 0}
+                        delta={
+                          idx > 0 && baselineResult
+                            ? r.finalValue - baselineResult.finalValue
+                            : null
+                        }
+                        deltaPct={
+                          idx > 0 &&
+                          baselineResult &&
+                          baselineResult.finalValue > 0
+                            ? ((r.finalValue - baselineResult.finalValue) /
+                                baselineResult.finalValue) *
+                              100
+                            : null
+                        }
+                        pensionYears={validPensionYears}
+                        pensionReturnPct={pensionRate}
+                        initialCapital={initialCapital}
+                        annualContribution={annualContribution}
+                        baselinePensionValue={
+                          validPensionYears !== null && idx > 0 && projectionData.results[0]
+                            ? projectWithRate(
+                                projectionData.results[0].finalValue,
+                                annualContribution,
+                                projectionData.results[0].avgAnnualReturnHorizon,
+                                validPensionYears
+                              )
+                            : null
+                        }
+                      />
+                    );
+                  })}
                 </div>
               )}
 
@@ -328,9 +590,12 @@ export default function Calculator() {
               <div className="bg-card rounded-xl border border-border p-5 shadow-sm">
                 <div className="flex items-center justify-between mb-6">
                   <div>
-                    <h2 className="text-base font-semibold text-foreground">Fremskrevet opsparing</h2>
+                    <h2 className="text-base font-semibold text-foreground">
+                      Fremskrevet opsparing
+                    </h2>
                     <p className="text-xs text-muted-foreground mt-0.5">
-                      Baseret på historiske afkast (ekskl. {new Date().getFullYear()}) fremskrevet {horizonYears} år
+                      Baseret på historiske afkast (ekskl.{" "}
+                      {new Date().getFullYear()}) fremskrevet {horizonYears} år
                     </p>
                   </div>
                   {isProjecting && (
@@ -339,11 +604,18 @@ export default function Calculator() {
                 </div>
 
                 <ResponsiveContainer width="100%" height={320}>
-                  <LineChart data={chartData} margin={{ top: 5, right: 20, left: 10, bottom: 5 }}>
-                    <CartesianGrid strokeDasharray="3 3" stroke="oklch(0.88 0.008 240)" strokeOpacity={0.6} />
+                  <LineChart
+                    data={chartData}
+                    margin={{ top: 5, right: 20, left: 10, bottom: 5 }}
+                  >
+                    <CartesianGrid
+                      strokeDasharray="3 3"
+                      stroke="oklch(0.88 0.008 240)"
+                      strokeOpacity={0.6}
+                    />
                     <XAxis
                       dataKey="year"
-                      tickFormatter={(v) => v === 0 ? "Start" : `År ${v}`}
+                      tickFormatter={(v) => (v === 0 ? "Start" : `År ${v}`)}
                       tick={{ fontSize: 11, fill: "oklch(0.52 0.018 240)" }}
                       axisLine={{ stroke: "oklch(0.88 0.008 240)" }}
                       tickLine={false}
@@ -354,11 +626,14 @@ export default function Calculator() {
                       axisLine={false}
                       tickLine={false}
                       width={80}
+                      domain={yAxisDomain ?? ["auto", "auto"]}
                     />
                     <Tooltip content={<CustomTooltip />} />
                     <Legend
                       wrapperStyle={{ fontSize: "12px", paddingTop: "16px" }}
-                      formatter={(value) => <span style={{ color: "oklch(0.52 0.018 240)" }}>{value}</span>}
+                      formatter={(value) => (
+                        <span style={{ color: "oklch(0.52 0.018 240)" }}>{value}</span>
+                      )}
                     />
                     {projectionData?.results.map((r) => (
                       <Line
@@ -368,7 +643,12 @@ export default function Calculator() {
                         stroke={r.color}
                         strokeWidth={2.5}
                         dot={{ r: 3, fill: r.color, strokeWidth: 0 }}
-                        activeDot={{ r: 5, fill: r.color, strokeWidth: 2, stroke: "white" }}
+                        activeDot={{
+                          r: 5,
+                          fill: r.color,
+                          strokeWidth: 2,
+                          stroke: "white",
+                        }}
                       />
                     ))}
                   </LineChart>
@@ -408,22 +688,41 @@ export default function Calculator() {
                     <table className="w-full text-sm">
                       <thead>
                         <tr className="border-b border-border">
-                          <th className="text-left py-2 pr-4 font-medium text-muted-foreground text-xs whitespace-nowrap">Produkt</th>
+                          <th className="text-left py-2 pr-4 font-medium text-muted-foreground text-xs whitespace-nowrap">
+                            Produkt
+                          </th>
                           {tableYears.map((y) => (
-                            <th key={y} className="text-right py-2 px-2 font-medium text-muted-foreground text-xs whitespace-nowrap">{y}</th>
+                            <th
+                              key={y}
+                              className="text-right py-2 px-2 font-medium text-muted-foreground text-xs whitespace-nowrap"
+                            >
+                              {y}
+                            </th>
                           ))}
-                          <th className="text-right py-2 pl-4 font-medium text-muted-foreground text-xs whitespace-nowrap">Ø/år*</th>
+                          <th className="text-right py-2 pl-4 font-medium text-muted-foreground text-xs whitespace-nowrap">
+                            Ø/{horizonYears}år*
+                          </th>
                         </tr>
                       </thead>
                       <tbody>
                         {projectionData.results.map((r) => {
-                          const returnMap = Object.fromEntries(r.historicalReturns.map((h) => [h.year, h]));
+                          const returnMap = Object.fromEntries(
+                            r.historicalReturns.map((h) => [h.year, h])
+                          );
                           return (
-                            <tr key={r.productId} className="border-b border-border/50 last:border-0">
+                            <tr
+                              key={r.productId}
+                              className="border-b border-border/50 last:border-0"
+                            >
                               <td className="py-2.5 pr-4 whitespace-nowrap">
                                 <div className="flex items-center gap-2">
-                                  <div className="w-2.5 h-2.5 rounded-full flex-shrink-0" style={{ backgroundColor: r.color }} />
-                                  <span className="font-medium text-foreground">{r.productName}</span>
+                                  <div
+                                    className="w-2.5 h-2.5 rounded-full flex-shrink-0"
+                                    style={{ backgroundColor: r.color }}
+                                  />
+                                  <span className="font-medium text-foreground">
+                                    {r.productName}
+                                  </span>
                                 </div>
                               </td>
                               {tableYears.map((y) => {
@@ -431,11 +730,25 @@ export default function Calculator() {
                                 const val = entry?.returnPct;
                                 const isIncomplete = entry?.isIncomplete;
                                 return (
-                                  <td key={y} className="text-right py-2.5 px-2 tabular-nums whitespace-nowrap">
+                                  <td
+                                    key={y}
+                                    className="text-right py-2.5 px-2 tabular-nums whitespace-nowrap"
+                                  >
                                     {val !== undefined ? (
-                                      <span className={`font-medium ${isIncomplete ? "text-muted-foreground/60 italic" : val >= 0 ? "text-emerald-600" : "text-red-500"}`}>
-                                        {val >= 0 ? "+" : ""}{val.toFixed(1)}%
-                                        {isIncomplete && <span className="text-xs ml-0.5">*</span>}
+                                      <span
+                                        className={`font-medium ${
+                                          isIncomplete
+                                            ? "text-muted-foreground/60 italic"
+                                            : val >= 0
+                                            ? "text-emerald-600"
+                                            : "text-red-500"
+                                        }`}
+                                      >
+                                        {val >= 0 ? "+" : ""}
+                                        {val.toFixed(1)}%
+                                        {isIncomplete && (
+                                          <span className="text-xs ml-0.5">*</span>
+                                        )}
                                       </span>
                                     ) : (
                                       <span className="text-muted-foreground/40">–</span>
@@ -444,8 +757,15 @@ export default function Calculator() {
                                 );
                               })}
                               <td className="text-right py-2.5 pl-4 tabular-nums whitespace-nowrap">
-                                <span className={`font-semibold ${r.avgAnnualReturn >= 0 ? "text-emerald-600" : "text-red-500"}`}>
-                                  {r.avgAnnualReturn >= 0 ? "+" : ""}{r.avgAnnualReturn.toFixed(1)}%
+                                <span
+                                  className={`font-semibold ${
+                                    r.avgAnnualReturnHorizon >= 0
+                                      ? "text-emerald-600"
+                                      : "text-red-500"
+                                  }`}
+                                >
+                                  {r.avgAnnualReturnHorizon >= 0 ? "+" : ""}
+                                  {r.avgAnnualReturnHorizon.toFixed(1)}%
                                 </span>
                               </td>
                             </tr>
@@ -455,7 +775,9 @@ export default function Calculator() {
                     </table>
                   </div>
                   <p className="text-xs text-muted-foreground mt-3">
-                    * Gennemsnit og fremskrivning er baseret på afkast t.o.m. {new Date().getFullYear() - 1}. Indeværende år ({new Date().getFullYear()}) vises kun til orientering.
+                    * Ø/{horizonYears}år er gennemsnittet for de seneste {horizonYears} år
+                    (ekskl. {new Date().getFullYear()}). Indeværende år vises kun til
+                    orientering.
                   </p>
                 </div>
               )}
@@ -464,8 +786,10 @@ export default function Calculator() {
               <div className="flex items-start gap-2.5 p-4 rounded-lg bg-muted/50 border border-border/50">
                 <Info className="w-4 h-4 text-muted-foreground flex-shrink-0 mt-0.5" />
                 <p className="text-xs text-muted-foreground leading-relaxed">
-                  <strong className="text-foreground/70">Bemærk:</strong> Fremskrivningen er baseret på historiske afkast og er ikke en garanti for fremtidige afkast.
-                  Beregningen antager, at de historiske afkast gentages i den valgte periode. Kun til intern rådgivningsbrug.
+                  <strong className="text-foreground/70">Bemærk:</strong> Fremskrivningen er
+                  baseret på historiske afkast og er ikke en garanti for fremtidige afkast.
+                  Beregningen antager, at de historiske afkast gentages i den valgte periode.
+                  Kun til intern rådgivningsbrug.
                 </p>
               </div>
             </>

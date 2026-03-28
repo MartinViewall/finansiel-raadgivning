@@ -172,21 +172,26 @@ export const appRouter = router({
           const allSorted = product.returns.sort((a, b) => a.year - b.year);
 
           // Returns used for projection: exclude current/incomplete year
-          const projectionReturns = allSorted
+           const projectionReturns = allSorted
             .filter((r) => r.year < EXCLUDE_FROM_YEAR)
             .map((r) => parseFloat(String(r.returnPct)));
-
           const projection = projectPortfolio(
             input.initialCapital,
             input.annualContribution,
             projectionReturns,
             input.horizonYears
           );
-
+          // Full-period average (all years excl. current)
           const avgReturn =
             projectionReturns.length > 0
               ? projectionReturns.reduce((s, r) => s + r, 0) / projectionReturns.length
               : 0;
+          // Horizon-based average: last N years matching the selected horizon
+          const horizonReturns = projectionReturns.slice(-input.horizonYears);
+          const avgReturnHorizon =
+            horizonReturns.length > 0
+              ? horizonReturns.reduce((s, r) => s + r, 0) / horizonReturns.length
+              : avgReturn;
 
           return {
             productId: product.id,
@@ -195,6 +200,7 @@ export const appRouter = router({
             projection,
             finalValue: projection[projection.length - 1]?.value ?? input.initialCapital,
             avgAnnualReturn: Math.round(avgReturn * 100) / 100,
+            avgAnnualReturnHorizon: Math.round(avgReturnHorizon * 100) / 100,
             // All historical returns for the table (including current year for display)
             historicalReturns: allSorted.map((r) => ({
               year: r.year,

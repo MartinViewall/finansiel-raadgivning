@@ -39,3 +39,11 @@
 - [x] År-fra/til filter på historisk afkasttabel i beregneren
 - [x] Vis fulde produktnavne i produktvælger (ingen afskæring)
 - [x] Reducer unødvendig luft i venstre/højre margen på beregnerside
+
+## Fase 4 – Graf og pensionsfremskrivning
+
+- [x] Y-akse starter ved laveste datapunkt minus 10% buffer (ikke 0)
+- [x] Ø/år* beregnes for de seneste X år svarende til valgt tidshorisont (ikke hele perioden)
+- [x] Venstre panel: tilføj "År til pension" og "Afkastforskel %" (forududfyldt med Ø/år-forskel, kan overskrives)
+- [x] Boblerne over grafen viser ekstra linje: "Ved pension om X år: +Y kr." baseret på pensionsparametrene
+- [x] Grafen ændres ikke – kun boblerne udvides
