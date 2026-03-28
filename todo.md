@@ -107,3 +107,11 @@
 - [x] Frontend: Modal med felter til klientnavn, rådgivernavn og valg af sektioner (Omkostningsberegner / Afkastberegner / Begge)
 - [x] Frontend: PDF downloades direkte i browseren ved klik
 - [x] Test: Verificer at PDF genereres korrekt med begge sektioner
+
+## Fase 11 – Bevar state ved navigation
+
+- [x] Udvid CalculatorContext til at gemme alle Afkastberegner-inputs: initialCapital, annualContribution, horizonYears, selectedProductIds, pensionYearsRaw, pensionReturnOverride, tableYearFrom, tableYearTo
+- [x] Udvid CalculatorContext til at gemme alle Omkostningsberegner-inputs: depot, annualContribution, yearsToPension, costTodayPct, costNewPct
+- [x] Afkastberegneren initialiserer sin state fra context (ikke hardkodede defaults)
+- [x] Omkostningsberegneren initialiserer sin state fra context (ikke hardkodede defaults)
+- [x] Begge sider skriver ændringer løbende til context så state bevares ved navigation

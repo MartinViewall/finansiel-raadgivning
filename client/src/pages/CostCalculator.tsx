@@ -266,14 +266,21 @@ function ResultRow({
 export default function CostCalculator() {
   const ctx = useCalculatorContext();
 
-  // Initialise from shared context (values set by Afkastberegneren)
-  const [depot, setDepot] = useState(ctx.depot);
-  const [annualContribution, setAnnualContribution] = useState(ctx.annualContribution);
-  const [yearsToPension, setYearsToPension] = useState(ctx.horizonYears);
-  const [costTodayRaw, setCostTodayRaw] = useState("1,5");
-  const [costNewRaw, setCostNewRaw] = useState("0,75");
+  // All state initialised from context so values survive navigation (unmount/remount)
+  const [depot, setDepot] = useState(() => ctx.costDepot);
+  const [annualContribution, setAnnualContribution] = useState(() => ctx.costAnnualContribution);
+  const [yearsToPension, setYearsToPension] = useState(() => ctx.costYearsToPension);
+  const [costTodayRaw, setCostTodayRaw] = useState(() => ctx.costTodayRaw);
+  const [costNewRaw, setCostNewRaw] = useState(() => ctx.costNewRaw);
   const [tableOpen, setTableOpen] = useState(false);
   const [pdfOpen, setPdfOpen] = useState(false);
+
+  // Write back to context on every change
+  const handleSetDepot = (v: number) => { setDepot(v); ctx.setCostDepot(v); };
+  const handleSetAnnualContribution = (v: number) => { setAnnualContribution(v); ctx.setCostAnnualContribution(v); };
+  const handleSetYearsToPension = (v: number) => { setYearsToPension(v); ctx.setCostYearsToPension(v); };
+  const handleSetCostTodayRaw = (v: string) => { setCostTodayRaw(v); ctx.setCostTodayRaw(v); };
+  const handleSetCostNewRaw = (v: string) => { setCostNewRaw(v); ctx.setCostNewRaw(v); };
 
   // Track whether values were transferred from the return calculator
   const [transferred, setTransferred] = useState(
@@ -282,9 +289,9 @@ export default function CostCalculator() {
 
   // Allow user to pull latest values from context on demand
   const handleTransfer = () => {
-    setDepot(ctx.depot);
-    setAnnualContribution(ctx.annualContribution);
-    setYearsToPension(ctx.horizonYears);
+    handleSetDepot(ctx.depot);
+    handleSetAnnualContribution(ctx.annualContribution);
+    handleSetYearsToPension(ctx.horizonYears);
     setTransferred(true);
   };
 
@@ -402,21 +409,21 @@ export default function CostCalculator() {
             <NumberInput
               label="År til pension"
               value={yearsToPension}
-              onChange={setYearsToPension}
+              onChange={handleSetYearsToPension}
               suffix="år"
               min={1}
             />
             <NumberInput
               label="Depot"
               value={depot}
-              onChange={setDepot}
+              onChange={handleSetDepot}
               suffix="kr."
               hint="Nuværende depotstørrelse"
             />
             <NumberInput
               label="Årlig indbetaling"
               value={annualContribution}
-              onChange={setAnnualContribution}
+              onChange={handleSetAnnualContribution}
               suffix="kr."
             />
           </div>
@@ -429,7 +436,7 @@ export default function CostCalculator() {
               <DecimalInput
                 label="Omkostning i dag"
                 value={costTodayRaw}
-                onChange={setCostTodayRaw}
+                onChange={handleSetCostTodayRaw}
                 suffix="%"
                 placeholder="f.eks. 1,5"
                 hint="Samlet årlig omkostning (ÅOP) i dag"
@@ -437,7 +444,7 @@ export default function CostCalculator() {
               <DecimalInput
                 label="Omkostning ny"
                 value={costNewRaw}
-                onChange={setCostNewRaw}
+                onChange={handleSetCostNewRaw}
                 suffix="%"
                 placeholder="f.eks. 0,75"
                 hint="Samlet årlig omkostning (ÅOP) fremadrettet"

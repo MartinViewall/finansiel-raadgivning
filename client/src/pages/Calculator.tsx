@@ -302,24 +302,25 @@ function DecimalInput({
 export default function Calculator() {
   const ctx = useCalculatorContext();
 
-  const [initialCapital, setInitialCapital] = useState(ctx.depot);
-  const [annualContribution, setAnnualContribution] = useState(ctx.annualContribution);
-  const [horizonYears, setHorizonYears] = useState(ctx.horizonYears);
+  // All state is initialised from context so it survives navigation (unmount/remount)
+  const [initialCapital, setInitialCapital] = useState(() => ctx.depot);
+  const [annualContribution, setAnnualContribution] = useState(() => ctx.annualContribution);
+  const [horizonYears, setHorizonYears] = useState(() => ctx.horizonYears);
+  const [selectedProductIds, setSelectedProductIds] = useState<number[]>(() => ctx.selectedProductIds);
+  const [tableYearFrom, setTableYearFrom] = useState<number>(() => ctx.tableYearFrom);
+  const [tableYearTo, setTableYearTo] = useState<number>(() => ctx.tableYearTo);
+  const [pensionYearsRaw, setPensionYearsRaw] = useState<string>(() => ctx.pensionYearsRaw);
+  const [pensionReturnOverride, setPensionReturnOverride] = useState<string>(() => ctx.pensionReturnOverride);
 
-  // Keep shared context in sync so CostCalculator can pick up the latest values
+  // Write back to context on every change so values persist when navigating away
   const handleSetInitialCapital = (v: number) => { setInitialCapital(v); ctx.setDepot(v); };
   const handleSetAnnualContribution = (v: number) => { setAnnualContribution(v); ctx.setAnnualContribution(v); };
   const handleSetHorizonYears = (v: number) => { setHorizonYears(v); ctx.setHorizonYears(v); };
-  const [selectedProductIds, setSelectedProductIds] = useState<number[]>([]);
-
-  // Year range filter for the historical table
-  const [tableYearFrom, setTableYearFrom] = useState<number>(2010);
-  const [tableYearTo, setTableYearTo] = useState<number>(new Date().getFullYear() - 1);
-
-  // Pension projection parameters
-  const [pensionYearsRaw, setPensionYearsRaw] = useState<string>("");
-  // Manual override for return rate — empty means "use auto from data"
-  const [pensionReturnOverride, setPensionReturnOverride] = useState<string>("");
+  const handleSetSelectedProductIds = (v: number[]) => { setSelectedProductIds(v); ctx.setSelectedProductIds(v); };
+  const handleSetTableYearFrom = (v: number) => { setTableYearFrom(v); ctx.setTableYearFrom(v); };
+  const handleSetTableYearTo = (v: number) => { setTableYearTo(v); ctx.setTableYearTo(v); };
+  const handleSetPensionYearsRaw = (v: string) => { setPensionYearsRaw(v); ctx.setPensionYearsRaw(v); };
+  const handleSetPensionReturnOverride = (v: string) => { setPensionReturnOverride(v); ctx.setPensionReturnOverride(v); };
 
   const canProject = selectedProductIds.length >= 1;
 
@@ -335,11 +336,13 @@ export default function Calculator() {
     );
 
   const toggleProduct = (id: number) => {
-    setSelectedProductIds((prev) => {
-      if (prev.includes(id)) return prev.filter((x) => x !== id);
-      if (prev.length >= 3) return prev;
-      return [...prev, id];
-    });
+    handleSetSelectedProductIds(
+      selectedProductIds.includes(id)
+        ? selectedProductIds.filter((x) => x !== id)
+        : selectedProductIds.length >= 3
+        ? selectedProductIds
+        : [...selectedProductIds, id]
+    );
   };
 
   // Derived pension parameters
@@ -520,7 +523,7 @@ export default function Calculator() {
                 max={60}
                 value={pensionYearsRaw}
                 placeholder="F.eks. 22"
-                onChange={(e) => setPensionYearsRaw(e.target.value)}
+                onChange={(e) => handleSetPensionYearsRaw(e.target.value)}
                 className="tabular-nums"
               />
             </div>
@@ -536,7 +539,7 @@ export default function Calculator() {
                   : "Lad stå tom for at bruge Ø/år automatisk"
               }
               value={pensionReturnOverride}
-              onChange={setPensionReturnOverride}
+              onChange={handleSetPensionReturnOverride}
               suffix="%"
               placeholder="F.eks. 2,5"
             />
@@ -724,7 +727,7 @@ export default function Calculator() {
                         min={2000}
                         max={tableYearTo}
                         value={tableYearFrom}
-                        onChange={(e) => setTableYearFrom(Number(e.target.value))}
+                        onChange={(e) => handleSetTableYearFrom(Number(e.target.value))}
                         className="w-16 h-7 text-xs text-center rounded-md border border-border bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-ring tabular-nums"
                       />
                       <span className="text-xs text-muted-foreground">til</span>
@@ -733,7 +736,7 @@ export default function Calculator() {
                         min={tableYearFrom}
                         max={new Date().getFullYear()}
                         value={tableYearTo}
-                        onChange={(e) => setTableYearTo(Number(e.target.value))}
+                        onChange={(e) => handleSetTableYearTo(Number(e.target.value))}
                         className="w-16 h-7 text-xs text-center rounded-md border border-border bg-background text-foreground focus:outline-none focus:ring-1 focus:ring-ring tabular-nums"
                       />
                     </div>
