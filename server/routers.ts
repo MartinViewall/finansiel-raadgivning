@@ -14,7 +14,8 @@ import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router } from "./_core/trpc";
 
-// ─── Projection Engine ────────────────────────────────────────────────────────
+// -----------------------------------------------------------------------
+
 /**
  * Projects future portfolio value using actual historical annual returns.
  *  - initialCapital: starting amount in DKK
@@ -44,8 +45,7 @@ function projectPortfolio(
   return points;
 }
 
-// ─── App Router ───────────────────────────────────────────────────────────────
-
+// -----------------------------------------------------------------------
 export const appRouter = router({
   system: systemRouter,
 
@@ -58,7 +58,7 @@ export const appRouter = router({
     }),
   }),
 
-  // ─── Password Gate ─────────────────────────────────────────────────────────
+  // -----------------------------------------------------------------------
   passwordGate: router({
     verify: publicProcedure
       .input(z.object({ password: z.string() }))
@@ -71,7 +71,7 @@ export const appRouter = router({
       }),
   }),
 
-  // ─── Products ──────────────────────────────────────────────────────────────
+  // -----------------------------------------------------------------------
   products: router({
     list: publicProcedure.query(async () => {
       return getProductsWithReturns();
@@ -114,7 +114,7 @@ export const appRouter = router({
       }),
   }),
 
-  // ─── Annual Returns ────────────────────────────────────────────────────────
+  // -----------------------------------------------------------------------
   returns: router({
     upsert: publicProcedure
       .input(
@@ -141,7 +141,7 @@ export const appRouter = router({
       }),
   }),
 
-  // ─── Calculator ────────────────────────────────────────────────────────────
+  // -----------------------------------------------------------------------
   calculator: router({
     project: publicProcedure
       .input(

@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useRef, useCallback } from "react";
 import { trpc } from "@/lib/trpc";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, ChevronDown, ChevronUp, TrendingUp, TrendingDown } from "lucide-react";
+import { Plus, Pencil, Trash2, ChevronDown, ChevronUp, TrendingUp, TrendingDown, Upload, FileSpreadsheet, CheckCircle2, AlertCircle, X } from "lucide-react";
 
 const PRESET_COLORS = [
   "#1e3a5f", "#c9a84c", "#2e7d52", "#c0392b", "#7b3fa0",
@@ -42,6 +42,207 @@ type ProductWithReturns = {
   returns: { id: number; productId: number; year: number; returnPct: string; createdAt: Date }[];
 };
 
+type UploadSummary = {
+  productsUpdated: number;
+  productsCreated: number;
+  returnsUpdated: number;
+  returnsCreated: number;
+  errors: string[];
+  yearColumns: number[];
+};
+
+// -----------------------------------------------------------------------
+// Excel Upload Panel
+// -----------------------------------------------------------------------
+function ExcelUploadPanel({ onSuccess }: { onSuccess: () => void }) {
+  const [isDragging, setIsDragging] = useState(false);
+  const [isUploading, setIsUploading] = useState(false);
+  const [summary, setSummary] = useState<UploadSummary | null>(null);
+  const [uploadError, setUploadError] = useState<string | null>(null);
+  const fileInputRef = useRef<HTMLInputElement>(null);
+
+  const handleFile = useCallback(async (file: File) => {
+    if (!file.name.endsWith(".xlsx") && !file.name.endsWith(".xls")) {
+      setUploadError("Kun Excel-filer (.xlsx eller .xls) er understøttet");
+      return;
+    }
+    setIsUploading(true);
+    setSummary(null);
+    setUploadError(null);
+
+    try {
+      const formData = new FormData();
+      formData.append("file", file);
+
+      const response = await fetch("/api/upload-excel", {
+        method: "POST",
+        body: formData,
+      });
+
+      const data = await response.json();
+
+      if (!response.ok || !data.success) {
+        setUploadError(data.error ?? "Ukendt fejl under upload");
+        return;
+      }
+
+      setSummary(data.summary);
+      onSuccess();
+      toast.success("Excel-fil importeret succesfuldt");
+    } catch (err) {
+      setUploadError(`Netværksfejl: ${err instanceof Error ? err.message : String(err)}`);
+    } finally {
+      setIsUploading(false);
+    }
+  }, [onSuccess]);
+
+  const handleDrop = useCallback((e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(false);
+    const file = e.dataTransfer.files[0];
+    if (file) handleFile(file);
+  }, [handleFile]);
+
+  const handleDragOver = (e: React.DragEvent) => {
+    e.preventDefault();
+    setIsDragging(true);
+  };
+
+  const handleDragLeave = () => setIsDragging(false);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const file = e.target.files?.[0];
+    if (file) handleFile(file);
+    // Reset input so same file can be re-uploaded
+    e.target.value = "";
+  };
+
+  return (
+    <div className="bg-card rounded-xl border border-border shadow-sm overflow-hidden mb-8">
+      <div className="px-5 py-4 border-b border-border flex items-center gap-2">
+        <FileSpreadsheet className="w-4 h-4 text-muted-foreground" />
+        <h2 className="text-sm font-semibold text-foreground">Importer fra Excel</h2>
+        <span className="text-xs text-muted-foreground ml-1">— opdater afkastdata fra Return_Yearly fil</span>
+      </div>
+
+      <div className="p-5 space-y-4">
+        {/* Drop zone */}
+        <div
+          onDrop={handleDrop}
+          onDragOver={handleDragOver}
+          onDragLeave={handleDragLeave}
+          onClick={() => !isUploading && fileInputRef.current?.click()}
+          className={`
+            relative border-2 border-dashed rounded-lg p-8 text-center cursor-pointer transition-all
+            ${isDragging
+              ? "border-primary bg-primary/5"
+              : "border-border hover:border-primary/50 hover:bg-muted/30"
+            }
+            ${isUploading ? "pointer-events-none opacity-60" : ""}
+          `}
+        >
+          <input
+            ref={fileInputRef}
+            type="file"
+            accept=".xlsx,.xls"
+            className="hidden"
+            onChange={handleInputChange}
+          />
+          {isUploading ? (
+            <div className="flex flex-col items-center gap-3">
+              <div className="w-8 h-8 border-2 border-primary border-t-transparent rounded-full animate-spin" />
+              <p className="text-sm text-muted-foreground">Behandler fil, vent venligst…</p>
+            </div>
+          ) : (
+            <div className="flex flex-col items-center gap-3">
+              <div className="w-12 h-12 rounded-full bg-muted flex items-center justify-center">
+                <Upload className="w-5 h-5 text-muted-foreground" />
+              </div>
+              <div>
+                <p className="text-sm font-medium text-foreground">
+                  Træk Excel-fil hertil, eller klik for at vælge
+                </p>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Understøtter .xlsx og .xls — maks. 20 MB
+                </p>
+              </div>
+              <Button variant="outline" size="sm" className="gap-2 pointer-events-none">
+                <FileSpreadsheet className="w-3.5 h-3.5" />
+                Vælg fil
+              </Button>
+            </div>
+          )}
+        </div>
+
+        {/* Format hint */}
+        <div className="bg-muted/40 rounded-lg px-4 py-3 text-xs text-muted-foreground space-y-1">
+          <p className="font-medium text-foreground/70">Forventet kolonneformat:</p>
+          <p>
+            <span className="font-mono bg-muted px-1 rounded">NHM_ID</span>,{" "}
+            <span className="font-mono bg-muted px-1 rounded">Name</span>,{" "}
+            <span className="font-mono bg-muted px-1 rounded">Company</span>,{" "}
+            <span className="font-mono bg-muted px-1 rounded">Risk</span>,{" "}
+            <span className="font-mono bg-muted px-1 rounded">YearsToPension</span>,{" "}
+            <span className="font-mono bg-muted px-1 rounded">AOP</span>,{" "}
+            <span className="font-mono bg-muted px-1 rounded">ProductLine</span>,{" "}
+            <span className="font-mono bg-muted px-1 rounded">2006</span>,{" "}
+            <span className="font-mono bg-muted px-1 rounded">2007</span>,{" "}
+            <span className="font-mono bg-muted px-1 rounded">…</span>
+          </p>
+          <p>Eksisterende produkter opdateres (upsert). Nye produkter tilføjes automatisk. Historiske data bevares.</p>
+        </div>
+
+        {/* Error */}
+        {uploadError && (
+          <div className="flex items-start gap-2 bg-destructive/10 border border-destructive/20 rounded-lg px-4 py-3">
+            <AlertCircle className="w-4 h-4 text-destructive flex-shrink-0 mt-0.5" />
+            <div className="flex-1">
+              <p className="text-sm font-medium text-destructive">Import fejlede</p>
+              <p className="text-xs text-destructive/80 mt-0.5">{uploadError}</p>
+            </div>
+            <button onClick={() => setUploadError(null)} className="text-destructive/60 hover:text-destructive">
+              <X className="w-3.5 h-3.5" />
+            </button>
+          </div>
+        )}
+
+        {/* Success summary */}
+        {summary && (
+          <div className="bg-emerald-500/10 border border-emerald-500/20 rounded-lg px-4 py-3 space-y-2">
+            <div className="flex items-center gap-2">
+              <CheckCircle2 className="w-4 h-4 text-emerald-600 flex-shrink-0" />
+              <p className="text-sm font-medium text-emerald-700 dark:text-emerald-400">Import gennemført</p>
+            </div>
+            <div className="grid grid-cols-2 gap-x-6 gap-y-1 text-xs text-muted-foreground ml-6">
+              <span>Produkter opdateret: <strong className="text-foreground">{summary.productsUpdated}</strong></span>
+              <span>Produkter oprettet: <strong className="text-foreground">{summary.productsCreated}</strong></span>
+              <span>Afkast opdateret: <strong className="text-foreground">{summary.returnsUpdated}</strong></span>
+              <span>Afkast tilføjet: <strong className="text-foreground">{summary.returnsCreated}</strong></span>
+            </div>
+            {summary.yearColumns.length > 0 && (
+              <p className="text-xs text-muted-foreground ml-6">
+                Årskolonner behandlet: {summary.yearColumns[0]}–{summary.yearColumns[summary.yearColumns.length - 1]}
+              </p>
+            )}
+            {summary.errors.length > 0 && (
+              <div className="ml-6 mt-1">
+                <p className="text-xs font-medium text-amber-600">Advarsler ({summary.errors.length}):</p>
+                <ul className="text-xs text-amber-600/80 mt-0.5 space-y-0.5">
+                  {summary.errors.slice(0, 5).map((e, i) => <li key={i}>• {e}</li>)}
+                  {summary.errors.length > 5 && <li>…og {summary.errors.length - 5} mere</li>}
+                </ul>
+              </div>
+            )}
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
+
+// -----------------------------------------------------------------------
+// Return row (inline edit)
+// -----------------------------------------------------------------------
 function ReturnRow({
   productId,
   year,
@@ -196,6 +397,9 @@ function AddReturnRow({ productId, existingYears, onAdded }: { productId: number
   );
 }
 
+// -----------------------------------------------------------------------
+// Product card
+// -----------------------------------------------------------------------
 function ProductCard({ product, onEdit, onDelete }: { product: ProductWithReturns; onEdit: () => void; onDelete: () => void }) {
   const [expanded, setExpanded] = useState(false);
   const sortedReturns = [...product.returns].sort((a, b) => a.year - b.year);
@@ -291,8 +495,11 @@ function ProductCard({ product, onEdit, onDelete }: { product: ProductWithReturn
   );
 }
 
+// -----------------------------------------------------------------------
+// Main page
+// -----------------------------------------------------------------------
 export default function Products() {
-  const { data: products, isLoading } = trpc.products.list.useQuery();
+  const { data: products, isLoading, refetch } = trpc.products.list.useQuery();
   const utils = trpc.useUtils();
 
   const [showCreateDialog, setShowCreateDialog] = useState(false);
@@ -362,6 +569,11 @@ export default function Products() {
   const isDialogOpen = showCreateDialog || !!editProduct;
   const isSaving = createMutation.isPending || updateMutation.isPending;
 
+  const handleUploadSuccess = () => {
+    utils.products.list.invalidate();
+    utils.products.listMeta.invalidate();
+  };
+
   return (
     <div className="max-w-3xl mx-auto">
       {/* Header */}
@@ -377,6 +589,9 @@ export default function Products() {
           Nyt produkt
         </Button>
       </div>
+
+      {/* Excel upload panel */}
+      <ExcelUploadPanel onSuccess={handleUploadSuccess} />
 
       {/* Product list */}
       {isLoading ? (

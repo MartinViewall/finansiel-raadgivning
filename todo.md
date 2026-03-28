@@ -58,3 +58,14 @@
 - [x] Graf bruger faktiske årsafkast år for år (cyklisk gentagelse ved fremskrivning ud over historik)
 - [x] Boblernes slutværdi beregnes også med faktiske årsafkast (ikke gennemsnit)
 - [x] Ø/år* i tabel og pensionsfremskrivning i boblerne forbliver gennemsnitsbaseret
+
+## Fase 7 – Excel-upload via UI
+
+- [x] Backend: Express multipart upload endpoint `/api/upload-excel` der modtager .xlsx-fil
+- [x] Backend: Parse Excel med exceljs npm-pakke (samme logik som import_excel.py)
+- [x] Backend: Upsert produkter og afkast — opdater eksisterende, tilføj nye, bevar uberørte
+- [x] Backend: Returnér importresultat (antal opdaterede/nye produkter, nye afkastpunkter, fejl)
+- [x] Frontend: Upload-sektion på Produktsiden med drag-and-drop eller fil-vælger
+- [x] Frontend: Vis importresultat-opsummering efter upload (tabel med ændringer)
+- [x] Frontend: Fejlhåndtering — vis tydelig besked hvis fil har forkert format
+- [x] Test: Verificer at upsert ikke sletter eksisterende data der ikke er i den nye fil
