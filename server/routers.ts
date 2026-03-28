@@ -15,29 +15,29 @@ import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, router } from "./_core/trpc";
 
 // ─── Projection Engine ────────────────────────────────────────────────────────
-
 /**
- * Projects future portfolio value given:
+ * Projects future portfolio value using actual historical annual returns.
  *  - initialCapital: starting amount in DKK
- *  - annualContribution: yearly deposit in DKK
- *  - avgAnnualReturnPct: average annual return percentage to apply each year
+ *  - annualContribution: yearly deposit added at the START of each year
+ *  - historicalReturns: array of annual return percentages in chronological order
+ *    (e.g. [11.7, -10.8, 9.2]). Applied sequentially; repeats cyclically if horizon
+ *    exceeds the available history.
  *  - horizonYears: number of years to project forward
  *
- * Uses the average return as a fixed compound rate each year.
- * Contribution is added at the start of each year, then the return is applied.
- * Returns an array of { year, value } objects starting from year 0 (initial).
+ * Returns an array of { year, value } objects starting from year 0 (initial capital).
  */
 function projectPortfolio(
   initialCapital: number,
   annualContribution: number,
-  avgAnnualReturnPct: number,
+  historicalReturns: number[],
   horizonYears: number
 ): { year: number; value: number }[] {
   const points: { year: number; value: number }[] = [{ year: 0, value: initialCapital }];
   let value = initialCapital;
-  const rate = avgAnnualReturnPct / 100;
+  const n = historicalReturns.length;
   for (let i = 0; i < horizonYears; i++) {
-    // Add contribution at start of year, then apply fixed average return
+    const rate = n > 0 ? (historicalReturns[i % n] ?? 0) / 100 : 0;
+    // Contribution added at start of year, then actual return applied
     value = (value + annualContribution) * (1 + rate);
     points.push({ year: i + 1, value: Math.round(value) });
   }
@@ -71,17 +71,15 @@ export const appRouter = router({
       }),
   }),
 
-  // ─── Products ─────────────────────────────────────────────────────────────
+  // ─── Products ──────────────────────────────────────────────────────────────
   products: router({
     list: publicProcedure.query(async () => {
       return getProductsWithReturns();
     }),
-
     /** Lightweight list for the cascade selector — no return data, just metadata */
     listMeta: publicProcedure.query(async () => {
       return getAllProducts();
     }),
-
     create: publicProcedure
       .input(
         z.object({
@@ -94,7 +92,6 @@ export const appRouter = router({
         await createProduct(input);
         return { success: true };
       }),
-
     update: publicProcedure
       .input(
         z.object({
@@ -109,7 +106,6 @@ export const appRouter = router({
         await updateProduct(id, data);
         return { success: true };
       }),
-
     delete: publicProcedure
       .input(z.object({ id: z.number().int().positive() }))
       .mutation(async ({ input }) => {
@@ -132,7 +128,6 @@ export const appRouter = router({
         await upsertAnnualReturn(input.productId, input.year, input.returnPct);
         return { success: true };
       }),
-
     delete: publicProcedure
       .input(
         z.object({
@@ -161,35 +156,39 @@ export const appRouter = router({
         const allProducts = await getProductsWithReturns();
         const selected = allProducts.filter((p) => input.productIds.includes(p.id));
 
-        // Current year — exclude incomplete years (2026 and beyond) from projection engine
+        // Exclude the current incomplete year (2026+) from projection data
         const CURRENT_YEAR = new Date().getFullYear();
-        const EXCLUDE_FROM_YEAR = CURRENT_YEAR; // exclude current + future incomplete years
 
         const results = selected.map((product) => {
           const allSorted = product.returns.sort((a, b) => a.year - b.year);
 
-          // All returns excluding current/incomplete year
+          // Returns used for projection: exclude current/incomplete year, chronological order
           const projectionReturns = allSorted
-            .filter((r) => r.year < EXCLUDE_FROM_YEAR)
+            .filter((r) => r.year < CURRENT_YEAR)
             .map((r) => parseFloat(String(r.returnPct)));
-          // Full-period average (all years excl. current)
+
+          // For the graph: use the last N years matching the horizon (most recent history)
+          const horizonReturns = projectionReturns.slice(-input.horizonYears);
+
+          // Project using actual yearly returns cyclically
+          const projection = projectPortfolio(
+            input.initialCapital,
+            input.annualContribution,
+            horizonReturns.length > 0 ? horizonReturns : projectionReturns,
+            input.horizonYears
+          );
+
+          // Full-period average (all years excl. current) — for display only
           const avgReturn =
             projectionReturns.length > 0
               ? projectionReturns.reduce((s, r) => s + r, 0) / projectionReturns.length
               : 0;
-          // Horizon-based average: last N years matching the selected horizon
-          const horizonReturns = projectionReturns.slice(-input.horizonYears);
+
+          // Horizon-based average: last N years — used for Ø/år* in table and pension calc
           const avgReturnHorizon =
             horizonReturns.length > 0
               ? horizonReturns.reduce((s, r) => s + r, 0) / horizonReturns.length
               : avgReturn;
-          // Project using the horizon-based average as a fixed compound rate
-          const projection = projectPortfolio(
-            input.initialCapital,
-            input.annualContribution,
-            avgReturnHorizon,
-            input.horizonYears
-          );
 
           return {
             productId: product.id,
@@ -203,7 +202,7 @@ export const appRouter = router({
             historicalReturns: allSorted.map((r) => ({
               year: r.year,
               returnPct: parseFloat(String(r.returnPct)),
-              isIncomplete: r.year >= EXCLUDE_FROM_YEAR,
+              isIncomplete: r.year >= CURRENT_YEAR,
             })),
           };
         });

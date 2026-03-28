@@ -52,3 +52,9 @@
 
 - [x] Fix fremskrivningsmotor: brug horisontbaseret gennemsnitsafkast (Ø/Når) som fast rate fremfor cyklisk gentagelse af historiske år
 - [x] Verificer at graf og slutværdier nu matcher Ø/år*-tallene i tabellen
+
+## Fase 6 – Korrekt grafberegning
+
+- [x] Graf bruger faktiske årsafkast år for år (cyklisk gentagelse ved fremskrivning ud over historik)
+- [x] Boblernes slutværdi beregnes også med faktiske årsafkast (ikke gennemsnit)
+- [x] Ø/år* i tabel og pensionsfremskrivning i boblerne forbliver gennemsnitsbaseret
