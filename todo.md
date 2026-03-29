@@ -144,3 +144,11 @@
 - [x] Opret `docker-compose.yml` med app + MySQL
 - [x] Opret `.env.example` med alle nødvendige miljøvariabler
 - [x] Skriv `DEPLOY.md` med trin-for-trin deploymentguide
+
+## Fase 15 – Sammenklappelige paneler i Afkastberegner
+
+- [x] Flyt Pensionsfremskrivning-boksen til under Produkter i layoutet
+- [x] Tilføj collapse-toggle (ChevronUp/Down) i øverste højre hjørne af "Parametre"-boksen
+- [x] Tilføj collapse-toggle i øverste højre hjørne af "Produkter"-boksen
+- [x] Tilføj collapse-toggle i øverste højre hjørne af "Pensionsfremskrivning"-boksen
+- [x] Bevar collapse-state i CalculatorContext så det huskes ved navigation

@@ -59,6 +59,14 @@ interface CalculatorSharedState {
   setGoalTargetAmount: (v: number) => void;
   setGoalAnnualPayout: (v: number) => void;
   setGoalPayoutYears: (v: number) => void;
+
+  // ── Afkastberegner panel collapse state ─────────────────────────────────────
+  calcParamsOpen: boolean;
+  calcProductsOpen: boolean;
+  calcPensionOpen: boolean;
+  setCalcParamsOpen: (v: boolean) => void;
+  setCalcProductsOpen: (v: boolean) => void;
+  setCalcPensionOpen: (v: boolean) => void;
 }
 
 // ─── Defaults ─────────────────────────────────────────────────────────────────
@@ -79,6 +87,10 @@ const DEFAULTS = {
   costYearsToPension: 5,
   costTodayRaw: "1,5",
   costNewRaw: "0,75",
+  // Afkastberegner panel collapse
+  calcParamsOpen: true,
+  calcProductsOpen: true,
+  calcPensionOpen: true,
   // Målberegner
   goalMode: "lumpsum" as GoalMode,
   goalDepot: 500_000,
@@ -113,6 +125,9 @@ const CalculatorContext = createContext<CalculatorSharedState>({
   setGoalTargetAmount: () => {},
   setGoalAnnualPayout: () => {},
   setGoalPayoutYears: () => {},
+  setCalcParamsOpen: () => {},
+  setCalcProductsOpen: () => {},
+  setCalcPensionOpen: () => {},
 });
 
 // ─── Provider ─────────────────────────────────────────────────────────────────
@@ -134,6 +149,11 @@ export function CalculatorProvider({ children }: { children: React.ReactNode }) 
   const [costYearsToPension, setCostYearsToPension] = useState(DEFAULTS.costYearsToPension);
   const [costTodayRaw, setCostTodayRaw] = useState(DEFAULTS.costTodayRaw);
   const [costNewRaw, setCostNewRaw] = useState(DEFAULTS.costNewRaw);
+
+  // Afkastberegner panel collapse
+  const [calcParamsOpen, setCalcParamsOpen] = useState(true);
+  const [calcProductsOpen, setCalcProductsOpen] = useState(true);
+  const [calcPensionOpen, setCalcPensionOpen] = useState(true);
 
   // Målberegner
   const [goalMode, setGoalMode] = useState<GoalMode>(DEFAULTS.goalMode);
@@ -167,6 +187,9 @@ export function CalculatorProvider({ children }: { children: React.ReactNode }) 
         goalTargetAmount, setGoalTargetAmount,
         goalAnnualPayout, setGoalAnnualPayout,
         goalPayoutYears, setGoalPayoutYears,
+        calcParamsOpen, setCalcParamsOpen,
+        calcProductsOpen, setCalcProductsOpen,
+        calcPensionOpen, setCalcPensionOpen,
       }}
     >
       {children}

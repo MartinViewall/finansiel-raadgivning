@@ -14,7 +14,7 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
-import { TrendingUp, Info, FileDown } from "lucide-react";
+import { TrendingUp, Info, FileDown, ChevronUp, ChevronDown } from "lucide-react";
 import { ProductSelector } from "@/components/ProductSelector";
 import { useCalculatorContext } from "@/contexts/CalculatorContext";
 import PdfReportModal, { GoalData } from "@/components/PdfReportModal";
@@ -403,6 +403,9 @@ export default function Calculator() {
 
   const [pdfOpen, setPdfOpen] = useState(false);
 
+  // Panel collapse state (persisted in context so state survives navigation)
+  const { calcParamsOpen, setCalcParamsOpen, calcProductsOpen, setCalcProductsOpen, calcPensionOpen, setCalcPensionOpen } = ctx;
+
   // Build goalData from context (populated by GoalCalculator) for PDF modal
   const goalDataFromCtx: GoalData | undefined = useMemo(() => {
     const r = parseFloat(ctx.goalReturnRaw.replace(/,/g, ".")) / 100;
@@ -482,101 +485,133 @@ export default function Calculator() {
         {/* ── Left: Inputs ─────────────────────────────────────────────────── */}
         <div className="space-y-5">
           {/* Parameters card */}
-          <div className="bg-card rounded-xl border border-border p-5 space-y-5 shadow-sm">
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-              Parametre
-            </h2>
-
-            <NumberInput
-              label="Nuværende opsparing"
-              value={initialCapital}
-              onChange={handleSetInitialCapital}
-              suffix="kr."
-              hint="Startbeløb / depot"
-            />
-
-            <NumberInput
-              label="Årlig indbetaling"
-              value={annualContribution}
-              onChange={handleSetAnnualContribution}
-              suffix="kr."
-              hint="Indbetaling pr. år"
-            />
-
-            <div className="space-y-3">
-              <div className="flex items-center justify-between">
-                <Label className="text-sm font-medium">Tidshorisont</Label>
-                <span className="text-sm font-semibold tabular-nums text-foreground">
-                  {horizonYears} år
-                </span>
-              </div>
-              <Slider
-                min={1}
-                max={30}
-                step={1}
-                value={[horizonYears]}
-                onValueChange={([v]) => handleSetHorizonYears(v)}
-                className="w-full"
-              />
-              <div className="flex justify-between text-xs text-muted-foreground">
-                <span>1 år</span>
-                <span>30 år</span>
-              </div>
-            </div>
-          </div>
-
-          {/* Pension projection card */}
-          <div className="bg-card rounded-xl border border-border p-5 space-y-4 shadow-sm">
-            <div>
+          {/* ── Parametre (collapsible) ──────────────────────────────────── */}
+          <div className="bg-card rounded-xl border border-border shadow-sm">
+            <button
+              onClick={() => setCalcParamsOpen(!calcParamsOpen)}
+              className="w-full flex items-center justify-between p-5 text-left hover:bg-muted/20 rounded-xl transition-colors"
+            >
               <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
-                Pensionsfremskrivning
+                Parametre
               </h2>
-              <p className="text-xs text-muted-foreground mt-1">
-                Valgfrit — viser pensionsværdi i boblerne
-              </p>
-            </div>
-
-            <div className="space-y-1.5">
-              <Label className="text-sm font-medium">År til pension</Label>
-              <p className="text-xs text-muted-foreground">F.eks. 22 hvis kunden er 45 år</p>
-              <Input
-                type="number"
-                min={1}
-                max={60}
-                value={pensionYearsRaw}
-                placeholder="F.eks. 22"
-                onChange={(e) => handleSetPensionYearsRaw(e.target.value)}
-                className="tabular-nums"
-              />
-            </div>
-
-            <DecimalInput
-              label="Afkastforskel % (valgfri)"
-              hint={
-                projectionData && projectionData.results.length >= 2
-                  ? `Auto: ${(
-                      projectionData.results[1].avgAnnualReturnHorizon -
-                      projectionData.results[0].avgAnnualReturnHorizon
-                    ).toFixed(1).replace(".", ",")}% (seneste ${horizonYears} år)`
-                  : "Lad stå tom for at bruge Ø/år automatisk"
-              }
-              value={pensionReturnOverride}
-              onChange={handleSetPensionReturnOverride}
-              suffix="%"
-              placeholder="F.eks. 2,5"
-            />
+              {calcParamsOpen
+                ? <ChevronUp className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                : <ChevronDown className="h-4 w-4 text-muted-foreground flex-shrink-0" />}
+            </button>
+            {calcParamsOpen && (
+              <div className="px-5 pb-5 space-y-5">
+                <NumberInput
+                  label="Nuværende opsparing"
+                  value={initialCapital}
+                  onChange={handleSetInitialCapital}
+                  suffix="kr."
+                  hint="Startbeløb / depot"
+                />
+                <NumberInput
+                  label="Årlig indbetaling"
+                  value={annualContribution}
+                  onChange={handleSetAnnualContribution}
+                  suffix="kr."
+                  hint="Indbetaling pr. år"
+                />
+                <div className="space-y-3">
+                  <div className="flex items-center justify-between">
+                    <Label className="text-sm font-medium">Tidshorisont</Label>
+                    <span className="text-sm font-semibold tabular-nums text-foreground">
+                      {horizonYears} år
+                    </span>
+                  </div>
+                  <Slider
+                    min={1}
+                    max={30}
+                    step={1}
+                    value={[horizonYears]}
+                    onValueChange={([v]) => handleSetHorizonYears(v)}
+                    className="w-full"
+                  />
+                  <div className="flex justify-between text-xs text-muted-foreground">
+                    <span>1 år</span>
+                    <span>30 år</span>
+                  </div>
+                </div>
+              </div>
+            )}
           </div>
 
-          {/* Product selection card */}
-          <div className="bg-card rounded-xl border border-border p-5 shadow-sm">
-            <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground mb-4">
-              Produkter
-            </h2>
-            <ProductSelector
-              selectedIds={selectedProductIds}
-              onToggle={toggleProduct}
-              maxSelections={3}
-            />
+          {/* ── Produkter (collapsible) ──────────────────────────────────────── */}
+          <div className="bg-card rounded-xl border border-border shadow-sm">
+            <button
+              onClick={() => setCalcProductsOpen(!calcProductsOpen)}
+              className="w-full flex items-center justify-between p-5 text-left hover:bg-muted/20 rounded-xl transition-colors"
+            >
+              <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                Produkter
+              </h2>
+              {calcProductsOpen
+                ? <ChevronUp className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                : <ChevronDown className="h-4 w-4 text-muted-foreground flex-shrink-0" />}
+            </button>
+            {calcProductsOpen && (
+              <div className="px-5 pb-5">
+                <ProductSelector
+                  selectedIds={selectedProductIds}
+                  onToggle={toggleProduct}
+                  maxSelections={3}
+                />
+              </div>
+            )}
+          </div>
+
+          {/* ── Pensionsfremskrivning (collapsible, last) ────────────────────── */}
+          <div className="bg-card rounded-xl border border-border shadow-sm">
+            <button
+              onClick={() => setCalcPensionOpen(!calcPensionOpen)}
+              className="w-full flex items-center justify-between p-5 text-left hover:bg-muted/20 rounded-xl transition-colors"
+            >
+              <div>
+                <h2 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                  Pensionsfremskrivning
+                </h2>
+                <p className="text-xs text-muted-foreground mt-0.5">
+                  Valgfrit — viser pensionsværdi i boblerne
+                </p>
+              </div>
+              {calcPensionOpen
+                ? <ChevronUp className="h-4 w-4 text-muted-foreground flex-shrink-0" />
+                : <ChevronDown className="h-4 w-4 text-muted-foreground flex-shrink-0" />}
+            </button>
+            {calcPensionOpen && (
+              <div className="px-5 pb-5 space-y-4">
+                <div className="space-y-1.5">
+                  <Label className="text-sm font-medium">År til pension</Label>
+                  <p className="text-xs text-muted-foreground">F.eks. 22 hvis kunden er 45 år</p>
+                  <Input
+                    type="number"
+                    min={1}
+                    max={60}
+                    value={pensionYearsRaw}
+                    placeholder="F.eks. 22"
+                    onChange={(e) => handleSetPensionYearsRaw(e.target.value)}
+                    className="tabular-nums"
+                  />
+                </div>
+                <DecimalInput
+                  label="Afkastforskel % (valgfri)"
+                  hint={
+                    projectionData && projectionData.results.length >= 2
+                      ? `Auto: ${
+                          (projectionData.results[1].avgAnnualReturnHorizon -
+                          projectionData.results[0].avgAnnualReturnHorizon)
+                          .toFixed(1).replace(".", ",")}% (seneste ${horizonYears} år)`
+                      : "Lad stå tom for at bruge Ø/år automatisk"
+                  }
+                  value={pensionReturnOverride}
+                  onChange={handleSetPensionReturnOverride}
+                  suffix="%"
+                  placeholder="F.eks. 2,5"
+                />
+              </div>
+            )}
           </div>
         </div>
 
