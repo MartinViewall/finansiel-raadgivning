@@ -176,3 +176,9 @@
 - [x] Udvid CalculatorContext med alle CapacityCalculator state-felter
 - [x] CapacityCalculator læser startværdier fra context og skriver ændringer tilbage løbende
 - [x] Ret for meget luft/padding i venstre side af CapacityCalculator-layoutet
+
+## Fase 18 – Ensret venstremargin på alle beregnersider
+
+- [x] Ret CostCalculator: erstat `max-w-5xl mx-auto` med `w-full max-w-[1400px] px-2`
+- [x] Ret GoalCalculator: erstat `p-6 max-w-5xl mx-auto` med `w-full max-w-[1400px] px-2`
+- [x] Ret CapacityCalculator: fjern DashboardLayout-wrapper og brug `w-full max-w-[1400px] px-2`

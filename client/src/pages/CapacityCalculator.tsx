@@ -1,5 +1,4 @@
 import { useState, useMemo } from "react";
-import DashboardLayout from "@/components/DashboardLayout";
 import { useCalculatorContext } from "@/contexts/CalculatorContext";
 import { ChevronDown, ChevronUp, BookmarkCheck, BarChart3 } from "lucide-react";
 import {
@@ -795,9 +794,8 @@ export default function CapacityCalculator() {
   const comparing = scenarioA !== null;
 
   return (
-    <DashboardLayout>
-      <div className="max-w-screen-xl">
-        <div className="flex items-start justify-between mb-6 flex-wrap gap-3">
+    <div className="w-full max-w-[1400px] space-y-6 px-2">
+      <div className="flex items-start justify-between flex-wrap gap-3">
           <div>
             <h1 className="text-2xl font-bold text-foreground">Din Økonomiske Kapacitet</h1>
             <p className="text-sm text-muted-foreground mt-1">
@@ -883,7 +881,6 @@ export default function CapacityCalculator() {
             <ResultsPanel r={results} s={current} />
           </div>
         )}
-      </div>
-    </DashboardLayout>
+    </div>
   );
 }

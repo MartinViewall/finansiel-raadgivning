@@ -371,7 +371,7 @@ export default function GoalCalculator() {
     : undefined;
 
   return (
-    <div className="p-6 max-w-5xl mx-auto">
+    <div className="w-full max-w-[1400px] space-y-6 px-2">
       <PdfReportModal
         open={pdfOpen}
         onClose={() => setPdfOpen(false)}

@@ -374,7 +374,7 @@ export default function CostCalculator() {
       goalData={goalDataFromCtx}
       defaultSection="cost"
     />
-    <div className="max-w-5xl mx-auto space-y-6">
+    <div className="w-full max-w-[1400px] space-y-6 px-2">
       {/* Overskrift */}
       <div className="flex items-start justify-between">
         <div>
