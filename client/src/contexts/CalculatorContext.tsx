@@ -1,12 +1,14 @@
 /**
  * CalculatorContext
  *
- * Persists all inputs for Afkastberegneren, Omkostningsberegneren, and Målberegneren
- * so that navigating between pages does not reset any values.
+ * Persists all inputs for Afkastberegneren, Omkostningsberegneren, Målberegneren,
+ * and Kapacitetsberegneren so that navigating between pages does not reset any values.
  */
 import { createContext, useContext, useState } from "react";
 
 type GoalMode = "lumpsum" | "payout";
+type CivilStatus = "enlig" | "par";
+type FrivaerdiMode = "beregn" | "direkte";
 
 // ─── Shared state shape ───────────────────────────────────────────────────────
 
@@ -29,6 +31,14 @@ interface CalculatorSharedState {
   setPensionReturnOverride: (v: string) => void;
   setTableYearFrom: (v: number) => void;
   setTableYearTo: (v: number) => void;
+
+  // ── Afkastberegner panel collapse state ─────────────────────────────────────
+  calcParamsOpen: boolean;
+  calcProductsOpen: boolean;
+  calcPensionOpen: boolean;
+  setCalcParamsOpen: (v: boolean) => void;
+  setCalcProductsOpen: (v: boolean) => void;
+  setCalcPensionOpen: (v: boolean) => void;
 
   // ── Omkostningsberegner ─────────────────────────────────────────────────────
   costDepot: number;
@@ -60,13 +70,64 @@ interface CalculatorSharedState {
   setGoalAnnualPayout: (v: number) => void;
   setGoalPayoutYears: (v: number) => void;
 
-  // ── Afkastberegner panel collapse state ─────────────────────────────────────
-  calcParamsOpen: boolean;
-  calcProductsOpen: boolean;
-  calcPensionOpen: boolean;
-  setCalcParamsOpen: (v: boolean) => void;
-  setCalcProductsOpen: (v: boolean) => void;
-  setCalcPensionOpen: (v: boolean) => void;
+  // ── Kapacitetsberegner ──────────────────────────────────────────────────────
+  capYearsToPension: number;
+  capPayoutYears: number;
+  capDesiredMonthly: number;
+  capCivilStatus: CivilStatus;
+  capPensionWealth: number;
+  capPensionMonthly: number;
+  capPensionReturn: number;
+  capPalTax: number;
+  capPensionTax: number;
+  capFriWealth: number;
+  capFriMonthly: number;
+  capFriReturn: number;
+  capFriTax: number;
+  capFrivaerdiMode: FrivaerdiMode;
+  capBoligVaerdi: number;
+  capBoligStigningPct: number;
+  capRestgaeld: number;
+  capAarligAfdrag: number;
+  capFrivaerdiDirekte: number;
+  capFrivaerdiAnvendtPct: number;
+  capSelskabWealth: number;
+  capSelskabMonthly: number;
+  capSelskabReturn: number;
+  capSelskabSkat: number;
+  capUdbytteSkat: number;
+  capFolkepension: number;
+  capPensionstillaeg: number;
+  capAtp: number;
+
+  setCapYearsToPension: (v: number) => void;
+  setCapPayoutYears: (v: number) => void;
+  setCapDesiredMonthly: (v: number) => void;
+  setCapCivilStatus: (v: CivilStatus) => void;
+  setCapPensionWealth: (v: number) => void;
+  setCapPensionMonthly: (v: number) => void;
+  setCapPensionReturn: (v: number) => void;
+  setCapPalTax: (v: number) => void;
+  setCapPensionTax: (v: number) => void;
+  setCapFriWealth: (v: number) => void;
+  setCapFriMonthly: (v: number) => void;
+  setCapFriReturn: (v: number) => void;
+  setCapFriTax: (v: number) => void;
+  setCapFrivaerdiMode: (v: FrivaerdiMode) => void;
+  setCapBoligVaerdi: (v: number) => void;
+  setCapBoligStigningPct: (v: number) => void;
+  setCapRestgaeld: (v: number) => void;
+  setCapAarligAfdrag: (v: number) => void;
+  setCapFrivaerdiDirekte: (v: number) => void;
+  setCapFrivaerdiAnvendtPct: (v: number) => void;
+  setCapSelskabWealth: (v: number) => void;
+  setCapSelskabMonthly: (v: number) => void;
+  setCapSelskabReturn: (v: number) => void;
+  setCapSelskabSkat: (v: number) => void;
+  setCapUdbytteSkat: (v: number) => void;
+  setCapFolkepension: (v: number) => void;
+  setCapPensionstillaeg: (v: number) => void;
+  setCapAtp: (v: number) => void;
 }
 
 // ─── Defaults ─────────────────────────────────────────────────────────────────
@@ -81,16 +142,16 @@ const DEFAULTS = {
   pensionReturnOverride: "",
   tableYearFrom: 2010,
   tableYearTo: new Date().getFullYear() - 1,
+  // Afkastberegner panel collapse
+  calcParamsOpen: true,
+  calcProductsOpen: true,
+  calcPensionOpen: true,
   // Omkostningsberegner
   costDepot: 2_000_000,
   costAnnualContribution: 100_000,
   costYearsToPension: 5,
   costTodayRaw: "1,5",
   costNewRaw: "0,75",
-  // Afkastberegner panel collapse
-  calcParamsOpen: true,
-  calcProductsOpen: true,
-  calcPensionOpen: true,
   // Målberegner
   goalMode: "lumpsum" as GoalMode,
   goalDepot: 500_000,
@@ -99,6 +160,35 @@ const DEFAULTS = {
   goalTargetAmount: 3_000_000,
   goalAnnualPayout: 200_000,
   goalPayoutYears: 20,
+  // Kapacitetsberegner
+  capYearsToPension: 10,
+  capPayoutYears: 20,
+  capDesiredMonthly: 30_000,
+  capCivilStatus: "enlig" as CivilStatus,
+  capPensionWealth: 0,
+  capPensionMonthly: 0,
+  capPensionReturn: 6.0,
+  capPalTax: 15.3,
+  capPensionTax: 38,
+  capFriWealth: 0,
+  capFriMonthly: 0,
+  capFriReturn: 6.0,
+  capFriTax: 27,
+  capFrivaerdiMode: "beregn" as FrivaerdiMode,
+  capBoligVaerdi: 0,
+  capBoligStigningPct: 2.0,
+  capRestgaeld: 0,
+  capAarligAfdrag: 0,
+  capFrivaerdiDirekte: 0,
+  capFrivaerdiAnvendtPct: 50,
+  capSelskabWealth: 0,
+  capSelskabMonthly: 0,
+  capSelskabReturn: 6.0,
+  capSelskabSkat: 22,
+  capUdbytteSkat: 27,
+  capFolkepension: 7100,
+  capPensionstillaeg: 4300,
+  capAtp: 2500,
 };
 
 // ─── Context ──────────────────────────────────────────────────────────────────
@@ -113,6 +203,9 @@ const CalculatorContext = createContext<CalculatorSharedState>({
   setPensionReturnOverride: () => {},
   setTableYearFrom: () => {},
   setTableYearTo: () => {},
+  setCalcParamsOpen: () => {},
+  setCalcProductsOpen: () => {},
+  setCalcPensionOpen: () => {},
   setCostDepot: () => {},
   setCostAnnualContribution: () => {},
   setCostYearsToPension: () => {},
@@ -125,9 +218,34 @@ const CalculatorContext = createContext<CalculatorSharedState>({
   setGoalTargetAmount: () => {},
   setGoalAnnualPayout: () => {},
   setGoalPayoutYears: () => {},
-  setCalcParamsOpen: () => {},
-  setCalcProductsOpen: () => {},
-  setCalcPensionOpen: () => {},
+  setCapYearsToPension: () => {},
+  setCapPayoutYears: () => {},
+  setCapDesiredMonthly: () => {},
+  setCapCivilStatus: () => {},
+  setCapPensionWealth: () => {},
+  setCapPensionMonthly: () => {},
+  setCapPensionReturn: () => {},
+  setCapPalTax: () => {},
+  setCapPensionTax: () => {},
+  setCapFriWealth: () => {},
+  setCapFriMonthly: () => {},
+  setCapFriReturn: () => {},
+  setCapFriTax: () => {},
+  setCapFrivaerdiMode: () => {},
+  setCapBoligVaerdi: () => {},
+  setCapBoligStigningPct: () => {},
+  setCapRestgaeld: () => {},
+  setCapAarligAfdrag: () => {},
+  setCapFrivaerdiDirekte: () => {},
+  setCapFrivaerdiAnvendtPct: () => {},
+  setCapSelskabWealth: () => {},
+  setCapSelskabMonthly: () => {},
+  setCapSelskabReturn: () => {},
+  setCapSelskabSkat: () => {},
+  setCapUdbytteSkat: () => {},
+  setCapFolkepension: () => {},
+  setCapPensionstillaeg: () => {},
+  setCapAtp: () => {},
 });
 
 // ─── Provider ─────────────────────────────────────────────────────────────────
@@ -143,17 +261,17 @@ export function CalculatorProvider({ children }: { children: React.ReactNode }) 
   const [tableYearFrom, setTableYearFrom] = useState(DEFAULTS.tableYearFrom);
   const [tableYearTo, setTableYearTo] = useState(DEFAULTS.tableYearTo);
 
+  // Afkastberegner panel collapse
+  const [calcParamsOpen, setCalcParamsOpen] = useState(true);
+  const [calcProductsOpen, setCalcProductsOpen] = useState(true);
+  const [calcPensionOpen, setCalcPensionOpen] = useState(true);
+
   // Omkostningsberegner
   const [costDepot, setCostDepot] = useState(DEFAULTS.costDepot);
   const [costAnnualContribution, setCostAnnualContribution] = useState(DEFAULTS.costAnnualContribution);
   const [costYearsToPension, setCostYearsToPension] = useState(DEFAULTS.costYearsToPension);
   const [costTodayRaw, setCostTodayRaw] = useState(DEFAULTS.costTodayRaw);
   const [costNewRaw, setCostNewRaw] = useState(DEFAULTS.costNewRaw);
-
-  // Afkastberegner panel collapse
-  const [calcParamsOpen, setCalcParamsOpen] = useState(true);
-  const [calcProductsOpen, setCalcProductsOpen] = useState(true);
-  const [calcPensionOpen, setCalcPensionOpen] = useState(true);
 
   // Målberegner
   const [goalMode, setGoalMode] = useState<GoalMode>(DEFAULTS.goalMode);
@@ -163,6 +281,36 @@ export function CalculatorProvider({ children }: { children: React.ReactNode }) 
   const [goalTargetAmount, setGoalTargetAmount] = useState(DEFAULTS.goalTargetAmount);
   const [goalAnnualPayout, setGoalAnnualPayout] = useState(DEFAULTS.goalAnnualPayout);
   const [goalPayoutYears, setGoalPayoutYears] = useState(DEFAULTS.goalPayoutYears);
+
+  // Kapacitetsberegner
+  const [capYearsToPension, setCapYearsToPension] = useState(DEFAULTS.capYearsToPension);
+  const [capPayoutYears, setCapPayoutYears] = useState(DEFAULTS.capPayoutYears);
+  const [capDesiredMonthly, setCapDesiredMonthly] = useState(DEFAULTS.capDesiredMonthly);
+  const [capCivilStatus, setCapCivilStatus] = useState<CivilStatus>(DEFAULTS.capCivilStatus);
+  const [capPensionWealth, setCapPensionWealth] = useState(DEFAULTS.capPensionWealth);
+  const [capPensionMonthly, setCapPensionMonthly] = useState(DEFAULTS.capPensionMonthly);
+  const [capPensionReturn, setCapPensionReturn] = useState(DEFAULTS.capPensionReturn);
+  const [capPalTax, setCapPalTax] = useState(DEFAULTS.capPalTax);
+  const [capPensionTax, setCapPensionTax] = useState(DEFAULTS.capPensionTax);
+  const [capFriWealth, setCapFriWealth] = useState(DEFAULTS.capFriWealth);
+  const [capFriMonthly, setCapFriMonthly] = useState(DEFAULTS.capFriMonthly);
+  const [capFriReturn, setCapFriReturn] = useState(DEFAULTS.capFriReturn);
+  const [capFriTax, setCapFriTax] = useState(DEFAULTS.capFriTax);
+  const [capFrivaerdiMode, setCapFrivaerdiMode] = useState<FrivaerdiMode>(DEFAULTS.capFrivaerdiMode);
+  const [capBoligVaerdi, setCapBoligVaerdi] = useState(DEFAULTS.capBoligVaerdi);
+  const [capBoligStigningPct, setCapBoligStigningPct] = useState(DEFAULTS.capBoligStigningPct);
+  const [capRestgaeld, setCapRestgaeld] = useState(DEFAULTS.capRestgaeld);
+  const [capAarligAfdrag, setCapAarligAfdrag] = useState(DEFAULTS.capAarligAfdrag);
+  const [capFrivaerdiDirekte, setCapFrivaerdiDirekte] = useState(DEFAULTS.capFrivaerdiDirekte);
+  const [capFrivaerdiAnvendtPct, setCapFrivaerdiAnvendtPct] = useState(DEFAULTS.capFrivaerdiAnvendtPct);
+  const [capSelskabWealth, setCapSelskabWealth] = useState(DEFAULTS.capSelskabWealth);
+  const [capSelskabMonthly, setCapSelskabMonthly] = useState(DEFAULTS.capSelskabMonthly);
+  const [capSelskabReturn, setCapSelskabReturn] = useState(DEFAULTS.capSelskabReturn);
+  const [capSelskabSkat, setCapSelskabSkat] = useState(DEFAULTS.capSelskabSkat);
+  const [capUdbytteSkat, setCapUdbytteSkat] = useState(DEFAULTS.capUdbytteSkat);
+  const [capFolkepension, setCapFolkepension] = useState(DEFAULTS.capFolkepension);
+  const [capPensionstillaeg, setCapPensionstillaeg] = useState(DEFAULTS.capPensionstillaeg);
+  const [capAtp, setCapAtp] = useState(DEFAULTS.capAtp);
 
   return (
     <CalculatorContext.Provider
@@ -175,6 +323,9 @@ export function CalculatorProvider({ children }: { children: React.ReactNode }) 
         pensionReturnOverride, setPensionReturnOverride,
         tableYearFrom, setTableYearFrom,
         tableYearTo, setTableYearTo,
+        calcParamsOpen, setCalcParamsOpen,
+        calcProductsOpen, setCalcProductsOpen,
+        calcPensionOpen, setCalcPensionOpen,
         costDepot, setCostDepot,
         costAnnualContribution, setCostAnnualContribution,
         costYearsToPension, setCostYearsToPension,
@@ -187,9 +338,34 @@ export function CalculatorProvider({ children }: { children: React.ReactNode }) 
         goalTargetAmount, setGoalTargetAmount,
         goalAnnualPayout, setGoalAnnualPayout,
         goalPayoutYears, setGoalPayoutYears,
-        calcParamsOpen, setCalcParamsOpen,
-        calcProductsOpen, setCalcProductsOpen,
-        calcPensionOpen, setCalcPensionOpen,
+        capYearsToPension, setCapYearsToPension,
+        capPayoutYears, setCapPayoutYears,
+        capDesiredMonthly, setCapDesiredMonthly,
+        capCivilStatus, setCapCivilStatus,
+        capPensionWealth, setCapPensionWealth,
+        capPensionMonthly, setCapPensionMonthly,
+        capPensionReturn, setCapPensionReturn,
+        capPalTax, setCapPalTax,
+        capPensionTax, setCapPensionTax,
+        capFriWealth, setCapFriWealth,
+        capFriMonthly, setCapFriMonthly,
+        capFriReturn, setCapFriReturn,
+        capFriTax, setCapFriTax,
+        capFrivaerdiMode, setCapFrivaerdiMode,
+        capBoligVaerdi, setCapBoligVaerdi,
+        capBoligStigningPct, setCapBoligStigningPct,
+        capRestgaeld, setCapRestgaeld,
+        capAarligAfdrag, setCapAarligAfdrag,
+        capFrivaerdiDirekte, setCapFrivaerdiDirekte,
+        capFrivaerdiAnvendtPct, setCapFrivaerdiAnvendtPct,
+        capSelskabWealth, setCapSelskabWealth,
+        capSelskabMonthly, setCapSelskabMonthly,
+        capSelskabReturn, setCapSelskabReturn,
+        capSelskabSkat, setCapSelskabSkat,
+        capUdbytteSkat, setCapUdbytteSkat,
+        capFolkepension, setCapFolkepension,
+        capPensionstillaeg, setCapPensionstillaeg,
+        capAtp, setCapAtp,
       }}
     >
       {children}

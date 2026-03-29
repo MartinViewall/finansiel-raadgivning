@@ -1,5 +1,6 @@
 import { useState, useMemo } from "react";
 import DashboardLayout from "@/components/DashboardLayout";
+import { useCalculatorContext } from "@/contexts/CalculatorContext";
 import { ChevronDown, ChevronUp, BookmarkCheck, BarChart3 } from "lucide-react";
 import {
   BarChart,
@@ -720,11 +721,73 @@ function ResultsPanel({ r, s, label }: { r: Results; s: ScenarioState; label?: s
 // ─── Page ──────────────────────────────────────────────────────────────────────
 
 export default function CapacityCalculator() {
-  const [scenarioA, setScenarioA] = useState<ScenarioState | null>(null);
-  const [current, setCurrent] = useState<ScenarioState>(() => defaultState());
+  const ctx = useCalculatorContext();
 
-  const set = (partial: Partial<ScenarioState>) =>
-    setCurrent((prev) => ({ ...prev, ...partial }));
+  // Build the current state from context values
+  const current: ScenarioState = {
+    yearsToPension: ctx.capYearsToPension,
+    payoutYears: ctx.capPayoutYears,
+    desiredMonthly: ctx.capDesiredMonthly,
+    civilStatus: ctx.capCivilStatus,
+    pensionWealth: ctx.capPensionWealth,
+    pensionMonthly: ctx.capPensionMonthly,
+    pensionReturn: ctx.capPensionReturn,
+    palTax: ctx.capPalTax,
+    pensionTax: ctx.capPensionTax,
+    friWealth: ctx.capFriWealth,
+    friMonthly: ctx.capFriMonthly,
+    friReturn: ctx.capFriReturn,
+    friTax: ctx.capFriTax,
+    frivaerdiMode: ctx.capFrivaerdiMode,
+    boligVaerdi: ctx.capBoligVaerdi,
+    boligStigningPct: ctx.capBoligStigningPct,
+    restgaeld: ctx.capRestgaeld,
+    aarligAfdrag: ctx.capAarligAfdrag,
+    frivaerdiDirekte: ctx.capFrivaerdiDirekte,
+    frivaerdiAnvendtPct: ctx.capFrivaerdiAnvendtPct,
+    selskabWealth: ctx.capSelskabWealth,
+    selskabMonthly: ctx.capSelskabMonthly,
+    selskabReturn: ctx.capSelskabReturn,
+    selskabSkat: ctx.capSelskabSkat,
+    udbytteSkat: ctx.capUdbytteSkat,
+    folkepension: ctx.capFolkepension,
+    pensionstillaeg: ctx.capPensionstillaeg,
+    atp: ctx.capAtp,
+  };
+
+  const [scenarioA, setScenarioA] = useState<ScenarioState | null>(null);
+
+  // Write each changed field back to context
+  const set = (partial: Partial<ScenarioState>) => {
+    if (partial.yearsToPension !== undefined) ctx.setCapYearsToPension(partial.yearsToPension);
+    if (partial.payoutYears !== undefined) ctx.setCapPayoutYears(partial.payoutYears);
+    if (partial.desiredMonthly !== undefined) ctx.setCapDesiredMonthly(partial.desiredMonthly);
+    if (partial.civilStatus !== undefined) ctx.setCapCivilStatus(partial.civilStatus);
+    if (partial.pensionWealth !== undefined) ctx.setCapPensionWealth(partial.pensionWealth);
+    if (partial.pensionMonthly !== undefined) ctx.setCapPensionMonthly(partial.pensionMonthly);
+    if (partial.pensionReturn !== undefined) ctx.setCapPensionReturn(partial.pensionReturn);
+    if (partial.palTax !== undefined) ctx.setCapPalTax(partial.palTax);
+    if (partial.pensionTax !== undefined) ctx.setCapPensionTax(partial.pensionTax);
+    if (partial.friWealth !== undefined) ctx.setCapFriWealth(partial.friWealth);
+    if (partial.friMonthly !== undefined) ctx.setCapFriMonthly(partial.friMonthly);
+    if (partial.friReturn !== undefined) ctx.setCapFriReturn(partial.friReturn);
+    if (partial.friTax !== undefined) ctx.setCapFriTax(partial.friTax);
+    if (partial.frivaerdiMode !== undefined) ctx.setCapFrivaerdiMode(partial.frivaerdiMode);
+    if (partial.boligVaerdi !== undefined) ctx.setCapBoligVaerdi(partial.boligVaerdi);
+    if (partial.boligStigningPct !== undefined) ctx.setCapBoligStigningPct(partial.boligStigningPct);
+    if (partial.restgaeld !== undefined) ctx.setCapRestgaeld(partial.restgaeld);
+    if (partial.aarligAfdrag !== undefined) ctx.setCapAarligAfdrag(partial.aarligAfdrag);
+    if (partial.frivaerdiDirekte !== undefined) ctx.setCapFrivaerdiDirekte(partial.frivaerdiDirekte);
+    if (partial.frivaerdiAnvendtPct !== undefined) ctx.setCapFrivaerdiAnvendtPct(partial.frivaerdiAnvendtPct);
+    if (partial.selskabWealth !== undefined) ctx.setCapSelskabWealth(partial.selskabWealth);
+    if (partial.selskabMonthly !== undefined) ctx.setCapSelskabMonthly(partial.selskabMonthly);
+    if (partial.selskabReturn !== undefined) ctx.setCapSelskabReturn(partial.selskabReturn);
+    if (partial.selskabSkat !== undefined) ctx.setCapSelskabSkat(partial.selskabSkat);
+    if (partial.udbytteSkat !== undefined) ctx.setCapUdbytteSkat(partial.udbytteSkat);
+    if (partial.folkepension !== undefined) ctx.setCapFolkepension(partial.folkepension);
+    if (partial.pensionstillaeg !== undefined) ctx.setCapPensionstillaeg(partial.pensionstillaeg);
+    if (partial.atp !== undefined) ctx.setCapAtp(partial.atp);
+  };
 
   const results = useMemo(() => calcResults(current), [current]);
   const resultsA = useMemo(() => (scenarioA ? calcResults(scenarioA) : null), [scenarioA]);
@@ -733,7 +796,7 @@ export default function CapacityCalculator() {
 
   return (
     <DashboardLayout>
-      <div className="p-6 max-w-screen-xl mx-auto">
+      <div className="max-w-screen-xl">
         <div className="flex items-start justify-between mb-6 flex-wrap gap-3">
           <div>
             <h1 className="text-2xl font-bold text-foreground">Din Økonomiske Kapacitet</h1>

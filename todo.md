@@ -170,3 +170,9 @@
 - [x] Edge cases: afkast=0%, friværdi negativ, år til pension=0
 - [x] Tilføj rute `/capacity-calculator` i App.tsx og "Din Øk. Kapacitet" i sidebar
 - [x] Installer Recharts: allerede installeret
+
+## Fase 17 – Kapacitetsberegner: state-persistence og layout-fix
+
+- [x] Udvid CalculatorContext med alle CapacityCalculator state-felter
+- [x] CapacityCalculator læser startværdier fra context og skriver ændringer tilbage løbende
+- [x] Ret for meget luft/padding i venstre side af CapacityCalculator-layoutet
