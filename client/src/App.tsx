@@ -11,6 +11,7 @@ import Calculator from "./pages/Calculator";
 import Products from "./pages/Products";
 import CostCalculator from "./pages/CostCalculator";
 import GoalCalculator from "./pages/GoalCalculator";
+import CapacityCalculator from "./pages/CapacityCalculator";
 import DashboardLayout from "./components/DashboardLayout";
 
 function AuthenticatedApp() {
@@ -22,6 +23,7 @@ function AuthenticatedApp() {
         <Route path={"/products"} component={Products} />
         <Route path={"/cost-calculator"} component={CostCalculator} />
         <Route path={"/goal-calculator"} component={GoalCalculator} />
+        <Route path={"/capacity-calculator"} component={CapacityCalculator} />
         <Route path={"/404"} component={NotFound} />
         <Route component={NotFound} />
       </Switch>

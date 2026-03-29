@@ -152,3 +152,21 @@
 - [x] Tilføj collapse-toggle i øverste højre hjørne af "Produkter"-boksen
 - [x] Tilføj collapse-toggle i øverste højre hjørne af "Pensionsfremskrivning"-boksen
 - [x] Bevar collapse-state i CalculatorContext så det huskes ved navigation
+
+## Fase 16 – Din Økonomiske Kapacitet
+
+- [x] Opret `client/src/pages/CapacityCalculator.tsx`
+- [x] Globale parametre: År til pension, Udbetalingsperiode, Ønsket månedligt forbrug, Civilstatus (Enlig/Par)
+- [x] Miljø 1 – Pension: formue, månedlig indbetaling, afkast, PAL-skat, udbetalingsskat — korrekt annuitetsformel med månedligt effektivt afkast
+- [x] Miljø 2 – Frie midler: formue, månedlig opsparing, afkast, beskatningssats — løbende beskatning af afkast
+- [x] Miljø 3 – Friværdi: Mode A (beregn) og Mode B (direkte input), slider for anvendt %, skattefri udbetaling
+- [x] Miljø 4 – Selskabsmidler: formue, månedlig opsparing, afkast, selskabsskat, udbytteskat
+- [x] Offentlige ydelser: folkepension, pensionstillæg, ATP — enlig/par satser
+- [x] Hook-tal øverst: "X kr./md. efter skat i Y år" — stort og centralt
+- [x] Gap-analyse: grøn/rød indikator mod ønsket forbrug
+- [x] Stacked bar chart (Recharts): fem komponenter + rød stiplet referencelinje + tooltip
+- [x] Foldbare paneler (accordion) for hvert miljø — starter sammenfoldet
+- [x] Scenariesammenligning: "Gem som Scenarie A" → side-by-side sammenligning
+- [x] Edge cases: afkast=0%, friværdi negativ, år til pension=0
+- [x] Tilføj rute `/capacity-calculator` i App.tsx og "Din Øk. Kapacitet" i sidebar
+- [x] Installer Recharts: allerede installeret
