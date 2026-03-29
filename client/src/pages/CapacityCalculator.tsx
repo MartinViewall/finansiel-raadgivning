@@ -168,33 +168,41 @@ function Row({
 // ─── Core calculation functions ────────────────────────────────────────────────
 
 /**
- * Future value of a lump sum + monthly contributions, compounded monthly.
- * Annuity due: contribution added at START of each month.
+ * Future value matching Excel: =FV(annualRate, years, -annualContrib, -pv, 1)
+ * Annual compounding, annuity due (contributions at START of each year).
+ *
+ * Excel FV(rate, nper, pmt, pv, type=1):
+ *   FV = pv*(1+r)^n + pmt*(1+r)*((1+r)^n - 1)/r
  */
 function calcFV(
   pv: number,
-  monthlyContrib: number,
-  monthlyRate: number,
-  months: number
+  annualContrib: number,
+  annualRate: number,
+  years: number
 ): number {
-  if (months <= 0) return pv;
-  if (monthlyRate === 0) return pv + monthlyContrib * months;
-  const growth = Math.pow(1 + monthlyRate, months);
-  // PV component
+  if (years <= 0) return pv;
+  const growth = Math.pow(1 + annualRate, years);
   const pvFV = pv * growth;
-  // Annuity due: PMT × ((1+r)^n - 1) / r × (1+r)
-  const annuityFV = monthlyContrib * ((growth - 1) / monthlyRate) * (1 + monthlyRate);
+  if (annualRate === 0) return pvFV + annualContrib * years;
+  // Annuity due (type=1): PMT × (1+r) × ((1+r)^n - 1) / r
+  const annuityFV = annualContrib * (1 + annualRate) * ((growth - 1) / annualRate);
   return pvFV + annuityFV;
 }
 
 /**
- * Monthly annuity payment from a lump sum over n months with monthly rate r.
- * Returns 0 if fv <= 0.
+ * Annual payout matching Excel: =PMT(annualRate, payoutYears, -fv, 0, 1)
+ * Annuity due (payments at START of each year).
+ * Returns ANNUAL gross payout. Monthly net = annual * (1-tax) / 12.
+ *
+ * Excel PMT(rate, nper, pv, fv=0, type=1):
+ *   PMT_ordinary = pv * r / (1-(1+r)^-n)
+ *   PMT_due = PMT_ordinary / (1+r)
  */
-function annuityPayment(fv: number, monthlyRate: number, months: number): number {
-  if (fv <= 0 || months <= 0) return 0;
-  if (monthlyRate === 0) return fv / months;
-  return (fv * monthlyRate) / (1 - Math.pow(1 + monthlyRate, -months));
+function annualPayoutDue(fv: number, annualRate: number, years: number): number {
+  if (fv <= 0 || years <= 0) return 0;
+  if (annualRate === 0) return fv / years;
+  const pmt_ordinary = (fv * annualRate) / (1 - Math.pow(1 + annualRate, -years));
+  return pmt_ordinary / (1 + annualRate);
 }
 
 // ─── Environment result types ──────────────────────────────────────────────────
@@ -278,22 +286,24 @@ const defaultState = (civilStatus: "enlig" | "par" = "enlig"): ScenarioState => 
 });
 
 function calcResults(s: ScenarioState) {
-  const months = s.yearsToPension * 12;
-  const payoutMonths = s.payoutYears * 12;
-
   // ── Pension ──────────────────────────────────────────────────────────────────
-  const palNetRate = (s.pensionReturn * (1 - s.palTax / 100)) / 100 / 12;
-  const pensionFV = calcFV(s.pensionWealth, s.pensionMonthly, palNetRate, months);
-  const palNetRateUdb = (s.pensionReturn * (1 - s.palTax / 100)) / 100 / 12;
-  const pensionGross = annuityPayment(pensionFV, palNetRateUdb, payoutMonths);
-  const pensionNet = pensionGross * (1 - s.pensionTax / 100);
+  // Excel: FV(rate*(1-PAL), years, -annualContrib, -depot, 1)
+  // Annual indbetaling = månedlig * 12
+  const palNetRate = (s.pensionReturn * (1 - s.palTax / 100)) / 100;
+  const pensionFV = calcFV(s.pensionWealth, s.pensionMonthly * 12, palNetRate, s.yearsToPension);
+  // Excel: PMT(rate*(1-PAL), payoutYears, -FV, 0, 1) → annual gross payout
+  const pensionAnnualGross = annualPayoutDue(pensionFV, palNetRate, s.payoutYears);
+  // Monthly net = annual * (1-skat) / 12
+  const pensionGross = pensionAnnualGross / 12;
+  const pensionNet = pensionAnnualGross * (1 - s.pensionTax / 100) / 12;
 
   // ── Frie midler ──────────────────────────────────────────────────────────────
-  const friNetRate = (s.friReturn * (1 - s.friTax / 100)) / 100 / 12;
-  const friFV = calcFV(s.friWealth, s.friMonthly, friNetRate, months);
-  const friNetRateUdb = (s.friReturn * (1 - s.friTax / 100)) / 100 / 12;
-  // Payout is tax-free to customer (return already taxed inside annuity)
-  const friNet = annuityPayment(friFV, friNetRateUdb, payoutMonths);
+  // Net rate after ongoing tax on returns
+  const friNetRate = (s.friReturn * (1 - s.friTax / 100)) / 100;
+  const friFV = calcFV(s.friWealth, s.friMonthly * 12, friNetRate, s.yearsToPension);
+  // Payout: return already taxed, so payout is tax-free
+  const friAnnualPayout = annualPayoutDue(friFV, friNetRate, s.payoutYears);
+  const friNet = friAnnualPayout / 12;
 
   // ── Friværdi ─────────────────────────────────────────────────────────────────
   let frivaerdiAtPension: number;
@@ -308,14 +318,16 @@ function calcResults(s: ScenarioState) {
   // Warning: negative equity
   const frivaerdiNegative = s.frivaerdiMode === "beregn" &&
     s.boligVaerdi * Math.pow(1 + s.boligStigningPct / 100, s.yearsToPension) < Math.max(0, s.restgaeld - s.aarligAfdrag * s.yearsToPension);
-  const frivaerdiMonthly = frivaerdiUsed / payoutMonths; // tax-free
+  // Friværdi: simple monthly drawdown over payout period (tax-free)
+  const frivaerdiMonthly = frivaerdiUsed / (s.payoutYears * 12);
 
   // ── Selskab ──────────────────────────────────────────────────────────────────
-  const selNetRate = (s.selskabReturn * (1 - s.selskabSkat / 100)) / 100 / 12;
-  const selFV = calcFV(s.selskabWealth, s.selskabMonthly, selNetRate, months);
-  const selNetRateUdb = (s.selskabReturn * (1 - s.selskabSkat / 100)) / 100 / 12;
-  const selGross = annuityPayment(selFV, selNetRateUdb, payoutMonths);
-  const selNet = selGross * (1 - s.udbytteSkat / 100);
+  // Net rate after corporate tax on returns
+  const selNetRate = (s.selskabReturn * (1 - s.selskabSkat / 100)) / 100;
+  const selFV = calcFV(s.selskabWealth, s.selskabMonthly * 12, selNetRate, s.yearsToPension);
+  const selAnnualGross = annualPayoutDue(selFV, selNetRate, s.payoutYears);
+  const selGross = selAnnualGross / 12;
+  const selNet = selAnnualGross * (1 - s.udbytteSkat / 100) / 12;
 
   // ── Offentlige ydelser ───────────────────────────────────────────────────────
   const offentlig = s.folkepension + s.pensionstillaeg + s.atp;

@@ -182,3 +182,11 @@
 - [x] Ret CostCalculator: erstat `max-w-5xl mx-auto` med `w-full max-w-[1400px] px-2`
 - [x] Ret GoalCalculator: erstat `p-6 max-w-5xl mx-auto` med `w-full max-w-[1400px] px-2`
 - [x] Ret CapacityCalculator: fjern DashboardLayout-wrapper og brug `w-full max-w-[1400px] px-2`
+
+## Fase 19 – Ret pensionsberegning til at matche Excel-model
+
+- [x] Ret calcFV til årsrente + årsindbetalinger (annuity due) i stedet for månedlig compounding
+- [x] Ret annuityPayment til årsrente + årsudbetalinger (annuity due) i stedet for månedlig
+- [x] Månedlig udbetaling = årsbeløb / 12 × (1-skat) — ikke månedlig annuitet
+- [x] Verificer: 1.000.000 depot, 0 indbetaling, 6%, PAL 15,3%, 10 år, 20 år udbetaling, 38% skat → FV=1.641.660, månedlig=6.522
+- [x] Verificer: 1.000.000 depot, 60.000 indbetaling, 6%, PAL 15,3%, 10 år, 20 år udbetaling, 38% skat → FV=2.437.728, månedlig=9.685
