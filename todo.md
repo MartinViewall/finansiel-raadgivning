@@ -125,7 +125,7 @@
 - [x] Tusindtalsseparator på alle tal-inputs og resultater
 - [x] Tilføj rute `/goal-calculator` i App.tsx og navigationspunkt "Målberegner" i sidebar
 - [x] Udvid CalculatorContext med state for GoalCalculator (alle inputs bevares ved navigation)
-- [ ] PDF-modal understøtter GoalCalculator-data som valgbar sektion
+- [x] PDF-modal understøtter GoalCalculator-data som valgbar sektion
 
 ## Fase 13 – Målberegner i PDF-rapport
 
@@ -134,3 +134,13 @@
 - [x] Opdater `client/src/components/PdfReportModal.tsx` med "Målberegner" som valgbar sektion
 - [x] Opdater `client/src/pages/GoalCalculator.tsx` til at sende goalData til modalen
 - [x] Opdater `client/src/pages/Calculator.tsx` og `CostCalculator.tsx` til at sende goalData fra context
+
+## Fase 14 – Self-hosting forberedelse
+
+- [x] Audit Manus-specifikke afhængigheder (OAuth, database URL, storage, LLM, notifications)
+- [x] Fjern/erstat Manus OAuth — brug kun PasswordGate (allerede implementeret)
+- [x] Tilpas database-forbindelse til standard MySQL (fjern Manus-specifikke env-navne)
+- [x] Tilpas filupload/storage til lokal disk eller S3-kompatibel (MinIO)
+- [x] Opret `docker-compose.yml` med app + MySQL
+- [x] Opret `.env.example` med alle nødvendige miljøvariabler
+- [x] Skriv `DEPLOY.md` med trin-for-trin deploymentguide

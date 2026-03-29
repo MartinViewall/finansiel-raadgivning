@@ -1,0 +1,53 @@
+version: "3.9"
+
+services:
+  db:
+    image: mysql:8.0
+    restart: unless-stopped
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-changeme}
+      MYSQL_DATABASE: finansiel
+      MYSQL_USER: finansiel
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-changeme}
+    volumes:
+      - db_data:/var/lib/mysql
+    ports:
+      - "3306:3306"
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "finansiel", "-p${MYSQL_PASSWORD:-changeme}"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  app:
+    build: .
+    restart: unless-stopped
+    depends_on:
+      db:
+        condition: service_healthy
+    ports:
+      - "${PORT:-3000}:3000"
+    environment:
+      NODE_ENV: production
+      PORT: 3000
+      DATABASE_URL: mysql://finansiel:${MYSQL_PASSWORD:-changeme}@db:3306/finansiel
+      JWT_SECRET: ${JWT_SECRET}
+      APP_PASSWORD: ${APP_PASSWORD}
+      # Manus-specific vars — leave blank when self-hosting (not used by the app)
+      VITE_APP_ID: ""
+      OAUTH_SERVER_URL: ""
+      OWNER_OPEN_ID: ""
+      OWNER_NAME: ""
+      BUILT_IN_FORGE_API_URL: ""
+      BUILT_IN_FORGE_API_KEY: ""
+      VITE_FRONTEND_FORGE_API_KEY: ""
+      VITE_FRONTEND_FORGE_API_URL: ""
+      VITE_OAUTH_PORTAL_URL: ""
+      VITE_ANALYTICS_ENDPOINT: ""
+      VITE_ANALYTICS_WEBSITE_ID: ""
+    volumes:
+      - uploads:/app/uploads
+
+volumes:
+  db_data:
+  uploads:
