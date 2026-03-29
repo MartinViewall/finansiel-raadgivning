@@ -190,3 +190,9 @@
 - [x] Månedlig udbetaling = årsbeløb / 12 × (1-skat) — ikke månedlig annuitet
 - [x] Verificer: 1.000.000 depot, 0 indbetaling, 6%, PAL 15,3%, 10 år, 20 år udbetaling, 38% skat → FV=1.641.660, månedlig=6.522
 - [x] Verificer: 1.000.000 depot, 60.000 indbetaling, 6%, PAL 15,3%, 10 år, 20 år udbetaling, 38% skat → FV=2.437.728, månedlig=9.685
+
+## Fase 20 – Ensret formler + vis formue v. pension
+
+- [x] Calculator.tsx: allerede korrekt (årsrente annuity due) — ingen rettelse nødvendig
+- [x] CostCalculator.tsx: allerede korrekt (årsrente annuity due) — ingen rettelse nødvendig
+- [x] CapacityCalculator.tsx: vis "Formue v. pension" som synlig linje i tabellen for hvert aktiv (pension, frie midler, selskab) — allerede implementeret
