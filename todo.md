@@ -229,3 +229,10 @@
 - [x] Eksport/import via CalculatorIOBar (inkluderet i samlet scenariefil- [x] Registrer rute /return-diff-calculator i App.tsx
 - [x] Tilføj til sidebar-navigation
 - [x] Opdater useCalculatorIO hook til at inkludere den nye beregner
+
+## Fase 25 – Klientnavn i Gem-dialog
+
+- [x] CalculatorIOBar: vis en lille dialog (shadcn Dialog) ved klik på "Gem" med et valgfrit klientnavn-felt
+- [x] useCalculatorIO: filnavn bliver `scenarie-{klientnavn}-{dato}.json` hvis navn er udfyldt, ellers `scenarie-{dato}.json`
+- [x] Klientnavn gemmes i JSON-filen under `_klient` feltet
+- [x] Ved import vises klientnavnet i en toast: "Scenarie for {klientnavn} indlæst"

@@ -2,13 +2,12 @@
  * useCalculatorIO
  *
  * Provides a single "Gem scenarie" / "Indlæs scenarie" pair that saves and
- * restores ALL four calculators in one JSON file.
+ * restores ALL five calculators in one JSON file.
  *
- * Usage: call useAllCalculatorsIO() once (e.g. in the sidebar or a shared
- * toolbar) and pass the returned { exportAll, triggerImportAll } to the UI.
+ * exportAll(clientName?) accepts an optional client name that is embedded in
+ * the filename: scenarie-{klientnavn}-{dato}.json
  *
- * The file is named  "scenarie-YYYY-MM-DD.json" and contains a top-level
- * _type: "alle-beregnere" field so we can reject wrong files on import.
+ * The file contains _type: "alle-beregnere" so wrong files are rejected on import.
  */
 import { useRef } from "react";
 import { toast } from "sonner";
@@ -22,10 +21,11 @@ export function useAllCalculatorsIO() {
   const fileInputRef = useRef<HTMLInputElement | null>(null);
 
   // ── Export ──────────────────────────────────────────────────────────────────
-  function exportAll() {
+  function exportAll(clientName = "") {
     const payload = {
       _type: FILE_TYPE,
       _version: FILE_VERSION,
+      _klient: clientName || undefined,
       // Afkastberegner
       afkast: {
         depot: ctx.depot,
@@ -100,9 +100,12 @@ export function useAllCalculatorsIO() {
     const blob = new Blob([json], { type: "application/json" });
     const url = URL.createObjectURL(blob);
     const today = new Date().toISOString().slice(0, 10);
+    const safeName = clientName.trim()
+      ? clientName.trim().replace(/\s+/g, "-").replace(/[^a-zA-Z0-9æøåÆØÅ\-_]/g, "") + "-"
+      : "";
     const a = document.createElement("a");
     a.href = url;
-    a.download = `scenarie-${today}.json`;
+    a.download = `scenarie-${safeName}${today}.json`;
     a.click();
     URL.revokeObjectURL(url);
     toast.success("Alle beregnere gemt som scenarie-fil");
@@ -164,6 +167,14 @@ export function useAllCalculatorsIO() {
         if (m.annualPayout !== undefined) ctx.setGoalAnnualPayout(m.annualPayout);
         if (m.payoutYears !== undefined) ctx.setGoalPayoutYears(m.payoutYears);
 
+        // Afkastforskelberegner
+        const rd = raw.afkastforskel ?? {};
+        if (rd.depot !== undefined) ctx.setReturnDiffDepot(rd.depot);
+        if (rd.annualContribution !== undefined) ctx.setReturnDiffAnnualContribution(rd.annualContribution);
+        if (rd.yearsToPension !== undefined) ctx.setReturnDiffYearsToPension(rd.yearsToPension);
+        if (rd.returnTodayRaw !== undefined) ctx.setReturnDiffTodayRaw(rd.returnTodayRaw);
+        if (rd.returnNewRaw !== undefined) ctx.setReturnDiffNewRaw(rd.returnNewRaw);
+
         // Kapacitetsberegner
         const k = raw.kapacitet ?? {};
         if (k.yearsToPension !== undefined) ctx.setCapYearsToPension(k.yearsToPension);
@@ -195,15 +206,8 @@ export function useAllCalculatorsIO() {
         if (k.pensionstillaeg !== undefined) ctx.setCapPensionstillaeg(k.pensionstillaeg);
         if (k.atp !== undefined) ctx.setCapAtp(k.atp);
 
-        // Afkastforskelberegner
-        const rd = raw.afkastforskel ?? {};
-        if (rd.depot !== undefined) ctx.setReturnDiffDepot(rd.depot);
-        if (rd.annualContribution !== undefined) ctx.setReturnDiffAnnualContribution(rd.annualContribution);
-        if (rd.yearsToPension !== undefined) ctx.setReturnDiffYearsToPension(rd.yearsToPension);
-        if (rd.returnTodayRaw !== undefined) ctx.setReturnDiffTodayRaw(rd.returnTodayRaw);
-        if (rd.returnNewRaw !== undefined) ctx.setReturnDiffNewRaw(rd.returnNewRaw);
-
-        toast.success("Scenarie indlæst — alle beregnere opdateret");
+        const klientNavn = raw._klient ? ` for ${raw._klient}` : "";
+        toast.success(`Scenarie${klientNavn} indlæst — alle beregnere opdateret`);
       } catch {
         toast.error("Kunne ikke læse filen — kontroller at det er en gyldig JSON-fil");
       }
