@@ -53,6 +53,19 @@ interface CalculatorSharedState {
   setCostTodayRaw: (v: string) => void;
   setCostNewRaw: (v: string) => void;
 
+  // ── Afkastforskelberegner ───────────────────────────────────────────────────
+  returnDiffDepot: number;
+  returnDiffAnnualContribution: number;
+  returnDiffYearsToPension: number;
+  returnDiffTodayRaw: string;
+  returnDiffNewRaw: string;
+
+  setReturnDiffDepot: (v: number) => void;
+  setReturnDiffAnnualContribution: (v: number) => void;
+  setReturnDiffYearsToPension: (v: number) => void;
+  setReturnDiffTodayRaw: (v: string) => void;
+  setReturnDiffNewRaw: (v: string) => void;
+
   // ── Målberegner ─────────────────────────────────────────────────────────────
   goalMode: GoalMode;
   goalDepot: number;
@@ -152,6 +165,12 @@ const DEFAULTS = {
   costYearsToPension: 5,
   costTodayRaw: "1,5",
   costNewRaw: "0,75",
+  // Afkastforskelberegner
+  returnDiffDepot: 2_000_000,
+  returnDiffAnnualContribution: 100_000,
+  returnDiffYearsToPension: 10,
+  returnDiffTodayRaw: "5",
+  returnDiffNewRaw: "7",
   // Målberegner
   goalMode: "lumpsum" as GoalMode,
   goalDepot: 500_000,
@@ -211,6 +230,11 @@ const CalculatorContext = createContext<CalculatorSharedState>({
   setCostYearsToPension: () => {},
   setCostTodayRaw: () => {},
   setCostNewRaw: () => {},
+  setReturnDiffDepot: () => {},
+  setReturnDiffAnnualContribution: () => {},
+  setReturnDiffYearsToPension: () => {},
+  setReturnDiffTodayRaw: () => {},
+  setReturnDiffNewRaw: () => {},
   setGoalMode: () => {},
   setGoalDepot: () => {},
   setGoalYears: () => {},
@@ -272,6 +296,12 @@ export function CalculatorProvider({ children }: { children: React.ReactNode }) 
   const [costYearsToPension, setCostYearsToPension] = useState(DEFAULTS.costYearsToPension);
   const [costTodayRaw, setCostTodayRaw] = useState(DEFAULTS.costTodayRaw);
   const [costNewRaw, setCostNewRaw] = useState(DEFAULTS.costNewRaw);
+  const [returnDiffDepot, setReturnDiffDepot] = useState(DEFAULTS.returnDiffDepot);
+  const [returnDiffAnnualContribution, setReturnDiffAnnualContribution] = useState(DEFAULTS.returnDiffAnnualContribution);
+  const [returnDiffYearsToPension, setReturnDiffYearsToPension] = useState(DEFAULTS.returnDiffYearsToPension);
+  const [returnDiffTodayRaw, setReturnDiffTodayRaw] = useState(DEFAULTS.returnDiffTodayRaw);
+  const [returnDiffNewRaw, setReturnDiffNewRaw] = useState(DEFAULTS.returnDiffNewRaw);
+
 
   // Målberegner
   const [goalMode, setGoalMode] = useState<GoalMode>(DEFAULTS.goalMode);
@@ -331,6 +361,11 @@ export function CalculatorProvider({ children }: { children: React.ReactNode }) 
         costYearsToPension, setCostYearsToPension,
         costTodayRaw, setCostTodayRaw,
         costNewRaw, setCostNewRaw,
+        returnDiffDepot, setReturnDiffDepot,
+        returnDiffAnnualContribution, setReturnDiffAnnualContribution,
+        returnDiffYearsToPension, setReturnDiffYearsToPension,
+        returnDiffTodayRaw, setReturnDiffTodayRaw,
+        returnDiffNewRaw, setReturnDiffNewRaw,
         goalMode, setGoalMode,
         goalDepot, setGoalDepot,
         goalYears, setGoalYears,

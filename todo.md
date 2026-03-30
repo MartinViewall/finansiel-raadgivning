@@ -217,3 +217,15 @@
 
 - [x] Hvert produktkort øverst viser Ø/år* (horisontbaseret gennemsnit) under slutværdien
 - [x] Sammenligningskort (2. og 3. produkt) viser delta Ø/år (forskel ift. første produkt)
+
+## Fase 24 – Afkastforskelberegner
+
+- [x] Opret ReturnDiffCalculator.tsx baseret på CostCalculator-struktur
+- [x] Inputs: Depot, Årlig indbetaling, Afkast i dag (%), Alternativt afkast (%), År til pension
+- [x] Beregning: FV for begge afkast (annuity due, årsrente)
+- [x] Resultatkort øverst: Depot v. pension (afkast i dag), Depot v. pension (alternativt afkast), Samlet merværdi
+- [x] Graf: år-for-år tabel (sammenklappelig)
+- [x] Tabel: År, Depot (i dag), Depot (alternativt), Forskel
+- [x] Eksport/import via CalculatorIOBar (inkluderet i samlet scenariefil- [x] Registrer rute /return-diff-calculator i App.tsx
+- [x] Tilføj til sidebar-navigation
+- [x] Opdater useCalculatorIO hook til at inkludere den nye beregner

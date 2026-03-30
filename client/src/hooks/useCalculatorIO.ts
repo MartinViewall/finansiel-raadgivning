@@ -55,6 +55,14 @@ export function useAllCalculatorsIO() {
         annualPayout: ctx.goalAnnualPayout,
         payoutYears: ctx.goalPayoutYears,
       },
+      // Afkastforskelberegner
+      afkastforskel: {
+        depot: ctx.returnDiffDepot,
+        annualContribution: ctx.returnDiffAnnualContribution,
+        yearsToPension: ctx.returnDiffYearsToPension,
+        returnTodayRaw: ctx.returnDiffTodayRaw,
+        returnNewRaw: ctx.returnDiffNewRaw,
+      },
       // Kapacitetsberegner
       kapacitet: {
         yearsToPension: ctx.capYearsToPension,
@@ -186,6 +194,14 @@ export function useAllCalculatorsIO() {
         if (k.folkepension !== undefined) ctx.setCapFolkepension(k.folkepension);
         if (k.pensionstillaeg !== undefined) ctx.setCapPensionstillaeg(k.pensionstillaeg);
         if (k.atp !== undefined) ctx.setCapAtp(k.atp);
+
+        // Afkastforskelberegner
+        const rd = raw.afkastforskel ?? {};
+        if (rd.depot !== undefined) ctx.setReturnDiffDepot(rd.depot);
+        if (rd.annualContribution !== undefined) ctx.setReturnDiffAnnualContribution(rd.annualContribution);
+        if (rd.yearsToPension !== undefined) ctx.setReturnDiffYearsToPension(rd.yearsToPension);
+        if (rd.returnTodayRaw !== undefined) ctx.setReturnDiffTodayRaw(rd.returnTodayRaw);
+        if (rd.returnNewRaw !== undefined) ctx.setReturnDiffNewRaw(rd.returnNewRaw);
 
         toast.success("Scenarie indlæst — alle beregnere opdateret");
       } catch {

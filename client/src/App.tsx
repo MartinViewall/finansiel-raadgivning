@@ -10,6 +10,7 @@ import PasswordGate from "./pages/PasswordGate";
 import Calculator from "./pages/Calculator";
 import Products from "./pages/Products";
 import CostCalculator from "./pages/CostCalculator";
+import ReturnDiffCalculator from "./pages/ReturnDiffCalculator";
 import GoalCalculator from "./pages/GoalCalculator";
 import CapacityCalculator from "./pages/CapacityCalculator";
 import DashboardLayout from "./components/DashboardLayout";
@@ -22,6 +23,7 @@ function AuthenticatedApp() {
         <Route path={"/calculator"} component={Calculator} />
         <Route path={"/products"} component={Products} />
         <Route path={"/cost-calculator"} component={CostCalculator} />
+        <Route path={"/return-diff-calculator"} component={ReturnDiffCalculator} />
         <Route path={"/goal-calculator"} component={GoalCalculator} />
         <Route path={"/capacity-calculator"} component={CapacityCalculator} />
         <Route path={"/404"} component={NotFound} />
