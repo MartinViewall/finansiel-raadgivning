@@ -196,3 +196,12 @@
 - [x] Calculator.tsx: allerede korrekt (årsrente annuity due) — ingen rettelse nødvendig
 - [x] CostCalculator.tsx: allerede korrekt (årsrente annuity due) — ingen rettelse nødvendig
 - [x] CapacityCalculator.tsx: vis "Formue v. pension" som synlig linje i tabellen for hvert aktiv (pension, frie midler, selskab) — allerede implementeret
+
+## Fase 21 – Eksport og import af beregnerdata
+
+- [x] Calculator.tsx: tilføj "Gem" (eksport til JSON) og "Indlæs" (import fra JSON) knapper
+- [x] CostCalculator.tsx: tilføj eksport/import
+- [x] GoalCalculator.tsx: tilføj eksport/import
+- [x] CapacityCalculator.tsx: tilføj eksport/import
+- [x] JSON-filer navngives med beregnertype og dato, fx "afkast-2026-03-30.json"
+- [x] Import validerer at filen er den rigtige beregnertype inden indlæsning
