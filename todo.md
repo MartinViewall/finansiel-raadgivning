@@ -212,3 +212,8 @@
 - [x] Fix 2: Ret produktvælger i Afkastberegneren så nye/importerede produkter kan vælges
 - [x] Fix 3: Udvid produktredigering til alle parametre: selskab, risikoniveau, år til pension, ÅOP, NHM-id
 - [x] Fix 4: Tilføj download-knap til eksempel Excel-fil på upload-siden
+
+## Fase 23 – Ø/år i produktkort (Afkastberegner)
+
+- [x] Hvert produktkort øverst viser Ø/år* (horisontbaseret gennemsnit) under slutværdien
+- [x] Sammenligningskort (2. og 3. produkt) viser delta Ø/år (forskel ift. første produkt)

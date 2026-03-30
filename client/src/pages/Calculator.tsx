@@ -107,6 +107,8 @@ function SummaryCard({
   initialCapital,
   annualContribution,
   baselinePensionValue,
+  avgReturn,
+  deltaAvgReturn,
 }: {
   name: string;
   finalValue: number;
@@ -119,6 +121,8 @@ function SummaryCard({
   initialCapital: number;
   annualContribution: number;
   baselinePensionValue: number | null;
+  avgReturn: number;
+  deltaAvgReturn: number | null;
 }) {
   // Pension projection: project from current finalValue (end of horizon) forward to pension
   const pensionValue =
@@ -166,6 +170,22 @@ function SummaryCard({
           {formatDKKFull(delta)} ({formatPct(deltaPct)})
         </p>
       )}
+
+      {/* Ø/år row */}
+      <div className="flex items-center gap-2 mt-2">
+        <span className="text-xs text-muted-foreground">Ø/år*</span>
+        <span className="text-xs font-semibold text-foreground tabular-nums">
+          {formatPct(avgReturn)}
+        </span>
+        {deltaAvgReturn !== null && !isBaseline && (
+          <span
+            className="text-xs font-medium ml-1"
+            style={{ color: deltaAvgReturn >= 0 ? "#16a34a" : "#dc2626" }}
+          >
+            ({deltaAvgReturn >= 0 ? "+" : ""}{formatPct(deltaAvgReturn)})
+          </span>
+        )}
+      </div>
 
       {/* Pension projection */}
       {pensionValue !== null && pensionYears !== null && (
@@ -680,6 +700,12 @@ export default function Calculator() {
                             ? ((r.finalValue - baselineResult.finalValue) /
                                 baselineResult.finalValue) *
                               100
+                            : null
+                        }
+                        avgReturn={r.avgAnnualReturnHorizon}
+                        deltaAvgReturn={
+                          idx > 0 && baselineResult
+                            ? r.avgAnnualReturnHorizon - baselineResult.avgAnnualReturnHorizon
                             : null
                         }
                         pensionYears={validPensionYears}
