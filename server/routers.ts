@@ -99,6 +99,12 @@ export const appRouter = router({
           name: z.string().min(1).max(128).optional(),
           description: z.string().optional(),
           color: z.string().regex(/^#[0-9a-fA-F]{6}$/).optional(),
+          company: z.string().max(128).optional(),
+          productLine: z.string().max(128).optional(),
+          riskLevel: z.string().max(64).optional(),
+          yearsToPension: z.number().int().optional(),
+          aop: z.number().optional(),
+          nhmId: z.string().max(32).optional(),
         })
       )
       .mutation(async ({ input }) => {

@@ -89,10 +89,24 @@ export async function createProduct(data: { name: string; description?: string; 
   return result[0];
 }
 
-export async function updateProduct(id: number, data: { name?: string; description?: string; color?: string }) {
+export async function updateProduct(id: number, data: {
+  name?: string;
+  description?: string;
+  color?: string;
+  company?: string;
+  productLine?: string;
+  riskLevel?: string;
+  yearsToPension?: number;
+  aop?: number;
+  nhmId?: string;
+}) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
-  await db.update(investmentProducts).set(data).where(eq(investmentProducts.id, id));
+  // Drizzle stores aop as decimal string in MySQL
+  const { aop, ...rest } = data;
+  const setData: Record<string, unknown> = { ...rest };
+  if (aop !== undefined) setData.aop = String(aop);
+  await db.update(investmentProducts).set(setData as Parameters<typeof db.update>[0] extends { set: (v: infer V) => unknown } ? V : never).where(eq(investmentProducts.id, id));
 }
 
 export async function deleteProduct(id: number) {

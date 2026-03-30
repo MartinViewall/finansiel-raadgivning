@@ -1,39 +1,37 @@
 /**
  * CalculatorIOBar
  *
- * A small toolbar with "Gem" (export) and "Indlæs" (import) buttons.
- * Drop this at the top of any calculator page.
+ * A small toolbar with "Gem scenarie" and "Indlæs scenarie" buttons.
+ * Saves/loads ALL four calculators in one JSON file via useAllCalculatorsIO.
+ * Drop this anywhere — it reads/writes the shared CalculatorContext directly.
  */
 import { Download, Upload } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useAllCalculatorsIO } from "@/hooks/useCalculatorIO";
 
-interface Props {
-  onExport: () => void;
-  onImport: () => void;
-}
-
-export function CalculatorIOBar({ onExport, onImport }: Props) {
+export function CalculatorIOBar() {
+  const { exportAll, triggerImportAll } = useAllCalculatorsIO();
   return (
     <div className="flex items-center gap-2 mb-4">
       <Button
         variant="outline"
         size="sm"
-        onClick={onExport}
+        onClick={exportAll}
         className="gap-1.5 text-xs"
-        title="Gem inputs til fil"
+        title="Gem alle beregnere til fil"
       >
         <Download className="h-3.5 w-3.5" />
-        Gem
+        Gem scenarie
       </Button>
       <Button
         variant="outline"
         size="sm"
-        onClick={onImport}
+        onClick={triggerImportAll}
         className="gap-1.5 text-xs"
-        title="Indlæs inputs fra fil"
+        title="Indlæs alle beregnere fra fil"
       >
         <Upload className="h-3.5 w-3.5" />
-        Indlæs
+        Indlæs scenarie
       </Button>
     </div>
   );

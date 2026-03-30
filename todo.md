@@ -205,3 +205,10 @@
 - [x] CapacityCalculator.tsx: tilføj eksport/import
 - [x] JSON-filer navngives med beregnertype og dato, fx "afkast-2026-03-30.json"
 - [x] Import validerer at filen er den rigtige beregnertype inden indlæsning
+
+## Fase 22 – Fire ændringer
+
+- [x] Fix 1: Gem/Hent gemmer alle fire beregnere i én samlet JSON-fil (ikke per beregner)
+- [x] Fix 2: Ret produktvælger i Afkastberegneren så nye/importerede produkter kan vælges
+- [x] Fix 3: Udvid produktredigering til alle parametre: selskab, risikoniveau, år til pension, ÅOP, NHM-id
+- [x] Fix 4: Tilføj download-knap til eksempel Excel-fil på upload-siden

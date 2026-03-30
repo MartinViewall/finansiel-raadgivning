@@ -1,6 +1,5 @@
-import { useState, useMemo } from "react";
-import { useCalculatorIO } from "@/hooks/useCalculatorIO";
 import { CalculatorIOBar } from "@/components/CalculatorIOBar";
+import { useState, useMemo } from "react";
 import { trpc } from "@/lib/trpc";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -405,30 +404,6 @@ export default function Calculator() {
 
   const [pdfOpen, setPdfOpen] = useState(false);
 
-  const { exportData, triggerImport } = useCalculatorIO({
-    type: "afkast",
-    getData: () => ({
-      initialCapital,
-      annualContribution,
-      horizonYears,
-      selectedProductIds,
-      pensionYearsRaw,
-      pensionReturnOverride,
-      tableYearFrom,
-      tableYearTo,
-    }),
-    onImport: (d) => {
-      if (d.initialCapital !== undefined) handleSetInitialCapital(d.initialCapital);
-      if (d.annualContribution !== undefined) handleSetAnnualContribution(d.annualContribution);
-      if (d.horizonYears !== undefined) handleSetHorizonYears(d.horizonYears);
-      if (d.selectedProductIds !== undefined) handleSetSelectedProductIds(d.selectedProductIds);
-      if (d.pensionYearsRaw !== undefined) handleSetPensionYearsRaw(d.pensionYearsRaw);
-      if (d.pensionReturnOverride !== undefined) handleSetPensionReturnOverride(d.pensionReturnOverride);
-      if (d.tableYearFrom !== undefined) handleSetTableYearFrom(d.tableYearFrom);
-      if (d.tableYearTo !== undefined) handleSetTableYearTo(d.tableYearTo);
-    },
-  });
-
   // Panel collapse state (persisted in context so state survives navigation)
   const { calcParamsOpen, setCalcParamsOpen, calcProductsOpen, setCalcProductsOpen, calcPensionOpen, setCalcPensionOpen } = ctx;
 
@@ -484,7 +459,7 @@ export default function Calculator() {
       defaultSection="return"
     />
     <div className="w-full max-w-[1400px] space-y-6 px-2">
-      <CalculatorIOBar onExport={exportData} onImport={triggerImport} />
+      <CalculatorIOBar />
       {/* Page header */}
       <div className="flex items-start justify-between">
         <div>

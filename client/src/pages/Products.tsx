@@ -39,6 +39,7 @@ type ProductWithReturns = {
   riskLevel: string | null;
   yearsToPension: number | null;
   aop: string | null;
+  nhmId: string | null;
   returns: { id: number; productId: number; year: number; returnPct: string; createdAt: Date }[];
 };
 
@@ -176,7 +177,18 @@ function ExcelUploadPanel({ onSuccess }: { onSuccess: () => void }) {
 
         {/* Format hint */}
         <div className="bg-muted/40 rounded-lg px-4 py-3 text-xs text-muted-foreground space-y-1">
-          <p className="font-medium text-foreground/70">Forventet kolonneformat:</p>
+          <div className="flex items-center justify-between mb-1">
+            <p className="font-medium text-foreground/70">Forventet kolonneformat:</p>
+            <a
+              href="https://d2xsxph8kpxj0f.cloudfront.net/310519663485446511/3cVu5yuXt8ENtYAZLcFt7i/eksempel-produkter_163ea0be.xlsx"
+              download="eksempel-produkter.xlsx"
+              className="flex items-center gap-1.5 text-xs text-primary hover:underline font-medium"
+              onClick={(e) => e.stopPropagation()}
+            >
+              <FileSpreadsheet className="w-3 h-3" />
+              Download eksempelfil
+            </a>
+          </div>
           <p>
             <span className="font-mono bg-muted px-1 rounded">NHM_ID</span>,{" "}
             <span className="font-mono bg-muted px-1 rounded">Name</span>,{" "}
@@ -509,6 +521,12 @@ export default function Products() {
   const [formName, setFormName] = useState("");
   const [formDescription, setFormDescription] = useState("");
   const [formColor, setFormColor] = useState(PRESET_COLORS[0]);
+  const [formCompany, setFormCompany] = useState("");
+  const [formProductLine, setFormProductLine] = useState("");
+  const [formRiskLevel, setFormRiskLevel] = useState("");
+  const [formYearsToPension, setFormYearsToPension] = useState("");
+  const [formAop, setFormAop] = useState("");
+  const [formNhmId, setFormNhmId] = useState("");
 
   const createMutation = trpc.products.create.useMutation({
     onSuccess: () => {
@@ -543,6 +561,12 @@ export default function Products() {
     setFormName("");
     setFormDescription("");
     setFormColor(PRESET_COLORS[0]);
+    setFormCompany("");
+    setFormProductLine("");
+    setFormRiskLevel("");
+    setFormYearsToPension("");
+    setFormAop("");
+    setFormNhmId("");
   };
 
   const openCreate = () => {
@@ -554,13 +578,32 @@ export default function Products() {
     setFormName(p.name);
     setFormDescription(p.description ?? "");
     setFormColor(p.color);
+    setFormCompany(p.company ?? "");
+    setFormProductLine(p.productLine ?? "");
+    setFormRiskLevel(p.riskLevel ?? "");
+    setFormYearsToPension(p.yearsToPension != null ? String(p.yearsToPension) : "");
+    setFormAop(p.aop != null ? String(parseFloat(p.aop)) : "");
+    setFormNhmId(p.nhmId ?? "");
     setEditProduct(p);
   };
 
   const handleSave = () => {
     if (!formName.trim()) return toast.error("Navn er påkrævet");
+    const yearsParsed = formYearsToPension.trim() !== "" ? parseInt(formYearsToPension) : undefined;
+    const aopParsed = formAop.trim() !== "" ? parseFloat(formAop.replace(",", ".")) : undefined;
     if (editProduct) {
-      updateMutation.mutate({ id: editProduct.id, name: formName, description: formDescription, color: formColor });
+      updateMutation.mutate({
+        id: editProduct.id,
+        name: formName,
+        description: formDescription || undefined,
+        color: formColor,
+        company: formCompany.trim() || undefined,
+        productLine: formProductLine.trim() || undefined,
+        riskLevel: formRiskLevel.trim() || undefined,
+        yearsToPension: yearsParsed,
+        aop: aopParsed,
+        nhmId: formNhmId.trim() || undefined,
+      });
     } else {
       createMutation.mutate({ name: formName, description: formDescription, color: formColor });
     }
@@ -626,7 +669,7 @@ export default function Products() {
 
       {/* Create / Edit dialog */}
       <Dialog open={isDialogOpen} onOpenChange={(open) => { if (!open) { setShowCreateDialog(false); setEditProduct(null); resetForm(); } }}>
-        <DialogContent className="sm:max-w-md">
+        <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>{editProduct ? "Rediger produkt" : "Nyt investeringsprodukt"}</DialogTitle>
           </DialogHeader>
@@ -648,6 +691,67 @@ export default function Products() {
                 placeholder="f.eks. Blandet portefølje med middel risiko"
                 value={formDescription}
                 onChange={(e) => setFormDescription(e.target.value)}
+              />
+            </div>
+            {/* Extra fields (edit only) */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="prod-company">Selskab</Label>
+                <Input
+                  id="prod-company"
+                  placeholder="f.eks. PFA"
+                  value={formCompany}
+                  onChange={(e) => setFormCompany(e.target.value)}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="prod-line">Produktlinje</Label>
+                <Input
+                  id="prod-line"
+                  placeholder="f.eks. LivsCyklus"
+                  value={formProductLine}
+                  onChange={(e) => setFormProductLine(e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="grid grid-cols-3 gap-3">
+              <div className="space-y-1.5">
+                <Label htmlFor="prod-risk">Risikoniveau</Label>
+                <Input
+                  id="prod-risk"
+                  placeholder="f.eks. Moderat"
+                  value={formRiskLevel}
+                  onChange={(e) => setFormRiskLevel(e.target.value)}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="prod-years">År til pension</Label>
+                <Input
+                  id="prod-years"
+                  type="number"
+                  placeholder="f.eks. 10"
+                  value={formYearsToPension}
+                  onChange={(e) => setFormYearsToPension(e.target.value)}
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label htmlFor="prod-aop">ÅOP (%)</Label>
+                <Input
+                  id="prod-aop"
+                  placeholder="f.eks. 0.75"
+                  value={formAop}
+                  onChange={(e) => setFormAop(e.target.value)}
+                />
+              </div>
+            </div>
+            <div className="space-y-1.5">
+              <Label htmlFor="prod-nhm">NHM-ID</Label>
+              <Input
+                id="prod-nhm"
+                placeholder="f.eks. PFACMOD10F0A"
+                value={formNhmId}
+                onChange={(e) => setFormNhmId(e.target.value)}
+                className="font-mono text-xs"
               />
             </div>
             <div className="space-y-1.5">

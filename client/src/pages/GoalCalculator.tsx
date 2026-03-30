@@ -1,6 +1,5 @@
-import { useState, useMemo, useRef, useEffect } from "react";
-import { useCalculatorIO } from "@/hooks/useCalculatorIO";
 import { CalculatorIOBar } from "@/components/CalculatorIOBar";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Target, PiggyBank, TrendingUp, Banknote, FileDown } from "lucide-react";
@@ -355,20 +354,6 @@ export default function GoalCalculator() {
   // ── PDF data ─────────────────────────────────────────────────────────────
   const [pdfOpen, setPdfOpen] = useState(false);
 
-  const { exportData, triggerImport } = useCalculatorIO({
-    type: "maal",
-    getData: () => ({ mode, depot, years, returnRaw, targetAmount, annualPayout, payoutYears }),
-    onImport: (d) => {
-      if (d.mode !== undefined) handleMode(d.mode);
-      if (d.depot !== undefined) handleDepot(d.depot);
-      if (d.years !== undefined) handleYears(d.years);
-      if (d.returnRaw !== undefined) handleReturnRaw(d.returnRaw);
-      if (d.targetAmount !== undefined) handleTargetAmount(d.targetAmount);
-      if (d.annualPayout !== undefined) handleAnnualPayout(d.annualPayout);
-      if (d.payoutYears !== undefined) handlePayoutYears(d.payoutYears);
-    },
-  });
-
   const goalDataForPdf: GoalData | undefined = results
     ? {
         mode: results.mode,
@@ -388,7 +373,7 @@ export default function GoalCalculator() {
 
   return (
     <div className="w-full max-w-[1400px] space-y-6 px-2">
-      <CalculatorIOBar onExport={exportData} onImport={triggerImport} />
+      <CalculatorIOBar />
       <PdfReportModal
         open={pdfOpen}
         onClose={() => setPdfOpen(false)}

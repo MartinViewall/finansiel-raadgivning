@@ -1,6 +1,5 @@
-import { useState, useMemo } from "react";
-import { useCalculatorIO } from "@/hooks/useCalculatorIO";
 import { CalculatorIOBar } from "@/components/CalculatorIOBar";
+import { useState, useMemo } from "react";
 import { useCalculatorContext } from "@/contexts/CalculatorContext";
 import { ChevronDown, ChevronUp, BookmarkCheck, BarChart3 } from "lucide-react";
 import {
@@ -770,12 +769,6 @@ export default function CapacityCalculator() {
 
   const [scenarioA, setScenarioA] = useState<ScenarioState | null>(null);
 
-  const { exportData, triggerImport } = useCalculatorIO({
-    type: "kapacitet",
-    getData: () => current,
-    onImport: (d) => set(d),
-  });
-
   // Write each changed field back to context
   const set = (partial: Partial<ScenarioState>) => {
     if (partial.yearsToPension !== undefined) ctx.setCapYearsToPension(partial.yearsToPension);
@@ -815,7 +808,7 @@ export default function CapacityCalculator() {
 
   return (
     <div className="w-full max-w-[1400px] space-y-6 px-2">
-      <CalculatorIOBar onExport={exportData} onImport={triggerImport} />
+      <CalculatorIOBar />
       <div className="flex items-start justify-between flex-wrap gap-3">
           <div>
             <h1 className="text-2xl font-bold text-foreground">Din Økonomiske Kapacitet</h1>

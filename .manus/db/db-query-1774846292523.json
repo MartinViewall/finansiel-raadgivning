@@ -1,0 +1,55 @@
+{
+  "query": "SELECT id, name, company, riskLevel, yearsToPension, aop, nhmId FROM investment_products ORDER BY createdAt DESC LIMIT 5;",
+  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway05.us-east-1.prod.aws.tidbcloud.com --port 4000 --user 2EHrsXn1aoUpkwY.68200309840c --database 3cVu5yuXt8ENtYAZLcFt7i --execute SELECT id, name, company, riskLevel, yearsToPension, aop, nhmId FROM investment_products ORDER BY createdAt DESC LIMIT 5;",
+  "rows": [
+    {
+      "id": "90004",
+      "name": "Velliv Index Aktiefond",
+      "company": "NULL",
+      "riskLevel": "NULL",
+      "yearsToPension": "NULL",
+      "aop": "NULL",
+      "nhmId": "VellivIndexAktiefond"
+    },
+    {
+      "id": "60001",
+      "name": "Test Produkt A",
+      "company": "Test Selskab",
+      "riskLevel": "Lav",
+      "yearsToPension": "10",
+      "aop": "0.5000",
+      "nhmId": "TEST001"
+    },
+    {
+      "id": "60002",
+      "name": "Test Produkt B",
+      "company": "Test Selskab",
+      "riskLevel": "Høj",
+      "yearsToPension": "5",
+      "aop": "1.2000",
+      "nhmId": "TEST002"
+    },
+    {
+      "id": "30730",
+      "name": "Velliv Aftryk Høj Risiko 10 år INVAFKAST",
+      "company": "Velliv Aftryk",
+      "riskLevel": "Aggressiv",
+      "yearsToPension": "10",
+      "aop": "0.9976",
+      "nhmId": "VELLCAGG10F0A"
+    },
+    {
+      "id": "30729",
+      "name": "Velliv Aktiv Mellem risiko -5 år INVAFKAST",
+      "company": "Velliv Aktiv",
+      "riskLevel": "Moderat",
+      "yearsToPension": "-5",
+      "aop": "0.7214",
+      "nhmId": "VEALCMOD05E00"
+    }
+  ],
+  "messages": [],
+  "stdout": "id\tname\tcompany\triskLevel\tyearsToPension\taop\tnhmId\n90004\tVelliv Index Aktiefond\tNULL\tNULL\tNULL\tNULL\tVellivIndexAktiefond\n60001\tTest Produkt A\tTest Selskab\tLav\t10\t0.5000\tTEST001\n60002\tTest Produkt B\tTest Selskab\tHøj\t5\t1.2000\tTEST002\n30730\tVelliv Aftryk Høj Risiko 10 år INVAFKAST\tVelliv Aftryk\tAggressiv\t10\t0.9976\tVELLCAGG10F0A\n30729\tVelliv Aktiv Mellem risiko -5 år INVAFKAST\tVelliv Aktiv\tModerat\t-5\t0.7214\tVEALCMOD05E00\n",
+  "stderr": "",
+  "execution_time_ms": 231
+}

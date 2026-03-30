@@ -1,6 +1,5 @@
-import { useState, useMemo, useRef, useEffect } from "react";
-import { useCalculatorIO } from "@/hooks/useCalculatorIO";
 import { CalculatorIOBar } from "@/components/CalculatorIOBar";
+import { useState, useMemo, useRef, useEffect } from "react";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { TrendingDown, PiggyBank, Info, ChevronDown, ChevronUp, ArrowRightLeft, FileDown } from "lucide-react";
@@ -305,18 +304,6 @@ export default function CostCalculator() {
   const handleSetCostTodayRaw = (v: string) => { setCostTodayRaw(v); ctx.setCostTodayRaw(v); };
   const handleSetCostNewRaw = (v: string) => { setCostNewRaw(v); ctx.setCostNewRaw(v); };
 
-  const { exportData, triggerImport } = useCalculatorIO({
-    type: "omkostning",
-    getData: () => ({ depot, annualContribution, yearsToPension, costTodayRaw, costNewRaw }),
-    onImport: (d) => {
-      if (d.depot !== undefined) handleSetDepot(d.depot);
-      if (d.annualContribution !== undefined) handleSetAnnualContribution(d.annualContribution);
-      if (d.yearsToPension !== undefined) handleSetYearsToPension(d.yearsToPension);
-      if (d.costTodayRaw !== undefined) handleSetCostTodayRaw(d.costTodayRaw);
-      if (d.costNewRaw !== undefined) handleSetCostNewRaw(d.costNewRaw);
-    },
-  });
-
   // Track whether values were transferred from the return calculator
   const [transferred, setTransferred] = useState(
     ctx.depot !== 2_000_000 || ctx.annualContribution !== 100_000 || ctx.horizonYears !== 5
@@ -389,7 +376,7 @@ export default function CostCalculator() {
       defaultSection="cost"
     />
     <div className="w-full max-w-[1400px] space-y-6 px-2">
-      <CalculatorIOBar onExport={exportData} onImport={triggerImport} />
+      <CalculatorIOBar />
       {/* Overskrift */}
       <div className="flex items-start justify-between">
         <div>
