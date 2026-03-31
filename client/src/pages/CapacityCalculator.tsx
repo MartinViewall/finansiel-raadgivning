@@ -365,6 +365,13 @@ function ScenarioInputs({
   s: ScenarioState;
   set: (partial: Partial<ScenarioState>) => void;
 }) {
+  // Separate mode state so "Manuel" stays selected even when value matches a preset
+  const [folkepensionMode, setFolkepensionMode] = useState<"par" | "enlig" | "manuel">(
+    s.folkepension === 8172 ? "enlig" : s.folkepension === 7260 ? "par" : "manuel"
+  );
+  const [pensionstillaegMode, setPensionstillaegMode] = useState<"ingen" | "par" | "enlig" | "manuel">(
+    s.pensionstillaeg === 8600 ? "enlig" : s.pensionstillaeg === 4300 ? "par" : s.pensionstillaeg === 0 ? "ingen" : "manuel"
+  );
   return (
     <div className="space-y-3">
       {/* Global parameters */}
@@ -526,13 +533,12 @@ function ScenarioInputs({
           <div className="space-y-1.5">
             <select
               className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary appearance-none"
-              value={
-                s.folkepension === 8172 ? "enlig" :
-                s.folkepension === 7260 ? "par" : "manuel"
-              }
+              value={folkepensionMode}
               onChange={(e) => {
-                if (e.target.value === "enlig") set({ folkepension: 8172 });
-                else if (e.target.value === "par") set({ folkepension: 7260 });
+                const v = e.target.value as typeof folkepensionMode;
+                setFolkepensionMode(v);
+                if (v === "enlig") set({ folkepension: 8172 });
+                else if (v === "par") set({ folkepension: 7260 });
                 // "manuel" — keep current value, user edits below
               }}
             >
@@ -540,7 +546,7 @@ function ScenarioInputs({
               <option value="enlig">Enlig – 8.172 kr./md.</option>
               <option value="manuel">Manuel</option>
             </select>
-            {s.folkepension !== 8172 && s.folkepension !== 7260 && (
+            {folkepensionMode === "manuel" && (
               <NumberInput value={s.folkepension} onChange={(v) => set({ folkepension: v })} suffix="kr./md." />
             )}
           </div>
@@ -550,15 +556,13 @@ function ScenarioInputs({
           <div className="space-y-1.5">
             <select
               className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary appearance-none"
-              value={
-                s.pensionstillaeg === 8600 ? "enlig" :
-                s.pensionstillaeg === 4300 ? "par" :
-                s.pensionstillaeg === 0 ? "ingen" : "manuel"
-              }
+              value={pensionstillaegMode}
               onChange={(e) => {
-                if (e.target.value === "enlig") set({ pensionstillaeg: 8600 });
-                else if (e.target.value === "par") set({ pensionstillaeg: 4300 });
-                else if (e.target.value === "ingen") set({ pensionstillaeg: 0 });
+                const v = e.target.value as typeof pensionstillaegMode;
+                setPensionstillaegMode(v);
+                if (v === "enlig") set({ pensionstillaeg: 8600 });
+                else if (v === "par") set({ pensionstillaeg: 4300 });
+                else if (v === "ingen") set({ pensionstillaeg: 0 });
                 // "manuel" — keep current value
               }}
             >
@@ -567,7 +571,7 @@ function ScenarioInputs({
               <option value="enlig">Enlig – 8.600 kr./md.</option>
               <option value="manuel">Manuel</option>
             </select>
-            {s.pensionstillaeg !== 8600 && s.pensionstillaeg !== 4300 && s.pensionstillaeg !== 0 && (
+            {pensionstillaegMode === "manuel" && (
               <NumberInput value={s.pensionstillaeg} onChange={(v) => set({ pensionstillaeg: v })} suffix="kr./md." />
             )}
           </div>

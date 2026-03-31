@@ -244,3 +244,8 @@
 - [ ] Tilføj dropdown ved Pensionstillæg med valgmuligheder: Enlig (8.600 kr.), Par (4.300 kr.), Manuel
 - [ ] Ny standardværdi: Folkepension = 7.260 (Par), Pensionstillæg = 0, ATP = 1.000
 - [ ] Fjern capCivilStatus fra CalculatorContext (eller behold som intern hjælper hvis nødvendigt)
+
+## Fase 27 – Fix Manuel-tilstand i offentlige ydelser dropdowns
+
+- [x] Folkepension: Manuel-valg viser taltfelt korrekt (brug separat state for dropdown-valg)
+- [x] Pensionstillæg: Manuel-valg viser taltfelt korrekt (brug separat state for dropdown-valg)
