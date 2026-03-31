@@ -205,9 +205,9 @@ const DEFAULTS = {
   capSelskabReturn: 6.0,
   capSelskabSkat: 22,
   capUdbytteSkat: 27,
-  capFolkepension: 7100,
-  capPensionstillaeg: 4300,
-  capAtp: 2500,
+  capFolkepension: 7260,
+  capPensionstillaeg: 0,
+  capAtp: 1000,
 };
 
 // ─── Context ──────────────────────────────────────────────────────────────────

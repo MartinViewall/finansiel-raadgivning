@@ -236,3 +236,11 @@
 - [x] useCalculatorIO: filnavn bliver `scenarie-{klientnavn}-{dato}.json` hvis navn er udfyldt, ellers `scenarie-{dato}.json`
 - [x] Klientnavn gemmes i JSON-filen under `_klient` feltet
 - [x] Ved import vises klientnavnet i en toast: "Scenarie for {klientnavn} indlæst"
+
+## Fase 26 – Civilstatus erstattes med dropdowns
+
+- [ ] Fjern civilstatus Enlig/Par-knap fra toppen af Kapacitetsberegneren
+- [ ] Tilføj dropdown ved Folkepension med valgmuligheder: Enlig (8.172 kr.), Par (7.260 kr.), Manuel
+- [ ] Tilføj dropdown ved Pensionstillæg med valgmuligheder: Enlig (8.600 kr.), Par (4.300 kr.), Manuel
+- [ ] Ny standardværdi: Folkepension = 7.260 (Par), Pensionstillæg = 0, ATP = 1.000
+- [ ] Fjern capCivilStatus fra CalculatorContext (eller behold som intern hjælper hvis nødvendigt)

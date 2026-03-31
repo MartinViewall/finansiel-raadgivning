@@ -281,9 +281,9 @@ const defaultState = (civilStatus: "enlig" | "par" = "enlig"): ScenarioState => 
   selskabReturn: 6.0,
   selskabSkat: 22,
   udbytteSkat: 27,
-  folkepension: civilStatus === "enlig" ? 7100 : 7100,
-  pensionstillaeg: civilStatus === "enlig" ? 4300 : 4300,
-  atp: civilStatus === "enlig" ? 2500 : 2500,
+  folkepension: civilStatus === "enlig" ? 8172 : 7260,
+  pensionstillaeg: 0,
+  atp: 1000,
 });
 
 function calcResults(s: ScenarioState) {
@@ -372,31 +372,7 @@ function ScenarioInputs({
         <h3 className="text-xs font-semibold uppercase tracking-wide text-muted-foreground">
           Forudsætninger
         </h3>
-        <Row label="Civilstatus">
-          <div className="flex gap-2">
-            {(["enlig", "par"] as const).map((v) => (
-              <button
-                key={v}
-                onClick={() => {
-                  const defaults = defaultState(v);
-                  set({
-                    civilStatus: v,
-                    folkepension: defaults.folkepension,
-                    pensionstillaeg: defaults.pensionstillaeg,
-                    atp: defaults.atp,
-                  });
-                }}
-                className={`flex-1 rounded-md border px-3 py-1.5 text-xs font-medium transition-colors ${
-                  s.civilStatus === v
-                    ? "border-primary bg-primary text-primary-foreground"
-                    : "border-border bg-background text-foreground hover:bg-accent"
-                }`}
-              >
-                {v === "enlig" ? "Enlig" : "Par"}
-              </button>
-            ))}
-          </div>
-        </Row>
+
         <Row label="År til pension">
           <NumberInput
             value={s.yearsToPension}
@@ -545,12 +521,58 @@ function ScenarioInputs({
 
       {/* Offentlige ydelser */}
       <Panel title="Offentlige ydelser" color="#6b7280">
+        {/* Folkepension */}
         <Row label="Folkepension grundbeløb">
-          <NumberInput value={s.folkepension} onChange={(v) => set({ folkepension: v })} suffix="kr./md." />
+          <div className="space-y-1.5">
+            <select
+              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary appearance-none"
+              value={
+                s.folkepension === 8172 ? "enlig" :
+                s.folkepension === 7260 ? "par" : "manuel"
+              }
+              onChange={(e) => {
+                if (e.target.value === "enlig") set({ folkepension: 8172 });
+                else if (e.target.value === "par") set({ folkepension: 7260 });
+                // "manuel" — keep current value, user edits below
+              }}
+            >
+              <option value="par">Par – 7.260 kr./md.</option>
+              <option value="enlig">Enlig – 8.172 kr./md.</option>
+              <option value="manuel">Manuel</option>
+            </select>
+            {s.folkepension !== 8172 && s.folkepension !== 7260 && (
+              <NumberInput value={s.folkepension} onChange={(v) => set({ folkepension: v })} suffix="kr./md." />
+            )}
+          </div>
         </Row>
+        {/* Pensionstillæg */}
         <Row label="Pensionstillæg">
-          <NumberInput value={s.pensionstillaeg} onChange={(v) => set({ pensionstillaeg: v })} suffix="kr./md." />
+          <div className="space-y-1.5">
+            <select
+              className="w-full rounded-md border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-1 focus:ring-primary appearance-none"
+              value={
+                s.pensionstillaeg === 8600 ? "enlig" :
+                s.pensionstillaeg === 4300 ? "par" :
+                s.pensionstillaeg === 0 ? "ingen" : "manuel"
+              }
+              onChange={(e) => {
+                if (e.target.value === "enlig") set({ pensionstillaeg: 8600 });
+                else if (e.target.value === "par") set({ pensionstillaeg: 4300 });
+                else if (e.target.value === "ingen") set({ pensionstillaeg: 0 });
+                // "manuel" — keep current value
+              }}
+            >
+              <option value="ingen">Ingen – 0 kr./md.</option>
+              <option value="par">Par – 4.300 kr./md.</option>
+              <option value="enlig">Enlig – 8.600 kr./md.</option>
+              <option value="manuel">Manuel</option>
+            </select>
+            {s.pensionstillaeg !== 8600 && s.pensionstillaeg !== 4300 && s.pensionstillaeg !== 0 && (
+              <NumberInput value={s.pensionstillaeg} onChange={(v) => set({ pensionstillaeg: v })} suffix="kr./md." />
+            )}
+          </div>
         </Row>
+        {/* ATP */}
         <Row label="ATP">
           <NumberInput value={s.atp} onChange={(v) => set({ atp: v })} suffix="kr./md." />
         </Row>
