@@ -271,3 +271,9 @@
 - [x] Forudsætninger (alder/pensionsalder) kan minimeres med collapse-toggle
 - [x] Opsparingstyper-sektioner forbliver sammenklappelige som nu
 - [x] Fjern scrollbehov: resultater synlige uden at scrolle
+
+## Fase 30 – Gennemsnitsrenteberegner: accepteret forskel baseret på rente
+
+- [x] Forskel vises som "≈ 0" når den tastede rente stemmer med nødvendig rente på 2 decimaler (f.eks. 4,56% = 4,56%)
+- [x] Sammenligning: Math.round(rentePct * 100) / 100 === Math.round(requiredRate * 10000) / 100
+- [x] Fjern den gamle afrunding til nærmeste 10 kr. — erstat med rentebaseret accept-logik

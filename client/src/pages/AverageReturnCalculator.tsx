@@ -19,9 +19,9 @@ function parsePct(s: string): number {
   return isNaN(v) ? 0 : Math.max(0, v);
 }
 
-// Round to nearest 10 — differences within ±10 kr. are considered "accepted"
-function roundDiff(n: number): number {
-  return Math.round(n / 10) * 10;
+// Round a rate percentage to 2 decimal places for comparison
+function roundRate2(pct: number): number {
+  return Math.round(pct * 100) / 100;
 }
 
 // ─── NumberInput ───────────────────────────────────────────────────────────────
@@ -154,8 +154,10 @@ function TopResultCard({
   rentePct: number;
 }) {
   const rawDiff = pmt - garanteret;
-  const roundedDiff = roundDiff(rawDiff);
-  const isAccepted = Math.abs(roundedDiff) === 0;
+  // Rate-based acceptance: if entered rate matches required rate to 2 decimal places → accepted
+  const isRateAccepted = requiredRate !== null
+    ? roundRate2(rentePct) === roundRate2(requiredRate * 100)
+    : false;
 
   return (
     <div className={`rounded-xl border ${pt.borderColor} bg-card p-3 flex flex-col gap-2 min-w-[200px] flex-1`}>
@@ -180,8 +182,8 @@ function TopResultCard({
 
           <div className="flex justify-between items-baseline gap-2 border-t border-border pt-1.5">
             <span className="text-xs text-muted-foreground">Forskel</span>
-            <span className={`text-sm font-bold ${isAccepted ? "text-emerald-400" : rawDiff >= 0 ? "text-emerald-400" : "text-red-400"}`}>
-              {isAccepted ? "≈ 0" : (rawDiff >= 0 ? "+" : "") + fmt(roundedDiff) + " kr."}
+            <span className={`text-sm font-bold ${isRateAccepted ? "text-emerald-400" : rawDiff >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+              {isRateAccepted ? "≈ 0" : (rawDiff >= 0 ? "+" : "") + fmt(rawDiff) + " kr."}
             </span>
           </div>
 
