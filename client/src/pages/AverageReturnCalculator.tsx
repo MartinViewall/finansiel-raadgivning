@@ -144,7 +144,7 @@ function hasData(s: SectionState): boolean {
 
 // ─── Compact result card (shown at top) ───────────────────────────────────────
 function TopResultCard({
-  pt, fv, pmt, garanteret, requiredRate, rentePct,
+  pt, fv, pmt, garanteret, requiredRate, rentePct, udbetalingsaar,
 }: {
   pt: PensionTypeDef;
   fv: number;
@@ -152,6 +152,7 @@ function TopResultCard({
   garanteret: number;
   requiredRate: number | null;
   rentePct: number;
+  udbetalingsaar: number;
 }) {
   const rawDiff = pmt - garanteret;
   // Rate-based acceptance: if entered rate matches required rate to 2 decimal places → accepted
@@ -181,11 +182,20 @@ function TopResultCard({
           </div>
 
           <div className="flex justify-between items-baseline gap-2 border-t border-border pt-1.5">
-            <span className="text-xs text-muted-foreground">Forskel</span>
+            <span className="text-xs text-muted-foreground">Forskel/år</span>
             <span className={`text-sm font-bold ${isRateAccepted ? "text-emerald-400" : rawDiff >= 0 ? "text-emerald-400" : "text-red-400"}`}>
               {isRateAccepted ? "≈ 0" : (rawDiff >= 0 ? "+" : "") + fmt(rawDiff) + " kr."}
             </span>
           </div>
+
+          {!isRateAccepted && (
+            <div className="flex justify-between items-baseline gap-2">
+              <span className="text-xs text-muted-foreground">Forskel i alt ({udbetalingsaar} år)</span>
+              <span className={`text-sm font-bold ${rawDiff >= 0 ? "text-emerald-400" : "text-red-400"}`}>
+                {(rawDiff >= 0 ? "+" : "") + fmt(rawDiff * udbetalingsaar) + " kr."}
+              </span>
+            </div>
+          )}
 
           {requiredRate !== null && (
             <div className="rounded-md bg-muted/40 px-2 py-1.5 flex items-center justify-between gap-2">
@@ -363,6 +373,7 @@ export default function AverageReturnCalculator() {
               garanteret={s.garanteret}
               requiredRate={res.requiredRate}
               rentePct={s.rentePct}
+              udbetalingsaar={s.udbetalingsaar}
             />
           ))}
         </div>

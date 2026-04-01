@@ -277,3 +277,9 @@
 - [x] Forskel vises som "≈ 0" når den tastede rente stemmer med nødvendig rente på 2 decimaler (f.eks. 4,56% = 4,56%)
 - [x] Sammenligning: Math.round(rentePct * 100) / 100 === Math.round(requiredRate * 10000) / 100
 - [x] Fjern den gamle afrunding til nærmeste 10 kr. — erstat med rentebaseret accept-logik
+
+## Fase 31 – Gennemsnitsrenteberegner: Forskel i alt
+
+- [x] Tilføj "Forskel i alt" linje i resultatkort: (Udbetaling/år − Garanti/år) × Udbetalingsår
+- [x] Vises under "Forskel" linjen med samme grøn/rød farve
+- [x] Gælder for alle fire opsparingstyper
