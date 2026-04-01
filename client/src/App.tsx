@@ -13,6 +13,7 @@ import CostCalculator from "./pages/CostCalculator";
 import ReturnDiffCalculator from "./pages/ReturnDiffCalculator";
 import GoalCalculator from "./pages/GoalCalculator";
 import CapacityCalculator from "./pages/CapacityCalculator";
+import AverageReturnCalculator from "./pages/AverageReturnCalculator";
 import DashboardLayout from "./components/DashboardLayout";
 
 function AuthenticatedApp() {
@@ -26,6 +27,7 @@ function AuthenticatedApp() {
         <Route path={"/return-diff-calculator"} component={ReturnDiffCalculator} />
         <Route path={"/goal-calculator"} component={GoalCalculator} />
         <Route path={"/capacity-calculator"} component={CapacityCalculator} />
+        <Route path={"/average-return-calculator"} component={AverageReturnCalculator} />
         <Route path={"/404"} component={NotFound} />
         <Route component={NotFound} />
       </Switch>

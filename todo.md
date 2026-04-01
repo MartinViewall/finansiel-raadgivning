@@ -239,13 +239,27 @@
 
 ## Fase 26 – Civilstatus erstattes med dropdowns
 
-- [ ] Fjern civilstatus Enlig/Par-knap fra toppen af Kapacitetsberegneren
-- [ ] Tilføj dropdown ved Folkepension med valgmuligheder: Enlig (8.172 kr.), Par (7.260 kr.), Manuel
-- [ ] Tilføj dropdown ved Pensionstillæg med valgmuligheder: Enlig (8.600 kr.), Par (4.300 kr.), Manuel
-- [ ] Ny standardværdi: Folkepension = 7.260 (Par), Pensionstillæg = 0, ATP = 1.000
-- [ ] Fjern capCivilStatus fra CalculatorContext (eller behold som intern hjælper hvis nødvendigt)
+- [x] Fjern civilstatus Enlig/Par-knap fra toppen af Kapacitetsberegneren
+- [x] Tilføj dropdown ved Folkepension med valgmuligheder: Enlig (8.172 kr.), Par (7.260 kr.), Manuel
+- [x] Tilføj dropdown ved Pensionstillæg med valgmuligheder: Enlig (8.600 kr.), Par (4.300 kr.), Manuel
+- [x] Ny standardværdi: Folkepension = 7.260 (Par), Pensionstillæg = 0, ATP = 1.000
+- [x] capCivilStatus bibeholdt i CalculatorContext som intern hjælper (ingen breaking change)
 
 ## Fase 27 – Fix Manuel-tilstand i offentlige ydelser dropdowns
 
 - [x] Folkepension: Manuel-valg viser taltfelt korrekt (brug separat state for dropdown-valg)
 - [x] Pensionstillæg: Manuel-valg viser taltfelt korrekt (brug separat state for dropdown-valg)
+
+## Fase 28 – Gennemsnitsrenteberegner
+
+- [x] AverageReturnCalculator.tsx: globale inputs øverst (Nuværende alder, Pensionsalder standard 67)
+- [x] Fire sektioner: Kapitalpension, Aldersopsparing, Ratepension, Livrente
+- [x] Hvert sektion: Depot i dag, Overførselstillæg (standard 0), Årlig indbetaling, Gennemsnitlig forrentning (%), Udbetalingsår (standard: 1/1/10/22), Garanteret ydelse
+- [x] Beregning: FV(rente, år_til_pension, indbetaling, depot+overf, type=0) → PMT(rente, udbetalingsår, FV, 0, type=1)
+- [x] Nødvendig rente: binær søgning der finder rente så PMT = garanteret ydelse
+- [x] Resultatkort per sektion: Depot v. pension, Forventet udbetaling, Garanteret ydelse, Difference, Nødvendig rente
+- [x] Difference vises grøn (positiv = forventet > garanti) eller rød (negativ = garanti er bedre)
+- [x] Tilføj avgReturn-felter til CalculatorContext for alle fire typer
+- [x] Registrer rute /average-return-calculator i App.tsx
+- [x] Tilføj "Gennemsnitsrente" til sidebar-navigation i DashboardLayout.tsx
+- [x] Integrér i useCalculatorIO (Gem/Hent)

@@ -2,7 +2,8 @@
  * CalculatorContext
  *
  * Persists all inputs for Afkastberegneren, Omkostningsberegneren, Målberegneren,
- * and Kapacitetsberegneren so that navigating between pages does not reset any values.
+ * Kapacitetsberegneren, and Gennemsnitsrenteberegneren so that navigating between
+ * pages does not reset any values.
  */
 import { createContext, useContext, useState } from "react";
 
@@ -141,6 +142,21 @@ interface CalculatorSharedState {
   setCapFolkepension: (v: number) => void;
   setCapPensionstillaeg: (v: number) => void;
   setCapAtp: (v: number) => void;
+
+  // ── Gennemsnitsrenteberegner ────────────────────────────────────────────────
+  avgRetCurrentAge: number;
+  avgRetPensionAge: number;
+  avgRet0Depot: number; avgRet0Overf: number; avgRet0Indbetaling: number; avgRet0RentePct: number; avgRet0Udbetalingsaar: number; avgRet0Garanteret: number;
+  avgRet1Depot: number; avgRet1Overf: number; avgRet1Indbetaling: number; avgRet1RentePct: number; avgRet1Udbetalingsaar: number; avgRet1Garanteret: number;
+  avgRet2Depot: number; avgRet2Overf: number; avgRet2Indbetaling: number; avgRet2RentePct: number; avgRet2Udbetalingsaar: number; avgRet2Garanteret: number;
+  avgRet3Depot: number; avgRet3Overf: number; avgRet3Indbetaling: number; avgRet3RentePct: number; avgRet3Udbetalingsaar: number; avgRet3Garanteret: number;
+
+  setAvgRetCurrentAge: (v: number) => void;
+  setAvgRetPensionAge: (v: number) => void;
+  setAvgRet0Depot: (v: number) => void; setAvgRet0Overf: (v: number) => void; setAvgRet0Indbetaling: (v: number) => void; setAvgRet0RentePct: (v: number) => void; setAvgRet0Udbetalingsaar: (v: number) => void; setAvgRet0Garanteret: (v: number) => void;
+  setAvgRet1Depot: (v: number) => void; setAvgRet1Overf: (v: number) => void; setAvgRet1Indbetaling: (v: number) => void; setAvgRet1RentePct: (v: number) => void; setAvgRet1Udbetalingsaar: (v: number) => void; setAvgRet1Garanteret: (v: number) => void;
+  setAvgRet2Depot: (v: number) => void; setAvgRet2Overf: (v: number) => void; setAvgRet2Indbetaling: (v: number) => void; setAvgRet2RentePct: (v: number) => void; setAvgRet2Udbetalingsaar: (v: number) => void; setAvgRet2Garanteret: (v: number) => void;
+  setAvgRet3Depot: (v: number) => void; setAvgRet3Overf: (v: number) => void; setAvgRet3Indbetaling: (v: number) => void; setAvgRet3RentePct: (v: number) => void; setAvgRet3Udbetalingsaar: (v: number) => void; setAvgRet3Garanteret: (v: number) => void;
 }
 
 // ─── Defaults ─────────────────────────────────────────────────────────────────
@@ -208,6 +224,13 @@ const DEFAULTS = {
   capFolkepension: 7260,
   capPensionstillaeg: 0,
   capAtp: 1000,
+  // Gennemsnitsrenteberegner
+  avgRetCurrentAge: 61,
+  avgRetPensionAge: 67,
+  avgRet0Depot: 0, avgRet0Overf: 0, avgRet0Indbetaling: 0, avgRet0RentePct: 3, avgRet0Udbetalingsaar: 1,  avgRet0Garanteret: 0,
+  avgRet1Depot: 0, avgRet1Overf: 0, avgRet1Indbetaling: 0, avgRet1RentePct: 3, avgRet1Udbetalingsaar: 1,  avgRet1Garanteret: 0,
+  avgRet2Depot: 0, avgRet2Overf: 0, avgRet2Indbetaling: 0, avgRet2RentePct: 3, avgRet2Udbetalingsaar: 10, avgRet2Garanteret: 0,
+  avgRet3Depot: 0, avgRet3Overf: 0, avgRet3Indbetaling: 0, avgRet3RentePct: 3, avgRet3Udbetalingsaar: 22, avgRet3Garanteret: 0,
 };
 
 // ─── Context ──────────────────────────────────────────────────────────────────
@@ -270,6 +293,12 @@ const CalculatorContext = createContext<CalculatorSharedState>({
   setCapFolkepension: () => {},
   setCapPensionstillaeg: () => {},
   setCapAtp: () => {},
+  setAvgRetCurrentAge: () => {},
+  setAvgRetPensionAge: () => {},
+  setAvgRet0Depot: () => {}, setAvgRet0Overf: () => {}, setAvgRet0Indbetaling: () => {}, setAvgRet0RentePct: () => {}, setAvgRet0Udbetalingsaar: () => {}, setAvgRet0Garanteret: () => {},
+  setAvgRet1Depot: () => {}, setAvgRet1Overf: () => {}, setAvgRet1Indbetaling: () => {}, setAvgRet1RentePct: () => {}, setAvgRet1Udbetalingsaar: () => {}, setAvgRet1Garanteret: () => {},
+  setAvgRet2Depot: () => {}, setAvgRet2Overf: () => {}, setAvgRet2Indbetaling: () => {}, setAvgRet2RentePct: () => {}, setAvgRet2Udbetalingsaar: () => {}, setAvgRet2Garanteret: () => {},
+  setAvgRet3Depot: () => {}, setAvgRet3Overf: () => {}, setAvgRet3Indbetaling: () => {}, setAvgRet3RentePct: () => {}, setAvgRet3Udbetalingsaar: () => {}, setAvgRet3Garanteret: () => {},
 });
 
 // ─── Provider ─────────────────────────────────────────────────────────────────
@@ -296,12 +325,13 @@ export function CalculatorProvider({ children }: { children: React.ReactNode }) 
   const [costYearsToPension, setCostYearsToPension] = useState(DEFAULTS.costYearsToPension);
   const [costTodayRaw, setCostTodayRaw] = useState(DEFAULTS.costTodayRaw);
   const [costNewRaw, setCostNewRaw] = useState(DEFAULTS.costNewRaw);
+
+  // Afkastforskelberegner
   const [returnDiffDepot, setReturnDiffDepot] = useState(DEFAULTS.returnDiffDepot);
   const [returnDiffAnnualContribution, setReturnDiffAnnualContribution] = useState(DEFAULTS.returnDiffAnnualContribution);
   const [returnDiffYearsToPension, setReturnDiffYearsToPension] = useState(DEFAULTS.returnDiffYearsToPension);
   const [returnDiffTodayRaw, setReturnDiffTodayRaw] = useState(DEFAULTS.returnDiffTodayRaw);
   const [returnDiffNewRaw, setReturnDiffNewRaw] = useState(DEFAULTS.returnDiffNewRaw);
-
 
   // Målberegner
   const [goalMode, setGoalMode] = useState<GoalMode>(DEFAULTS.goalMode);
@@ -341,6 +371,34 @@ export function CalculatorProvider({ children }: { children: React.ReactNode }) 
   const [capFolkepension, setCapFolkepension] = useState(DEFAULTS.capFolkepension);
   const [capPensionstillaeg, setCapPensionstillaeg] = useState(DEFAULTS.capPensionstillaeg);
   const [capAtp, setCapAtp] = useState(DEFAULTS.capAtp);
+
+  // Gennemsnitsrenteberegner
+  const [avgRetCurrentAge, setAvgRetCurrentAge] = useState(DEFAULTS.avgRetCurrentAge);
+  const [avgRetPensionAge, setAvgRetPensionAge] = useState(DEFAULTS.avgRetPensionAge);
+  const [avgRet0Depot, setAvgRet0Depot] = useState(DEFAULTS.avgRet0Depot);
+  const [avgRet0Overf, setAvgRet0Overf] = useState(DEFAULTS.avgRet0Overf);
+  const [avgRet0Indbetaling, setAvgRet0Indbetaling] = useState(DEFAULTS.avgRet0Indbetaling);
+  const [avgRet0RentePct, setAvgRet0RentePct] = useState(DEFAULTS.avgRet0RentePct);
+  const [avgRet0Udbetalingsaar, setAvgRet0Udbetalingsaar] = useState(DEFAULTS.avgRet0Udbetalingsaar);
+  const [avgRet0Garanteret, setAvgRet0Garanteret] = useState(DEFAULTS.avgRet0Garanteret);
+  const [avgRet1Depot, setAvgRet1Depot] = useState(DEFAULTS.avgRet1Depot);
+  const [avgRet1Overf, setAvgRet1Overf] = useState(DEFAULTS.avgRet1Overf);
+  const [avgRet1Indbetaling, setAvgRet1Indbetaling] = useState(DEFAULTS.avgRet1Indbetaling);
+  const [avgRet1RentePct, setAvgRet1RentePct] = useState(DEFAULTS.avgRet1RentePct);
+  const [avgRet1Udbetalingsaar, setAvgRet1Udbetalingsaar] = useState(DEFAULTS.avgRet1Udbetalingsaar);
+  const [avgRet1Garanteret, setAvgRet1Garanteret] = useState(DEFAULTS.avgRet1Garanteret);
+  const [avgRet2Depot, setAvgRet2Depot] = useState(DEFAULTS.avgRet2Depot);
+  const [avgRet2Overf, setAvgRet2Overf] = useState(DEFAULTS.avgRet2Overf);
+  const [avgRet2Indbetaling, setAvgRet2Indbetaling] = useState(DEFAULTS.avgRet2Indbetaling);
+  const [avgRet2RentePct, setAvgRet2RentePct] = useState(DEFAULTS.avgRet2RentePct);
+  const [avgRet2Udbetalingsaar, setAvgRet2Udbetalingsaar] = useState(DEFAULTS.avgRet2Udbetalingsaar);
+  const [avgRet2Garanteret, setAvgRet2Garanteret] = useState(DEFAULTS.avgRet2Garanteret);
+  const [avgRet3Depot, setAvgRet3Depot] = useState(DEFAULTS.avgRet3Depot);
+  const [avgRet3Overf, setAvgRet3Overf] = useState(DEFAULTS.avgRet3Overf);
+  const [avgRet3Indbetaling, setAvgRet3Indbetaling] = useState(DEFAULTS.avgRet3Indbetaling);
+  const [avgRet3RentePct, setAvgRet3RentePct] = useState(DEFAULTS.avgRet3RentePct);
+  const [avgRet3Udbetalingsaar, setAvgRet3Udbetalingsaar] = useState(DEFAULTS.avgRet3Udbetalingsaar);
+  const [avgRet3Garanteret, setAvgRet3Garanteret] = useState(DEFAULTS.avgRet3Garanteret);
 
   return (
     <CalculatorContext.Provider
@@ -401,6 +459,12 @@ export function CalculatorProvider({ children }: { children: React.ReactNode }) 
         capFolkepension, setCapFolkepension,
         capPensionstillaeg, setCapPensionstillaeg,
         capAtp, setCapAtp,
+        avgRetCurrentAge, setAvgRetCurrentAge,
+        avgRetPensionAge, setAvgRetPensionAge,
+        avgRet0Depot, setAvgRet0Depot, avgRet0Overf, setAvgRet0Overf, avgRet0Indbetaling, setAvgRet0Indbetaling, avgRet0RentePct, setAvgRet0RentePct, avgRet0Udbetalingsaar, setAvgRet0Udbetalingsaar, avgRet0Garanteret, setAvgRet0Garanteret,
+        avgRet1Depot, setAvgRet1Depot, avgRet1Overf, setAvgRet1Overf, avgRet1Indbetaling, setAvgRet1Indbetaling, avgRet1RentePct, setAvgRet1RentePct, avgRet1Udbetalingsaar, setAvgRet1Udbetalingsaar, avgRet1Garanteret, setAvgRet1Garanteret,
+        avgRet2Depot, setAvgRet2Depot, avgRet2Overf, setAvgRet2Overf, avgRet2Indbetaling, setAvgRet2Indbetaling, avgRet2RentePct, setAvgRet2RentePct, avgRet2Udbetalingsaar, setAvgRet2Udbetalingsaar, avgRet2Garanteret, setAvgRet2Garanteret,
+        avgRet3Depot, setAvgRet3Depot, avgRet3Overf, setAvgRet3Overf, avgRet3Indbetaling, setAvgRet3Indbetaling, avgRet3RentePct, setAvgRet3RentePct, avgRet3Udbetalingsaar, setAvgRet3Udbetalingsaar, avgRet3Garanteret, setAvgRet3Garanteret,
       }}
     >
       {children}

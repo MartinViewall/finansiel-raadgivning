@@ -94,6 +94,15 @@ export function useAllCalculatorsIO() {
         pensionstillaeg: ctx.capPensionstillaeg,
         atp: ctx.capAtp,
       },
+      // Gennemsnitsrenteberegner
+      gennemsnitsrente: {
+        currentAge: ctx.avgRetCurrentAge,
+        pensionAge: ctx.avgRetPensionAge,
+        s0: { depot: ctx.avgRet0Depot, overf: ctx.avgRet0Overf, indbetaling: ctx.avgRet0Indbetaling, rentePct: ctx.avgRet0RentePct, udbetalingsaar: ctx.avgRet0Udbetalingsaar, garanteret: ctx.avgRet0Garanteret },
+        s1: { depot: ctx.avgRet1Depot, overf: ctx.avgRet1Overf, indbetaling: ctx.avgRet1Indbetaling, rentePct: ctx.avgRet1RentePct, udbetalingsaar: ctx.avgRet1Udbetalingsaar, garanteret: ctx.avgRet1Garanteret },
+        s2: { depot: ctx.avgRet2Depot, overf: ctx.avgRet2Overf, indbetaling: ctx.avgRet2Indbetaling, rentePct: ctx.avgRet2RentePct, udbetalingsaar: ctx.avgRet2Udbetalingsaar, garanteret: ctx.avgRet2Garanteret },
+        s3: { depot: ctx.avgRet3Depot, overf: ctx.avgRet3Overf, indbetaling: ctx.avgRet3Indbetaling, rentePct: ctx.avgRet3RentePct, udbetalingsaar: ctx.avgRet3Udbetalingsaar, garanteret: ctx.avgRet3Garanteret },
+      },
     };
 
     const json = JSON.stringify(payload, null, 2);
@@ -205,6 +214,39 @@ export function useAllCalculatorsIO() {
         if (k.folkepension !== undefined) ctx.setCapFolkepension(k.folkepension);
         if (k.pensionstillaeg !== undefined) ctx.setCapPensionstillaeg(k.pensionstillaeg);
         if (k.atp !== undefined) ctx.setCapAtp(k.atp);
+
+        // Gennemsnitsrenteberegner
+        const g = raw.gennemsnitsrente ?? {};
+        if (g.currentAge !== undefined) ctx.setAvgRetCurrentAge(g.currentAge);
+        if (g.pensionAge !== undefined) ctx.setAvgRetPensionAge(g.pensionAge);
+        const gs0 = g.s0 ?? {};
+        if (gs0.depot !== undefined) ctx.setAvgRet0Depot(gs0.depot);
+        if (gs0.overf !== undefined) ctx.setAvgRet0Overf(gs0.overf);
+        if (gs0.indbetaling !== undefined) ctx.setAvgRet0Indbetaling(gs0.indbetaling);
+        if (gs0.rentePct !== undefined) ctx.setAvgRet0RentePct(gs0.rentePct);
+        if (gs0.udbetalingsaar !== undefined) ctx.setAvgRet0Udbetalingsaar(gs0.udbetalingsaar);
+        if (gs0.garanteret !== undefined) ctx.setAvgRet0Garanteret(gs0.garanteret);
+        const gs1 = g.s1 ?? {};
+        if (gs1.depot !== undefined) ctx.setAvgRet1Depot(gs1.depot);
+        if (gs1.overf !== undefined) ctx.setAvgRet1Overf(gs1.overf);
+        if (gs1.indbetaling !== undefined) ctx.setAvgRet1Indbetaling(gs1.indbetaling);
+        if (gs1.rentePct !== undefined) ctx.setAvgRet1RentePct(gs1.rentePct);
+        if (gs1.udbetalingsaar !== undefined) ctx.setAvgRet1Udbetalingsaar(gs1.udbetalingsaar);
+        if (gs1.garanteret !== undefined) ctx.setAvgRet1Garanteret(gs1.garanteret);
+        const gs2 = g.s2 ?? {};
+        if (gs2.depot !== undefined) ctx.setAvgRet2Depot(gs2.depot);
+        if (gs2.overf !== undefined) ctx.setAvgRet2Overf(gs2.overf);
+        if (gs2.indbetaling !== undefined) ctx.setAvgRet2Indbetaling(gs2.indbetaling);
+        if (gs2.rentePct !== undefined) ctx.setAvgRet2RentePct(gs2.rentePct);
+        if (gs2.udbetalingsaar !== undefined) ctx.setAvgRet2Udbetalingsaar(gs2.udbetalingsaar);
+        if (gs2.garanteret !== undefined) ctx.setAvgRet2Garanteret(gs2.garanteret);
+        const gs3 = g.s3 ?? {};
+        if (gs3.depot !== undefined) ctx.setAvgRet3Depot(gs3.depot);
+        if (gs3.overf !== undefined) ctx.setAvgRet3Overf(gs3.overf);
+        if (gs3.indbetaling !== undefined) ctx.setAvgRet3Indbetaling(gs3.indbetaling);
+        if (gs3.rentePct !== undefined) ctx.setAvgRet3RentePct(gs3.rentePct);
+        if (gs3.udbetalingsaar !== undefined) ctx.setAvgRet3Udbetalingsaar(gs3.udbetalingsaar);
+        if (gs3.garanteret !== undefined) ctx.setAvgRet3Garanteret(gs3.garanteret);
 
         const klientNavn = raw._klient ? ` for ${raw._klient}` : "";
         toast.success(`Scenarie${klientNavn} indlæst — alle beregnere opdateret`);

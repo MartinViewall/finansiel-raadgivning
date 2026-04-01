@@ -13,7 +13,7 @@ import {
 } from "@/components/ui/sidebar";
 import { useIsMobile } from "@/hooks/useMobile";
 import { usePasswordGate } from "@/contexts/PasswordGateContext";
-import { Calculator, Database, Lock, PanelLeft, TrendingUp, PieChart, Target, Wallet, BarChart2 } from "lucide-react";
+import { Calculator, Database, Lock, PanelLeft, TrendingUp, PieChart, Target, Wallet, BarChart2, Percent } from "lucide-react";
 import { CSSProperties, useEffect, useRef, useState } from "react";
 import { useLocation } from "wouter";
 
@@ -23,6 +23,7 @@ const menuItems = [
   { icon: BarChart2, label: "Afkastforskel", path: "/return-diff-calculator" },
   { icon: Target, label: "Målberegner", path: "/goal-calculator" },
   { icon: Wallet, label: "Øk. Kapacitet", path: "/capacity-calculator" },
+  { icon: Percent, label: "Gennemsnitsrente", path: "/average-return-calculator" },
   { icon: Database, label: "Produkter", path: "/products" },
 ];
 
