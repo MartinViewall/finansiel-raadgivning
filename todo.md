@@ -263,3 +263,11 @@
 - [x] Registrer rute /average-return-calculator i App.tsx
 - [x] Tilføj "Gennemsnitsrente" til sidebar-navigation i DashboardLayout.tsx
 - [x] Integrér i useCalculatorIO (Gem/Hent)
+
+## Fase 29 – Gennemsnitsrenteberegner: layout og afrunding
+
+- [x] Difference afrundet til nærmeste 10 kr. (±5 kr. tolerance) — vises som 0 når forskel < 10 kr.
+- [x] Resultatkort vises øverst som kompakte horisontale bokse (kun synlige når sektion har data)
+- [x] Forudsætninger (alder/pensionsalder) kan minimeres med collapse-toggle
+- [x] Opsparingstyper-sektioner forbliver sammenklappelige som nu
+- [x] Fjern scrollbehov: resultater synlige uden at scrolle
