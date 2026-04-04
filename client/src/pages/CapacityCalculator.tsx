@@ -253,6 +253,9 @@ interface ScenarioState {
   folkepension: number;
   pensionstillaeg: number;
   atp: number;
+  offentligSkat: number;
+  // Friværdi afkast
+  frivaerdiAfkastPct: number;
 }
 
 const defaultState = (civilStatus: "enlig" | "par" = "enlig"): ScenarioState => ({
@@ -284,6 +287,8 @@ const defaultState = (civilStatus: "enlig" | "par" = "enlig"): ScenarioState => 
   folkepension: civilStatus === "enlig" ? 8172 : 7260,
   pensionstillaeg: 0,
   atp: 1000,
+  offentligSkat: 38,
+  frivaerdiAfkastPct: 4,
 });
 
 function calcResults(s: ScenarioState) {
@@ -319,8 +324,10 @@ function calcResults(s: ScenarioState) {
   // Warning: negative equity
   const frivaerdiNegative = s.frivaerdiMode === "beregn" &&
     s.boligVaerdi * Math.pow(1 + s.boligStigningPct / 100, s.yearsToPension) < Math.max(0, s.restgaeld - s.aarligAfdrag * s.yearsToPension);
-  // Friværdi: simple monthly drawdown over payout period (tax-free)
-  const frivaerdiMonthly = frivaerdiUsed / (s.payoutYears * 12);
+  // Friværdi: treated as free assets with return rate, payout as annuity due
+  const frivaerdiAfkastRate = s.frivaerdiAfkastPct / 100;
+  const frivaerdiAnnualPayout = annualPayoutDue(frivaerdiUsed, frivaerdiAfkastRate, s.payoutYears);
+  const frivaerdiMonthly = frivaerdiAnnualPayout / 12;
 
   // ── Selskab ──────────────────────────────────────────────────────────────────
   // Net rate after corporate tax on returns
@@ -330,8 +337,9 @@ function calcResults(s: ScenarioState) {
   const selGross = selAnnualGross / 12;
   const selNet = selAnnualGross * (1 - s.udbytteSkat / 100) / 12;
 
-  // ── Offentlige ydelser ───────────────────────────────────────────────────────
-  const offentlig = s.folkepension + s.pensionstillaeg + s.atp;
+  // ──   // ── Offentlige ydelser ────────────────────────────────────────────
+  const offentligBrutto = s.folkepension + s.pensionstillaeg + s.atp;
+  const offentlig = offentligBrutto * (1 - s.offentligSkat / 100);
 
   // ── Totals ───────────────────────────────────────────────────────────────────
   const totalMonthly = pensionNet + friNet + frivaerdiMonthly + selNet + offentlig;
@@ -485,6 +493,9 @@ function ScenarioInputs({
             <NumberInput value={s.frivaerdiDirekte} onChange={(v) => set({ frivaerdiDirekte: v })} />
           </Row>
         )}
+        <Row label="Afkast på friværdi">
+          <PctInput value={s.frivaerdiAfkastPct} onChange={(v) => set({ frivaerdiAfkastPct: v })} />
+        </Row>
         <Row label="Anvendt friværdi">
           <div className="space-y-1">
             <input
@@ -579,6 +590,9 @@ function ScenarioInputs({
         {/* ATP */}
         <Row label="ATP">
           <NumberInput value={s.atp} onChange={(v) => set({ atp: v })} suffix="kr./md." />
+        </Row>
+        <Row label="Skatteprocent">
+          <PctInput value={s.offentligSkat} onChange={(v) => set({ offentligSkat: v })} />
         </Row>
       </Panel>
     </div>
@@ -791,6 +805,8 @@ export default function CapacityCalculator() {
     folkepension: ctx.capFolkepension,
     pensionstillaeg: ctx.capPensionstillaeg,
     atp: ctx.capAtp,
+    offentligSkat: 38,
+    frivaerdiAfkastPct: 4,
   };
 
   const [scenarioA, setScenarioA] = useState<ScenarioState | null>(null);

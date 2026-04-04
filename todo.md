@@ -283,3 +283,13 @@
 - [x] Tilføj "Forskel i alt" linje i resultatkort: (Udbetaling/år − Garanti/år) × Udbetalingsår
 - [x] Vises under "Forskel" linjen med samme grøn/rød farve
 - [x] Gælder for alle fire opsparingstyper
+
+## Fase 32 – Kapacitetsberegner: skat på offentlige ydelser + friværdi afkast
+
+- [x] Tilføj offentligSkat felt i ScenarioState (standard 38%)
+- [x] Beregn offentligNet = (folkepension + pensionstillaeg + atp) * (1 - offentligSkat/100)
+- [x] Vis skatteprocent-felt i "Offentlige ydelser" panel
+- [x] Tilføj frivaerdiAfkastPct felt i ScenarioState (standard 4%)
+- [x] Friværdi beregnes som frie midler: annualPayoutDue(frivaerdiUsed, frivaerdiAfkastPct/100, payoutYears) / 12
+- [x] Vis afkast-felt i "Friværdi i bolig" panel
+- [x] Offentlig skat og friværdi afkast er lokale felter i ScenarioState (ikke i CalculatorContext)
