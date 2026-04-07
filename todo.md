@@ -293,3 +293,10 @@
 - [x] Friværdi beregnes som frie midler: annualPayoutDue(frivaerdiUsed, frivaerdiAfkastPct/100, payoutYears) / 12
 - [x] Vis afkast-felt i "Friværdi i bolig" panel
 - [x] Offentlig skat og friværdi afkast er lokale felter i ScenarioState (ikke i CalculatorContext)
+
+## Fase 33 – Afkastberegner: anonym visning af konkurrenter
+
+- [x] Tilføj flueben "Skjul selskabsnavne" ved produktvælgeren i afkastberegneren
+- [x] Når flueben er aktivt: det første valgte produkt beholder sit navn, øvrige vises som "Alternativ 1", "Alternativ 2" osv.
+- [x] Flueben er diskret (lille, placeret tæt på produktvalg)
+- [x] Gælder i summary cards, graf og historisk tabel

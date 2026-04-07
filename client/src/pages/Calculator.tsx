@@ -379,7 +379,7 @@ export default function Calculator() {
       ? parseFloat(pensionReturnOverride.replace(",", "."))
       : null;
 
-  // Build chart data
+  // Build chart data (always uses original productName as key — used for PDF projections)
   const chartData = useMemo(() => {
     if (!projectionData?.results.length) return [];
     const maxLen = Math.max(...projectionData.results.map((r) => r.projection.length));
@@ -423,9 +423,32 @@ export default function Calculator() {
   const baselineResult = projectionData?.results[0];
 
   const [pdfOpen, setPdfOpen] = useState(false);
+  const [anonymize, setAnonymize] = useState(false);
 
   // Panel collapse state (persisted in context so state survives navigation)
   const { calcParamsOpen, setCalcParamsOpen, calcProductsOpen, setCalcProductsOpen, calcPensionOpen, setCalcPensionOpen } = ctx;
+
+  // Helper: mask product name — first selected product keeps its name, rest become "Alternativ N"
+  const maskName = (productId: number, originalName: string): string => {
+    if (!anonymize) return originalName;
+    const idx = selectedProductIds.indexOf(productId);
+    if (idx <= 0) return originalName;
+    return `Alternativ ${idx}`;
+  };
+
+  // Masked chart data for display — keys use maskName so Line dataKey matches
+  const maskedChartData = useMemo(() => {
+    if (!projectionData?.results.length) return chartData;
+    return chartData.map((pt) => {
+      const masked: Record<string, number | string> = { year: pt.year };
+      projectionData!.results.forEach((r) => {
+        const maskedKey = maskName(r.productId, r.productName);
+        if (pt[r.productName] !== undefined) masked[maskedKey] = pt[r.productName] as number;
+      });
+      return masked;
+    });
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [chartData, anonymize, selectedProductIds]);
 
   // Build goalData from context (populated by GoalCalculator) for PDF modal
   const goalDataFromCtx: GoalData | undefined = useMemo(() => {
@@ -455,15 +478,15 @@ export default function Calculator() {
         annualContribution,
         horizonYears,
         products: projectionData.results.map((r) => ({
-          name: r.productName,
-          company: r.company ?? "",
+          name: maskName(r.productId, r.productName),
+          company: anonymize && selectedProductIds.indexOf(r.productId) > 0 ? "" : (r.company ?? ""),
           avgReturn: r.avgAnnualReturnHorizon,
           aop: r.aop ?? 0,
         })),
         projections: chartData.map((pt, i) => ({
           year: i + 1,
           values: Object.fromEntries(
-            projectionData.results.map((r) => [r.productName, pt[r.productName] as number])
+            projectionData.results.map((r) => [maskName(r.productId, r.productName), pt[r.productName] as number])
           ),
         })),
       }
@@ -574,12 +597,24 @@ export default function Calculator() {
                 : <ChevronDown className="h-4 w-4 text-muted-foreground flex-shrink-0" />}
             </button>
             {calcProductsOpen && (
-              <div className="px-5 pb-5">
+              <div className="px-5 pb-5 space-y-3">
                 <ProductSelector
                   selectedIds={selectedProductIds}
                   onToggle={toggleProduct}
                   maxSelections={3}
                 />
+                {/* Anonymize toggle */}
+                <label className="flex items-center gap-2 cursor-pointer select-none group">
+                  <input
+                    type="checkbox"
+                    checked={anonymize}
+                    onChange={(e) => setAnonymize(e.target.checked)}
+                    className="w-3.5 h-3.5 rounded border-border accent-primary cursor-pointer"
+                  />
+                  <span className="text-xs text-muted-foreground group-hover:text-foreground transition-colors">
+                    Skjul konkurrenters navne
+                  </span>
+                </label>
               </div>
             )}
           </div>
@@ -684,7 +719,7 @@ export default function Calculator() {
                     return (
                       <SummaryCard
                         key={r.productId}
-                        name={r.productName}
+                        name={maskName(r.productId, r.productName)}
                         finalValue={r.finalValue}
                         color={r.color}
                         isBaseline={idx === 0}
@@ -747,7 +782,7 @@ export default function Calculator() {
 
                 <ResponsiveContainer width="100%" height={320}>
                   <LineChart
-                    data={chartData}
+                     data={maskedChartData}
                     margin={{ top: 5, right: 20, left: 10, bottom: 5 }}
                   >
                     <CartesianGrid
@@ -781,7 +816,7 @@ export default function Calculator() {
                       <Line
                         key={r.productId}
                         type="monotone"
-                        dataKey={r.productName}
+                        dataKey={maskName(r.productId, r.productName)}
                         stroke={r.color}
                         strokeWidth={2.5}
                         dot={{ r: 3, fill: r.color, strokeWidth: 0 }}
@@ -863,7 +898,7 @@ export default function Calculator() {
                                     style={{ backgroundColor: r.color }}
                                   />
                                   <span className="font-medium text-foreground">
-                                    {r.productName}
+                                    {maskName(r.productId, r.productName)}
                                   </span>
                                 </div>
                               </td>
