@@ -601,6 +601,7 @@ export default function Calculator() {
                 <ProductSelector
                   selectedIds={selectedProductIds}
                   onToggle={toggleProduct}
+                  onReorder={handleSetSelectedProductIds}
                   maxSelections={3}
                 />
                 {/* Anonymize toggle */}

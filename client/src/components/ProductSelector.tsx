@@ -1,8 +1,22 @@
 import { useState, useMemo } from "react";
+import {
+  DndContext,
+  closestCenter,
+  PointerSensor,
+  useSensor,
+  useSensors,
+  DragEndEvent,
+} from "@dnd-kit/core";
+import {
+  SortableContext,
+  horizontalListSortingStrategy,
+  useSortable,
+  arrayMove,
+} from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { trpc } from "@/lib/trpc";
-import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { X, ChevronDown, ChevronRight, Plus } from "lucide-react";
+import { X, ChevronDown, ChevronRight, Plus, GripVertical } from "lucide-react";
 
 // ─── Types ────────────────────────────────────────────────────────────────────
 
@@ -17,16 +31,10 @@ interface ProductMeta {
   aop: string | null;
 }
 
-interface SelectedProduct {
-  id: number;
-  name: string;
-  color: string;
-  company: string | null;
-}
-
 interface ProductSelectorProps {
   selectedIds: number[];
   onToggle: (id: number) => void;
+  onReorder: (newIds: number[]) => void;
   maxSelections?: number;
 }
 
@@ -47,13 +55,80 @@ function riskColor(risk: string | null): string {
   return "bg-muted text-muted-foreground";
 }
 
+// ─── Sortable chip ────────────────────────────────────────────────────────────
+
+interface SortableChipProps {
+  id: number;
+  name: string;
+  color: string;
+  isFirst: boolean;
+  onRemove: () => void;
+}
+
+function SortableChip({ id, name, color, isFirst, onRemove }: SortableChipProps) {
+  const {
+    attributes,
+    listeners,
+    setNodeRef,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id });
+
+  const style = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+    opacity: isDragging ? 0.5 : 1,
+    borderColor: color + "60",
+    background: color + "12",
+    color: "var(--foreground)",
+  };
+
+  return (
+    <div
+      ref={setNodeRef}
+      style={style}
+      className="flex items-center gap-1 px-2 py-1 rounded-full text-xs font-medium border select-none"
+    >
+      {/* Drag handle */}
+      <button
+        type="button"
+        {...attributes}
+        {...listeners}
+        className="cursor-grab active:cursor-grabbing touch-none text-muted-foreground hover:text-foreground transition-colors flex-shrink-0"
+        tabIndex={-1}
+        aria-label="Træk for at omarrangere"
+      >
+        <GripVertical className="w-3 h-3" />
+      </button>
+      <ColorDot color={color} />
+      <span className="break-words leading-tight max-w-[120px] truncate">{name}</span>
+      {isFirst && (
+        <span className="text-[10px] text-muted-foreground ml-0.5 flex-shrink-0">(nuv.)</span>
+      )}
+      <button
+        type="button"
+        onClick={onRemove}
+        className="ml-0.5 hover:opacity-70 transition-opacity flex-shrink-0"
+        aria-label={`Fjern ${name}`}
+      >
+        <X className="w-3 h-3" />
+      </button>
+    </div>
+  );
+}
+
 // ─── Main Component ───────────────────────────────────────────────────────────
 
-export function ProductSelector({ selectedIds, onToggle, maxSelections = 3 }: ProductSelectorProps) {
+export function ProductSelector({ selectedIds, onToggle, onReorder, maxSelections = 3 }: ProductSelectorProps) {
   const { data: products = [] } = trpc.products.listMeta.useQuery();
   const [expandedCompany, setExpandedCompany] = useState<string | null>(null);
   const [expandedRisk, setExpandedRisk] = useState<string | null>(null);
   const [searchQuery, setSearchQuery] = useState("");
+
+  const sensors = useSensors(
+    useSensor(PointerSensor, { activationConstraint: { distance: 5 } })
+  );
 
   // Group products: company → riskLevel → yearsToPension → products[]
   const grouped = useMemo(() => {
@@ -81,46 +156,61 @@ export function ProductSelector({ selectedIds, onToggle, maxSelections = 3 }: Pr
     return map;
   }, [products, searchQuery]);
 
+  // Preserve selection order
   const selectedProducts = useMemo(
-    () => (products as ProductMeta[]).filter((p) => selectedIds.includes(p.id)),
+    () => selectedIds
+      .map((id) => (products as ProductMeta[]).find((p) => p.id === id))
+      .filter((p): p is ProductMeta => p !== undefined),
     [products, selectedIds]
   );
 
   const companies = Array.from(grouped.keys()).sort();
 
+  function handleDragEnd(event: DragEndEvent) {
+    const { active, over } = event;
+    if (!over || active.id === over.id) return;
+    const oldIndex = selectedIds.indexOf(active.id as number);
+    const newIndex = selectedIds.indexOf(over.id as number);
+    if (oldIndex === -1 || newIndex === -1) return;
+    onReorder(arrayMove(selectedIds, oldIndex, newIndex));
+  }
+
   return (
     <div className="space-y-3">
-      {/* Selected chips */}
+      {/* Sortable selected chips */}
       {selectedProducts.length > 0 && (
-        <div className="flex flex-wrap gap-1.5">
-          {selectedProducts.map((p) => (
-            <div
-              key={p.id}
-              className="flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-medium border"
-              style={{
-                borderColor: p.color + "60",
-                background: p.color + "12",
-                color: "var(--foreground)",
-              }}
-            >
-              <ColorDot color={p.color} />
-              <span className="break-words leading-tight">{p.name}</span>
-              <button
-                type="button"
-                onClick={() => onToggle(p.id)}
-                className="ml-0.5 hover:opacity-70 transition-opacity"
-              >
-                <X className="w-3 h-3" />
-              </button>
+        <DndContext
+          sensors={sensors}
+          collisionDetection={closestCenter}
+          onDragEnd={handleDragEnd}
+        >
+          <SortableContext
+            items={selectedIds}
+            strategy={horizontalListSortingStrategy}
+          >
+            <div className="flex flex-wrap gap-1.5">
+              {selectedProducts.map((p, idx) => (
+                <SortableChip
+                  key={p.id}
+                  id={p.id}
+                  name={p.name}
+                  color={p.color}
+                  isFirst={idx === 0}
+                  onRemove={() => onToggle(p.id)}
+                />
+              ))}
             </div>
-          ))}
-        </div>
+          </SortableContext>
+        </DndContext>
       )}
 
       {/* Counter */}
       <div className="flex items-center justify-between">
         <span className="text-xs text-muted-foreground">
           {selectedIds.length}/{maxSelections} valgt
+          {selectedIds.length > 1 && (
+            <span className="ml-1 opacity-60">· træk for at omarrangere</span>
+          )}
         </span>
         {selectedIds.length > 0 && (
           <button

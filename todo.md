@@ -306,3 +306,10 @@
 - [x] Omdøb flueben-tekst fra "Skjul konkurrenters navne" til "Skjul alternativer"
 - [x] Produktresultater sorteres efter valgt rækkefølge (selectedProductIds), ikke alfabetisk
 - [x] Første valgte produkt = "Nuværende", øvrige = "Alternativ 1", "Alternativ 2"
+
+## Fase 35 – Afkastberegner: drag-and-drop rækkefølge
+
+- [x] Installer @dnd-kit/core og @dnd-kit/sortable
+- [x] Tilføj sortable chips med drag-håndtag i ProductSelector
+- [x] Drag-and-drop opdaterer selectedProductIds rækkefølge via onReorder prop
+- [x] Første produkt vises med (nuv.) badge
