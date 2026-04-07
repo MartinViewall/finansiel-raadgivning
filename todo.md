@@ -300,3 +300,9 @@
 - [x] Når flueben er aktivt: det første valgte produkt beholder sit navn, øvrige vises som "Alternativ 1", "Alternativ 2" osv.
 - [x] Flueben er diskret (lille, placeret tæt på produktvalg)
 - [x] Gælder i summary cards, graf og historisk tabel
+
+## Fase 34 – Afkastberegner: rækkefølge og label-fix
+
+- [x] Omdøb flueben-tekst fra "Skjul konkurrenters navne" til "Skjul alternativer"
+- [x] Produktresultater sorteres efter valgt rækkefølge (selectedProductIds), ikke alfabetisk
+- [x] Første valgte produkt = "Nuværende", øvrige = "Alternativ 1", "Alternativ 2"

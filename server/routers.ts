@@ -160,7 +160,10 @@ export const appRouter = router({
       )
       .query(async ({ input }) => {
         const allProducts = await getProductsWithReturns();
-        const selected = allProducts.filter((p) => input.productIds.includes(p.id));
+        // Preserve selection order: sort by position in input.productIds array
+        const selected = allProducts
+          .filter((p) => input.productIds.includes(p.id))
+          .sort((a, b) => input.productIds.indexOf(a.id) - input.productIds.indexOf(b.id));
 
         // Exclude the current incomplete year (2026+) from projection data
         const CURRENT_YEAR = new Date().getFullYear();

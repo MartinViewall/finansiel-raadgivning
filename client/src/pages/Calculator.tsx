@@ -612,7 +612,7 @@ export default function Calculator() {
                     className="w-3.5 h-3.5 rounded border-border accent-primary cursor-pointer"
                   />
                   <span className="text-xs text-muted-foreground group-hover:text-foreground transition-colors">
-                    Skjul konkurrenters navne
+                    Skjul alternativer
                   </span>
                 </label>
               </div>
