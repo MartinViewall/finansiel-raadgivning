@@ -1,4 +1,4 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { useCalculatorContext } from "@/contexts/CalculatorContext";
 import { CalculatorIOBar } from "@/components/CalculatorIOBar";
 import { ChevronDown, ChevronUp, TrendingUp, AlertTriangle, CheckCircle2 } from "lucide-react";
@@ -288,6 +288,26 @@ export default function AverageReturnCalculator() {
     { depot: ctx.avgRet1Depot, overf: ctx.avgRet1Overf, indbetaling: ctx.avgRet1Indbetaling, rentePct: ctx.avgRet1RentePct, udbetalingsaar: ctx.avgRet1Udbetalingsaar, garanteret: ctx.avgRet1Garanteret, open: false },
     { depot: ctx.avgRet2Depot, overf: ctx.avgRet2Overf, indbetaling: ctx.avgRet2Indbetaling, rentePct: ctx.avgRet2RentePct, udbetalingsaar: ctx.avgRet2Udbetalingsaar, garanteret: ctx.avgRet2Garanteret, open: false },
     { depot: ctx.avgRet3Depot, overf: ctx.avgRet3Overf, indbetaling: ctx.avgRet3Indbetaling, rentePct: ctx.avgRet3RentePct, udbetalingsaar: ctx.avgRet3Udbetalingsaar, garanteret: ctx.avgRet3Garanteret, open: false },
+  ]);
+
+  // Sync local state from context when context changes (e.g. after import)
+  useEffect(() => { setCurrentAge(ctx.avgRetCurrentAge); }, [ctx.avgRetCurrentAge]);
+  useEffect(() => { setPensionAge(ctx.avgRetPensionAge); }, [ctx.avgRetPensionAge]);
+  useEffect(() => {
+    setSections((prev) => prev.map((s, i) => {
+      const ctxFields = [
+        { depot: ctx.avgRet0Depot, overf: ctx.avgRet0Overf, indbetaling: ctx.avgRet0Indbetaling, rentePct: ctx.avgRet0RentePct, udbetalingsaar: ctx.avgRet0Udbetalingsaar, garanteret: ctx.avgRet0Garanteret },
+        { depot: ctx.avgRet1Depot, overf: ctx.avgRet1Overf, indbetaling: ctx.avgRet1Indbetaling, rentePct: ctx.avgRet1RentePct, udbetalingsaar: ctx.avgRet1Udbetalingsaar, garanteret: ctx.avgRet1Garanteret },
+        { depot: ctx.avgRet2Depot, overf: ctx.avgRet2Overf, indbetaling: ctx.avgRet2Indbetaling, rentePct: ctx.avgRet2RentePct, udbetalingsaar: ctx.avgRet2Udbetalingsaar, garanteret: ctx.avgRet2Garanteret },
+        { depot: ctx.avgRet3Depot, overf: ctx.avgRet3Overf, indbetaling: ctx.avgRet3Indbetaling, rentePct: ctx.avgRet3RentePct, udbetalingsaar: ctx.avgRet3Udbetalingsaar, garanteret: ctx.avgRet3Garanteret },
+      ];
+      return { ...s, ...ctxFields[i] };
+    }));
+  }, [
+    ctx.avgRet0Depot, ctx.avgRet0Overf, ctx.avgRet0Indbetaling, ctx.avgRet0RentePct, ctx.avgRet0Udbetalingsaar, ctx.avgRet0Garanteret,
+    ctx.avgRet1Depot, ctx.avgRet1Overf, ctx.avgRet1Indbetaling, ctx.avgRet1RentePct, ctx.avgRet1Udbetalingsaar, ctx.avgRet1Garanteret,
+    ctx.avgRet2Depot, ctx.avgRet2Overf, ctx.avgRet2Indbetaling, ctx.avgRet2RentePct, ctx.avgRet2Udbetalingsaar, ctx.avgRet2Garanteret,
+    ctx.avgRet3Depot, ctx.avgRet3Overf, ctx.avgRet3Indbetaling, ctx.avgRet3RentePct, ctx.avgRet3Udbetalingsaar, ctx.avgRet3Garanteret,
   ]);
 
   const years = Math.max(0, pensionAge - currentAge);

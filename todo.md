@@ -321,3 +321,8 @@
 - [x] Tilføj "Vælg alle" flueben i tabelheaderen
 - [x] Vis "Slet valgte (N)" knap når mindst ét produkt er valgt
 - [x] Bekræftelsesdialog inden sletning
+
+## Fase 37 – Gennemsnitsrente: fix import/indlæsning
+
+- [x] Tilføj useEffect i AverageReturnCalculator der synkroniserer lokal state fra context når context ændres (fix "stale initial state" ved import)
+- [x] Samme fix gælder currentAge og pensionAge
