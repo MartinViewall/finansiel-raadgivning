@@ -313,3 +313,11 @@
 - [x] Tilføj sortable chips med drag-håndtag i ProductSelector
 - [x] Drag-and-drop opdaterer selectedProductIds rækkefølge via onReorder prop
 - [x] Første produkt vises med (nuv.) badge
+
+## Fase 36 – Produktadmin: masse-slet
+
+- [x] Tilføj bulkDelete tRPC procedure i server/routers.ts (input: ids: number[])
+- [x] Tilføj flueben per række i produkttabellen i admin-siden
+- [x] Tilføj "Vælg alle" flueben i tabelheaderen
+- [x] Vis "Slet valgte (N)" knap når mindst ét produkt er valgt
+- [x] Bekræftelsesdialog inden sletning

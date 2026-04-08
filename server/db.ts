@@ -1,4 +1,4 @@
-import { and, asc, eq } from "drizzle-orm";
+import { and, asc, eq, inArray } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { annualReturns, InsertUser, investmentProducts, users } from "../drizzle/schema";
 import { ENV } from "./_core/env";
@@ -113,6 +113,13 @@ export async function deleteProduct(id: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   await db.delete(investmentProducts).where(eq(investmentProducts.id, id));
+}
+
+export async function bulkDeleteProducts(ids: number[]) {
+  if (ids.length === 0) return;
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  await db.delete(investmentProducts).where(inArray(investmentProducts.id, ids));
 }
 
 // ─── Annual Returns ───────────────────────────────────────────────────────────

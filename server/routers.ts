@@ -1,6 +1,7 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import {
+  bulkDeleteProducts,
   createProduct,
   deleteAnnualReturn,
   deleteProduct,
@@ -117,6 +118,12 @@ export const appRouter = router({
       .mutation(async ({ input }) => {
         await deleteProduct(input.id);
         return { success: true };
+      }),
+    bulkDelete: publicProcedure
+      .input(z.object({ ids: z.array(z.number().int().positive()).min(1) }))
+      .mutation(async ({ input }) => {
+        await bulkDeleteProducts(input.ids);
+        return { success: true, deleted: input.ids.length };
       }),
   }),
 

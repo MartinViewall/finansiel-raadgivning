@@ -517,6 +517,8 @@ export default function Products() {
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [editProduct, setEditProduct] = useState<ProductWithReturns | null>(null);
   const [deleteProductId, setDeleteProductId] = useState<number | null>(null);
+  const [selectedIds, setSelectedIds] = useState<Set<number>>(new Set());
+  const [showBulkDeleteConfirm, setShowBulkDeleteConfirm] = useState(false);
 
   const [formName, setFormName] = useState("");
   const [formDescription, setFormDescription] = useState("");
@@ -556,6 +558,35 @@ export default function Products() {
     },
     onError: (e) => toast.error(e.message),
   });
+
+  const bulkDeleteMutation = trpc.products.bulkDelete.useMutation({
+    onSuccess: (data) => {
+      utils.products.list.invalidate();
+      utils.products.listMeta.invalidate();
+      toast.success(`${data.deleted} produkter slettet`);
+      setSelectedIds(new Set());
+      setShowBulkDeleteConfirm(false);
+    },
+    onError: (e) => toast.error(e.message),
+  });
+
+  const toggleSelect = (id: number) => {
+    setSelectedIds((prev) => {
+      const next = new Set(prev);
+      if (next.has(id)) next.delete(id); else next.add(id);
+      return next;
+    });
+  };
+
+  const toggleSelectAll = () => {
+    if (!products) return;
+    const allIds = (products as ProductWithReturns[]).map((p) => p.id);
+    if (selectedIds.size === allIds.length) {
+      setSelectedIds(new Set());
+    } else {
+      setSelectedIds(new Set(allIds));
+    }
+  };
 
   const resetForm = () => {
     setFormName("");
@@ -656,13 +687,52 @@ export default function Products() {
         </div>
       ) : (
         <div className="space-y-3">
+          {/* Bulk action toolbar */}
+          <div className="flex items-center gap-3 px-1">
+            <label className="flex items-center gap-2 cursor-pointer select-none">
+              <input
+                type="checkbox"
+                className="w-4 h-4 rounded accent-primary cursor-pointer"
+                checked={selectedIds.size === (products as ProductWithReturns[]).length && (products as ProductWithReturns[]).length > 0}
+                onChange={toggleSelectAll}
+              />
+              <span className="text-xs text-muted-foreground">
+                {selectedIds.size === 0
+                  ? "Vælg alle"
+                  : `${selectedIds.size} valgt`}
+              </span>
+            </label>
+            {selectedIds.size > 0 && (
+              <Button
+                variant="destructive"
+                size="sm"
+                className="gap-1.5 h-7 text-xs"
+                onClick={() => setShowBulkDeleteConfirm(true)}
+                disabled={bulkDeleteMutation.isPending}
+              >
+                <Trash2 className="w-3.5 h-3.5" />
+                Slet valgte ({selectedIds.size})
+              </Button>
+            )}
+          </div>
           {(products as ProductWithReturns[]).map((p) => (
-            <ProductCard
-              key={p.id}
-              product={p}
-              onEdit={() => openEdit(p)}
-              onDelete={() => setDeleteProductId(p.id)}
-            />
+            <div key={p.id} className="flex items-start gap-3">
+              <div className="pt-5 pl-1 flex-shrink-0">
+                <input
+                  type="checkbox"
+                  className="w-4 h-4 rounded accent-primary cursor-pointer"
+                  checked={selectedIds.has(p.id)}
+                  onChange={() => toggleSelect(p.id)}
+                />
+              </div>
+              <div className="flex-1 min-w-0">
+                <ProductCard
+                  product={p}
+                  onEdit={() => openEdit(p)}
+                  onDelete={() => setDeleteProductId(p.id)}
+                />
+              </div>
+            </div>
           ))}
         </div>
       )}
@@ -795,6 +865,28 @@ export default function Products() {
           </DialogFooter>
         </DialogContent>
       </Dialog>
+
+      {/* Bulk delete confirmation */}
+      <AlertDialog open={showBulkDeleteConfirm} onOpenChange={(open) => { if (!open) setShowBulkDeleteConfirm(false); }}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Slet {selectedIds.size} produkter?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Dette vil permanent slette de valgte {selectedIds.size} produkter og alle tilhørende afkastdata. Handlingen kan ikke fortrydes.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Annuller</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => bulkDeleteMutation.mutate({ ids: Array.from(selectedIds) })}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+              disabled={bulkDeleteMutation.isPending}
+            >
+              {bulkDeleteMutation.isPending ? "Sletter..." : `Slet ${selectedIds.size} produkter`}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
 
       {/* Delete confirmation */}
       <AlertDialog open={!!deleteProductId} onOpenChange={(open) => { if (!open) setDeleteProductId(null); }}>
