@@ -298,6 +298,15 @@ export default function GoalCalculator() {
   const [annualPayout, setAnnualPayout]   = useState(() => ctx.goalAnnualPayout);
   const [payoutYears, setPayoutYears]     = useState(() => ctx.goalPayoutYears);
 
+  // Sync local state from context when context changes (e.g. after import)
+  useEffect(() => { setMode(ctx.goalMode); }, [ctx.goalMode]);
+  useEffect(() => { setDepot(ctx.goalDepot); }, [ctx.goalDepot]);
+  useEffect(() => { setYears(ctx.goalYears); }, [ctx.goalYears]);
+  useEffect(() => { setReturnRaw(ctx.goalReturnRaw); }, [ctx.goalReturnRaw]);
+  useEffect(() => { setTargetAmount(ctx.goalTargetAmount); }, [ctx.goalTargetAmount]);
+  useEffect(() => { setAnnualPayout(ctx.goalAnnualPayout); }, [ctx.goalAnnualPayout]);
+  useEffect(() => { setPayoutYears(ctx.goalPayoutYears); }, [ctx.goalPayoutYears]);
+
   // ── Write back to context on every change ─────────────────────────────────
   const handleMode          = (v: Mode)   => { setMode(v);          ctx.setGoalMode(v); };
   const handleDepot         = (v: number) => { setDepot(v);         ctx.setGoalDepot(v); };

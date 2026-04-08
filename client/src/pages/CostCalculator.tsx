@@ -297,6 +297,13 @@ export default function CostCalculator() {
     }
   }, [ctx.goalMode, ctx.goalDepot, ctx.goalYears, ctx.goalReturnRaw, ctx.goalTargetAmount, ctx.goalAnnualPayout, ctx.goalPayoutYears]);
 
+  // Sync local state from context when context changes (e.g. after import)
+  useEffect(() => { setDepot(ctx.costDepot); }, [ctx.costDepot]);
+  useEffect(() => { setAnnualContribution(ctx.costAnnualContribution); }, [ctx.costAnnualContribution]);
+  useEffect(() => { setYearsToPension(ctx.costYearsToPension); }, [ctx.costYearsToPension]);
+  useEffect(() => { setCostTodayRaw(ctx.costTodayRaw); }, [ctx.costTodayRaw]);
+  useEffect(() => { setCostNewRaw(ctx.costNewRaw); }, [ctx.costNewRaw]);
+
   // Write back to context on every change
   const handleSetDepot = (v: number) => { setDepot(v); ctx.setCostDepot(v); };
   const handleSetAnnualContribution = (v: number) => { setAnnualContribution(v); ctx.setCostAnnualContribution(v); };

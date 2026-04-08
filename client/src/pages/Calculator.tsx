@@ -1,5 +1,5 @@
 import { CalculatorIOBar } from "@/components/CalculatorIOBar";
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { trpc } from "@/lib/trpc";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -332,6 +332,16 @@ export default function Calculator() {
   const [tableYearTo, setTableYearTo] = useState<number>(() => ctx.tableYearTo);
   const [pensionYearsRaw, setPensionYearsRaw] = useState<string>(() => ctx.pensionYearsRaw);
   const [pensionReturnOverride, setPensionReturnOverride] = useState<string>(() => ctx.pensionReturnOverride);
+
+  // Sync local state from context when context changes (e.g. after import)
+  useEffect(() => { setInitialCapital(ctx.depot); }, [ctx.depot]);
+  useEffect(() => { setAnnualContribution(ctx.annualContribution); }, [ctx.annualContribution]);
+  useEffect(() => { setHorizonYears(ctx.horizonYears); }, [ctx.horizonYears]);
+  useEffect(() => { setSelectedProductIds(ctx.selectedProductIds); }, [ctx.selectedProductIds]);
+  useEffect(() => { setTableYearFrom(ctx.tableYearFrom); }, [ctx.tableYearFrom]);
+  useEffect(() => { setTableYearTo(ctx.tableYearTo); }, [ctx.tableYearTo]);
+  useEffect(() => { setPensionYearsRaw(ctx.pensionYearsRaw); }, [ctx.pensionYearsRaw]);
+  useEffect(() => { setPensionReturnOverride(ctx.pensionReturnOverride); }, [ctx.pensionReturnOverride]);
 
   // Write back to context on every change so values persist when navigating away
   const handleSetInitialCapital = (v: number) => { setInitialCapital(v); ctx.setDepot(v); };

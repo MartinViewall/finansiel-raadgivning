@@ -268,6 +268,13 @@ export default function ReturnDiffCalculator() {
   const [returnNewRaw, setReturnNewRaw] = useState(() => ctx.returnDiffNewRaw);
   const [tableOpen, setTableOpen] = useState(false);
 
+  // Sync local state from context when context changes (e.g. after import)
+  useEffect(() => { setDepot(ctx.returnDiffDepot); }, [ctx.returnDiffDepot]);
+  useEffect(() => { setAnnualContribution(ctx.returnDiffAnnualContribution); }, [ctx.returnDiffAnnualContribution]);
+  useEffect(() => { setYearsToPension(ctx.returnDiffYearsToPension); }, [ctx.returnDiffYearsToPension]);
+  useEffect(() => { setReturnTodayRaw(ctx.returnDiffTodayRaw); }, [ctx.returnDiffTodayRaw]);
+  useEffect(() => { setReturnNewRaw(ctx.returnDiffNewRaw); }, [ctx.returnDiffNewRaw]);
+
   // Write back to context on every change
   const handleSetDepot = (v: number) => { setDepot(v); ctx.setReturnDiffDepot(v); };
   const handleSetAnnualContribution = (v: number) => { setAnnualContribution(v); ctx.setReturnDiffAnnualContribution(v); };

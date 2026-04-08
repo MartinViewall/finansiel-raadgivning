@@ -326,3 +326,11 @@
 
 - [x] Tilføj useEffect i AverageReturnCalculator der synkroniserer lokal state fra context når context ændres (fix "stale initial state" ved import)
 - [x] Samme fix gælder currentAge og pensionAge
+
+## Fase 38 – Import-sync audit for alle beregnere
+
+- [x] Afkastberegner (Calculator.tsx): useEffect sync tilføjet
+- [x] Omkostningsberegner (CostCalculator.tsx): useEffect sync tilføjet
+- [x] Målberegner (GoalCalculator.tsx): useEffect sync tilføjet
+- [x] Afkastforskelberegner (ReturnDiffCalculator.tsx): useEffect sync tilføjet
+- [x] Kapacitetsberegner (CapacityCalculator.tsx): ikke ramt (læser direkte fra ctx i render)
