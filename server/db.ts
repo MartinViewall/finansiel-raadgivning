@@ -1,6 +1,6 @@
 import { and, asc, eq, inArray } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
-import { annualReturns, InsertUser, investmentProducts, users } from "../drizzle/schema";
+import { annualReturns, InsertUser, insuranceBasePrices, insuranceCompanies, insuranceSalaryScale, investmentProducts, users } from "../drizzle/schema";
 import { ENV } from "./_core/env";
 
 let _db: ReturnType<typeof drizzle> | null = null;
@@ -153,4 +153,75 @@ export async function deleteAnnualReturn(productId: number, year: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
   await db.delete(annualReturns).where(and(eq(annualReturns.productId, productId), eq(annualReturns.year, year)));
+}
+
+// ─── Insurance ───────────────────────────────────────────────────────────────
+
+export async function getInsuranceCompanies() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(insuranceCompanies).orderBy(asc(insuranceCompanies.sortOrder));
+}
+
+export async function getInsuranceBasePrices() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(insuranceBasePrices).orderBy(asc(insuranceBasePrices.companyId));
+}
+
+export async function getInsuranceSalaryScale() {
+  const db = await getDb();
+  if (!db) return [];
+  return db.select().from(insuranceSalaryScale).orderBy(asc(insuranceSalaryScale.salaryUpTo));
+}
+
+export async function upsertInsuranceBasePrice(
+  companyId: number,
+  coverageType: string,
+  ratePct: number,
+  fixedKr: number,
+  baselinePct: number
+) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const existing = await db
+    .select()
+    .from(insuranceBasePrices)
+    .where(and(eq(insuranceBasePrices.companyId, companyId), eq(insuranceBasePrices.coverageType, coverageType)))
+    .limit(1);
+  if (existing.length > 0) {
+    await db
+      .update(insuranceBasePrices)
+      .set({ ratePct: String(ratePct), fixedKr: String(fixedKr), baselinePct: String(baselinePct) })
+      .where(and(eq(insuranceBasePrices.companyId, companyId), eq(insuranceBasePrices.coverageType, coverageType)));
+  } else {
+    await db.insert(insuranceBasePrices).values({ companyId, coverageType, ratePct: String(ratePct), fixedKr: String(fixedKr), baselinePct: String(baselinePct) });
+  }
+}
+
+export async function addInsuranceCompany(name: string, useEaFormula: boolean) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const all = await db.select().from(insuranceCompanies);
+  const maxSort = all.reduce((m, c) => Math.max(m, c.sortOrder), 0);
+  const result = await db.insert(insuranceCompanies).values({ name, useEaFormula: useEaFormula ? 1 : 0, sortOrder: maxSort + 1, isActive: 1 });
+  return result;
+}
+
+export async function updateInsuranceCompany(id: number, data: { name?: string; useEaFormula?: boolean; isActive?: boolean; sortOrder?: number }) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  const setData: Record<string, unknown> = {};
+  if (data.name !== undefined) setData.name = data.name;
+  if (data.useEaFormula !== undefined) setData.useEaFormula = data.useEaFormula ? 1 : 0;
+  if (data.isActive !== undefined) setData.isActive = data.isActive ? 1 : 0;
+  if (data.sortOrder !== undefined) setData.sortOrder = data.sortOrder;
+  await db.update(insuranceCompanies).set(setData as Parameters<ReturnType<typeof drizzle>["update"]>[0] extends { set: (v: infer V) => unknown } ? V : never).where(eq(insuranceCompanies.id, id));
+}
+
+export async function deleteInsuranceCompany(id: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+  // cascade deletes base prices
+  await db.delete(insuranceCompanies).where(eq(insuranceCompanies.id, id));
 }

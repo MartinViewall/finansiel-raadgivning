@@ -74,3 +74,57 @@ export const annualReturns = mysqlTable("annual_returns", {
 
 export type AnnualReturn = typeof annualReturns.$inferSelect;
 export type InsertAnnualReturn = typeof annualReturns.$inferInsert;
+
+/**
+ * Insurance companies (Velliv, PFA, EA, Nordea, ...)
+ * useEaFormula = true means: price = salary * ratePct + fixedKr (no daekning/baseline)
+ */
+export const insuranceCompanies = mysqlTable("insurance_companies", {
+  id: int("id").autoincrement().primaryKey(),
+  name: varchar("name", { length: 128 }).notNull(),
+  /** If true, use EA formula: salary * ratePct + fixedKr. Otherwise standard formula. */
+  useEaFormula: int("useEaFormula").notNull().default(0),
+  sortOrder: int("sortOrder").notNull().default(0),
+  isActive: int("isActive").notNull().default(1),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type InsuranceCompany = typeof insuranceCompanies.$inferSelect;
+export type InsertInsuranceCompany = typeof insuranceCompanies.$inferInsert;
+
+/**
+ * Base prices per company per coverage type.
+ * coverageType: 'erhvervsevne' | 'praemiefritagelse' | 'livsforsikring' | 'kritisksygdom' | 'sundhedsordning' | 'administration'
+ * ratePct: rate as decimal, e.g. 0.014722 for 1.4722%
+ * fixedKr: fixed kr amount added on top (e.g. 600 for PFA erhvervsevne)
+ * baselinePct: the baseline coverage pct the rate is calibrated for (0.40 for standard, 1.0 for others)
+ */
+export const insuranceBasePrices = mysqlTable("insurance_base_prices", {
+  id: int("id").autoincrement().primaryKey(),
+  companyId: int("companyId")
+    .notNull()
+    .references(() => insuranceCompanies.id, { onDelete: "cascade" }),
+  coverageType: varchar("coverageType", { length: 64 }).notNull(),
+  ratePct: decimal("ratePct", { precision: 12, scale: 8 }).notNull().default("0"),
+  fixedKr: decimal("fixedKr", { precision: 10, scale: 2 }).notNull().default("0"),
+  baselinePct: decimal("baselinePct", { precision: 6, scale: 4 }).notNull().default("1"),
+  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+});
+
+export type InsuranceBasePrice = typeof insuranceBasePrices.$inferSelect;
+export type InsertInsuranceBasePrice = typeof insuranceBasePrices.$inferInsert;
+
+/**
+ * Salary scale for TAEE coverage percentage lookup.
+ * salaryUpTo: the upper bound of this salary band (inclusive)
+ * coveragePct: the coverage percentage for this band, e.g. 0.78 for 78%
+ */
+export const insuranceSalaryScale = mysqlTable("insurance_salary_scale", {
+  id: int("id").autoincrement().primaryKey(),
+  salaryUpTo: int("salaryUpTo").notNull(),
+  coveragePct: decimal("coveragePct", { precision: 5, scale: 4 }).notNull(),
+});
+
+export type InsuranceSalaryScale = typeof insuranceSalaryScale.$inferSelect;

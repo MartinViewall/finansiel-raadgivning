@@ -1,14 +1,21 @@
 import { TRPCError } from "@trpc/server";
 import { z } from "zod";
 import {
+  addInsuranceCompany,
   bulkDeleteProducts,
   createProduct,
   deleteAnnualReturn,
+  deleteInsuranceCompany,
   deleteProduct,
   getAllProducts,
+  getInsuranceBasePrices,
+  getInsuranceCompanies,
+  getInsuranceSalaryScale,
   getProductsWithReturns,
+  updateInsuranceCompany,
   updateProduct,
   upsertAnnualReturn,
+  upsertInsuranceBasePrice,
 } from "./db";
 import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
@@ -228,6 +235,54 @@ export const appRouter = router({
         return { results, horizonYears: input.horizonYears };
       }),
   }),
+  insurance: router({
+    listCompanies: publicProcedure.query(async () => {
+      return getInsuranceCompanies();
+    }),
+    getBasePrices: publicProcedure.query(async () => {
+      return getInsuranceBasePrices();
+    }),
+    getSalaryScale: publicProcedure.query(async () => {
+      return getInsuranceSalaryScale();
+    }),
+    upsertBasePrice: publicProcedure
+      .input(z.object({
+        companyId: z.number(),
+        coverageType: z.string(),
+        ratePct: z.number(),
+        fixedKr: z.number(),
+        baselinePct: z.number(),
+      }))
+      .mutation(async ({ input }) => {
+        await upsertInsuranceBasePrice(input.companyId, input.coverageType, input.ratePct, input.fixedKr, input.baselinePct);
+        return { ok: true };
+      }),
+    addCompany: publicProcedure
+      .input(z.object({ name: z.string().min(1), useEaFormula: z.boolean() }))
+      .mutation(async ({ input }) => {
+        await addInsuranceCompany(input.name, input.useEaFormula);
+        return { ok: true };
+      }),
+    updateCompany: publicProcedure
+      .input(z.object({
+        id: z.number(),
+        name: z.string().optional(),
+        useEaFormula: z.boolean().optional(),
+        isActive: z.boolean().optional(),
+        sortOrder: z.number().optional(),
+      }))
+      .mutation(async ({ input }) => {
+        const { id, ...data } = input;
+        await updateInsuranceCompany(id, data);
+        return { ok: true };
+      }),
+    deleteCompany: publicProcedure
+      .input(z.object({ id: z.number() }))
+      .mutation(async ({ input }) => {
+        await deleteInsuranceCompany(input.id);
+        return { ok: true };
+      }),
+  }),
 });
-
 export type AppRouter = typeof appRouter;
+

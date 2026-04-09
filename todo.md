@@ -334,3 +334,43 @@
 - [x] Målberegner (GoalCalculator.tsx): useEffect sync tilføjet
 - [x] Afkastforskelberegner (ReturnDiffCalculator.tsx): useEffect sync tilføjet
 - [x] Kapacitetsberegner (CapacityCalculator.tsx): ikke ramt (læser direkte fra ctx i render)
+
+## Tilbagevendende opgave – Skill-opdatering
+
+> **Regel:** Opdatér skillen (`/home/ubuntu/skills/finansiel-raadgivning/`) efter enhver fase der indeholder:
+> - Ny beregner → SKILL.md (trin-guide) + context-fields.md + formulas.md
+> - Ny formel eller skattelogik → formulas.md
+> - Nyt context-felt eller ændret standardværdi → context-fields.md
+> - Ny arkitekturændring (komponent, hook, mønster) → SKILL.md
+> - Generelt bugfix-mønster (f.eks. import-sync) → SKILL.md (Critical Patterns)
+>
+> Skill-opdatering sker som næstsidste trin inden checkpoint.
+
+- [ ] Opdatér skill efter næste større fase
+
+## Fase 39 – Forsikringsprisberegner
+
+- [x] DB: `insurance_companies` tabel (id, name, useEaFormula, sortOrder, isActive)
+- [x] DB: `insurance_base_prices` tabel (id, companyId, coverageType, ratePct, fixedKr, baselinePct)
+- [x] DB: `insurance_salary_scale` tabel (id, salaryUpTo, coveragePct) — Lønskala-data
+- [x] Seed: Velliv, PFA, EA, Nordea, Danica med grundpriser fra Excel (Danica = Nordea priser)
+  - Præmiefritagelse formel: Årlig indbetaling × Grundpris (ikke løn × dækningspct)
+- [x] Seed: Lønskala (44 trin fra Excel)
+- [x] tRPC: insurance.listCompanies, insurance.getBasePrices, insurance.upsertBasePrice, insurance.addCompany, insurance.deleteCompany, insurance.updateCompany, insurance.getSalaryScale
+- [x] InsuranceCalculator.tsx: Inputfelter (Løn, Årlig indbetaling)
+- [x] InsuranceCalculator.tsx: Auto-opslag i lønskala → foreslå dækningspct erhvervsevne (kan overskrives)
+- [x] InsuranceCalculator.tsx: Livsforsikring standard 100% af løn (kan ændres)
+- [x] InsuranceCalculator.tsx: Kritisk Sygdom standard 100.000 kr. (kan ændres)
+- [x] InsuranceCalculator.tsx: Sundhedsordning til/fra toggle
+- [x] InsuranceCalculator.tsx: Beregningsmotor — standard formel + EA-formel
+- [x] InsuranceCalculator.tsx: Resultattabel med detaljerede priser per forsikringstype per selskab
+- [x] InsuranceCalculator.tsx: Kollapset visning (kun total per selskab) / udvidet visning (alle linjer)
+- [x] InsuranceCalculator.tsx: Vælg hvilke selskaber der vises (checkbox per selskab)
+- [x] InsuranceCalculator.tsx: "Skjul alternativer" toggle → Selskab 1, Selskab 2 osv.
+- [x] Admin-modul: Modal-panel til redigering af grundpriser per selskab
+- [x] Admin-modul: Tilføj/fjern selskaber, markér EA-formel
+- [x] Rute /insurance-calculator i App.tsx
+- [x] Sidebar-link "Forsikringspriser" i DashboardLayout.tsx
+- [x] InsuranceCalculator er selvstændig (ingen CalculatorContext-integration — data gemmes lokalt)
+- [ ] Integrer i useCalculatorIO (Gem/Hent) — fremtidig fase
+- [x] Opdatér skill efter implementering
