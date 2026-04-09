@@ -1,4 +1,4 @@
-import { useState, useMemo, useCallback, useEffect } from "react";
+import { useState, useMemo, useCallback, useEffect, useRef } from "react";
 import { trpc } from "@/lib/trpc";
 import { ChevronDown, ChevronUp, Eye, EyeOff, Settings2, Plus, Trash2, Check, HelpCircle } from "lucide-react";
 import { useCalculatorContext } from "@/contexts/CalculatorContext";
@@ -436,6 +436,9 @@ export default function InsuranceCalculator() {
   );
   const [visningCollapsed, setVisningCollapsed] = useState(false);
 
+  // Guard ref: prevents write-back from triggering inward-sync and vice-versa
+  const importingRef = useRef(false);
+
   // ── Sync local state from context when a scenario is imported ──────────────
   useEffect(() => { setSalaryRaw(ctx.insSalaryRaw); }, [ctx.insSalaryRaw]);
   useEffect(() => { setContributionRaw(ctx.insContributionRaw); }, [ctx.insContributionRaw]);
@@ -445,8 +448,13 @@ export default function InsuranceCalculator() {
   useEffect(() => { setIncludeSundhed(ctx.insIncludeSundhed); }, [ctx.insIncludeSundhed]);
   useEffect(() => { setAnonymize(ctx.insAnonymize); }, [ctx.insAnonymize]);
   useEffect(() => {
+    // Serialize both sides to compare; skip if identical to avoid the loop
+    const ctxSerialized = ctx.insVisibleIds ? JSON.stringify(Array.from(ctx.insVisibleIds).sort((a, b) => a - b)) : null;
+    const localSerialized = visibleIds ? JSON.stringify(Array.from(visibleIds).sort((a, b) => a - b)) : null;
+    if (ctxSerialized === localSerialized) return;
+    importingRef.current = true;
     setVisibleIds(ctx.insVisibleIds ? new Set(ctx.insVisibleIds) : null);
-  }, [ctx.insVisibleIds]);
+  }, [ctx.insVisibleIds]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const handleAdminOpen = () => {
     setAdminPwInput("");
@@ -473,8 +481,10 @@ export default function InsuranceCalculator() {
   useEffect(() => { ctx.setInsIncludeSundhed(includeSundhed); }, [includeSundhed]);
   useEffect(() => { ctx.setInsAnonymize(anonymize); }, [anonymize]);
   useEffect(() => {
+    // Skip write-back if this change was caused by an import (inward-sync)
+    if (importingRef.current) { importingRef.current = false; return; }
     ctx.setInsVisibleIds(visibleIds ? Array.from(visibleIds) : null);
-  }, [visibleIds]);
+  }, [visibleIds]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const salary = parseNum(salaryRaw);
   const annualContribution = parseNum(contributionRaw);

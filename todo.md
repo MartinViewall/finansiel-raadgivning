@@ -385,3 +385,6 @@
 - [x] Tilføj insurance-sektion til useCalculatorIO (gem/hent)
 - [x] Vis CalculatorIOBar i InsuranceCalculator med klientnavn-dialog (samme mønster som andre beregnere)
 - [x] useEffect-sync i InsuranceCalculator så import opdaterer lokal state
+
+## Fase 42 – Bugfix: InsuranceCalculator visibleIds uendelig re-render
+- [x] Fix infinite loop ved toggle af selskabssynlighed (visibleIds useEffect ↔ ctx.setInsVisibleIds)
