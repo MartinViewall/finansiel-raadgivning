@@ -1,6 +1,8 @@
-import { useState, useMemo, useCallback } from "react";
+import { useState, useMemo, useCallback, useEffect } from "react";
 import { trpc } from "@/lib/trpc";
 import { ChevronDown, ChevronUp, Eye, EyeOff, Settings2, Plus, Trash2, Check, HelpCircle } from "lucide-react";
+import { useCalculatorContext } from "@/contexts/CalculatorContext";
+import { CalculatorIOBar } from "@/components/CalculatorIOBar";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -408,28 +410,43 @@ function AdminPanel({
 // ─── Main page ────────────────────────────────────────────────────────────────
 
 export default function InsuranceCalculator() {
+  const ctx = useCalculatorContext();
   const { data: companies = [] } = trpc.insurance.listCompanies.useQuery();
   const { data: rawPrices = [] } = trpc.insurance.getBasePrices.useQuery();
   const { data: salaryScale = [] } = trpc.insurance.getSalaryScale.useQuery();
 
-  // Inputs
-  const [salaryRaw, setSalaryRaw] = useState("660.000");
-  const [contributionRaw, setContributionRaw] = useState("60.000");
-  const [coveragePctRaw, setCoveragePctRaw] = useState(""); // empty = auto from scale
-  const [livsPctRaw, setLivsPctRaw] = useState("100");
-  const [kritiskRaw, setKritiskRaw] = useState("100.000");
-  const [includeSundhed, setIncludeSundhed] = useState(true);
+  // Inputs — initialised from context (persisted across navigation + import)
+  const [salaryRaw, setSalaryRaw] = useState(ctx.insSalaryRaw);
+  const [contributionRaw, setContributionRaw] = useState(ctx.insContributionRaw);
+  const [coveragePctRaw, setCoveragePctRaw] = useState(ctx.insCoveragePctRaw);
+  const [livsPctRaw, setLivsPctRaw] = useState(ctx.insLivsPctRaw);
+  const [kritiskRaw, setKritiskRaw] = useState(ctx.insKritiskRaw);
+  const [includeSundhed, setIncludeSundhed] = useState(ctx.insIncludeSundhed);
 
-  // UI state
-  const [anonymize, setAnonymize] = useState(false);
+  // UI state — also from context
+  const [anonymize, setAnonymize] = useState(ctx.insAnonymize);
   const [expandedIds, setExpandedIds] = useState<Set<number>>(new Set());
   const [showAdmin, setShowAdmin] = useState(false);
   const [showAdminPw, setShowAdminPw] = useState(false);
   const [adminPwInput, setAdminPwInput] = useState("");
   const [adminPwError, setAdminPwError] = useState(false);
   const [showHint, setShowHint] = useState(false);
-  const [visibleIds, setVisibleIds] = useState<Set<number> | null>(null); // null = all
+  const [visibleIds, setVisibleIds] = useState<Set<number> | null>(
+    ctx.insVisibleIds ? new Set(ctx.insVisibleIds) : null
+  );
   const [visningCollapsed, setVisningCollapsed] = useState(false);
+
+  // ── Sync local state from context when a scenario is imported ──────────────
+  useEffect(() => { setSalaryRaw(ctx.insSalaryRaw); }, [ctx.insSalaryRaw]);
+  useEffect(() => { setContributionRaw(ctx.insContributionRaw); }, [ctx.insContributionRaw]);
+  useEffect(() => { setCoveragePctRaw(ctx.insCoveragePctRaw); }, [ctx.insCoveragePctRaw]);
+  useEffect(() => { setLivsPctRaw(ctx.insLivsPctRaw); }, [ctx.insLivsPctRaw]);
+  useEffect(() => { setKritiskRaw(ctx.insKritiskRaw); }, [ctx.insKritiskRaw]);
+  useEffect(() => { setIncludeSundhed(ctx.insIncludeSundhed); }, [ctx.insIncludeSundhed]);
+  useEffect(() => { setAnonymize(ctx.insAnonymize); }, [ctx.insAnonymize]);
+  useEffect(() => {
+    setVisibleIds(ctx.insVisibleIds ? new Set(ctx.insVisibleIds) : null);
+  }, [ctx.insVisibleIds]);
 
   const handleAdminOpen = () => {
     setAdminPwInput("");
@@ -446,6 +463,18 @@ export default function InsuranceCalculator() {
       setAdminPwError(true);
     }
   };
+
+  // ── Write-back to context whenever local state changes ─────────────────────
+  useEffect(() => { ctx.setInsSalaryRaw(salaryRaw); }, [salaryRaw]);
+  useEffect(() => { ctx.setInsContributionRaw(contributionRaw); }, [contributionRaw]);
+  useEffect(() => { ctx.setInsCoveragePctRaw(coveragePctRaw); }, [coveragePctRaw]);
+  useEffect(() => { ctx.setInsLivsPctRaw(livsPctRaw); }, [livsPctRaw]);
+  useEffect(() => { ctx.setInsKritiskRaw(kritiskRaw); }, [kritiskRaw]);
+  useEffect(() => { ctx.setInsIncludeSundhed(includeSundhed); }, [includeSundhed]);
+  useEffect(() => { ctx.setInsAnonymize(anonymize); }, [anonymize]);
+  useEffect(() => {
+    ctx.setInsVisibleIds(visibleIds ? Array.from(visibleIds) : null);
+  }, [visibleIds]);
 
   const salary = parseNum(salaryRaw);
   const annualContribution = parseNum(contributionRaw);
@@ -524,6 +553,9 @@ export default function InsuranceCalculator() {
 
   return (
     <div className="p-6 max-w-5xl mx-auto space-y-6">
+      {/* Gem/Hent bar */}
+      <CalculatorIOBar />
+
       {/* Header */}
       <div className="flex items-start justify-between">
         <div>

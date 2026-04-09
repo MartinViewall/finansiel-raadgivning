@@ -379,3 +379,9 @@
 - [x] Admin-modul: adgangskodebeskyttelse (Kakao467) med skjult hint via ?-ikon (HotDrinkNumber)
 - [x] Visning-panel kan minimeres (collapsible)
 - [x] "Skjul alternativer" omdøbt til "Skjul selskabsnavne" — alle selskaber anonymiseres som Selskab 1/2/3
+
+## Fase 41 – Forsikringsprisberegner: Gem/Hent scenarie
+- [x] Tilføj insurance-felter til CalculatorContext (salaryRaw, contributionRaw, coveragePctRaw, livsPctRaw, kritiskRaw, includeSundhed, anonymize, visibleIds)
+- [x] Tilføj insurance-sektion til useCalculatorIO (gem/hent)
+- [x] Vis CalculatorIOBar i InsuranceCalculator med klientnavn-dialog (samme mønster som andre beregnere)
+- [x] useEffect-sync i InsuranceCalculator så import opdaterer lokal state

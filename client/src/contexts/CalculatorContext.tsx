@@ -157,6 +157,25 @@ interface CalculatorSharedState {
   setAvgRet1Depot: (v: number) => void; setAvgRet1Overf: (v: number) => void; setAvgRet1Indbetaling: (v: number) => void; setAvgRet1RentePct: (v: number) => void; setAvgRet1Udbetalingsaar: (v: number) => void; setAvgRet1Garanteret: (v: number) => void;
   setAvgRet2Depot: (v: number) => void; setAvgRet2Overf: (v: number) => void; setAvgRet2Indbetaling: (v: number) => void; setAvgRet2RentePct: (v: number) => void; setAvgRet2Udbetalingsaar: (v: number) => void; setAvgRet2Garanteret: (v: number) => void;
   setAvgRet3Depot: (v: number) => void; setAvgRet3Overf: (v: number) => void; setAvgRet3Indbetaling: (v: number) => void; setAvgRet3RentePct: (v: number) => void; setAvgRet3Udbetalingsaar: (v: number) => void; setAvgRet3Garanteret: (v: number) => void;
+
+  // ── Forsikringsprisberegner ─────────────────────────────────────────────────
+  insSalaryRaw: string;
+  insContributionRaw: string;
+  insCoveragePctRaw: string;
+  insLivsPctRaw: string;
+  insKritiskRaw: string;
+  insIncludeSundhed: boolean;
+  insAnonymize: boolean;
+  insVisibleIds: number[] | null; // null = all
+
+  setInsSalaryRaw: (v: string) => void;
+  setInsContributionRaw: (v: string) => void;
+  setInsCoveragePctRaw: (v: string) => void;
+  setInsLivsPctRaw: (v: string) => void;
+  setInsKritiskRaw: (v: string) => void;
+  setInsIncludeSundhed: (v: boolean) => void;
+  setInsAnonymize: (v: boolean) => void;
+  setInsVisibleIds: (v: number[] | null) => void;
 }
 
 // ─── Defaults ─────────────────────────────────────────────────────────────────
@@ -231,6 +250,15 @@ const DEFAULTS = {
   avgRet1Depot: 0, avgRet1Overf: 0, avgRet1Indbetaling: 0, avgRet1RentePct: 3, avgRet1Udbetalingsaar: 1,  avgRet1Garanteret: 0,
   avgRet2Depot: 0, avgRet2Overf: 0, avgRet2Indbetaling: 0, avgRet2RentePct: 3, avgRet2Udbetalingsaar: 10, avgRet2Garanteret: 0,
   avgRet3Depot: 0, avgRet3Overf: 0, avgRet3Indbetaling: 0, avgRet3RentePct: 3, avgRet3Udbetalingsaar: 22, avgRet3Garanteret: 0,
+  // Forsikringsprisberegner
+  insSalaryRaw: "660.000",
+  insContributionRaw: "60.000",
+  insCoveragePctRaw: "",
+  insLivsPctRaw: "100",
+  insKritiskRaw: "100.000",
+  insIncludeSundhed: true,
+  insAnonymize: false,
+  insVisibleIds: null as number[] | null,
 };
 
 // ─── Context ──────────────────────────────────────────────────────────────────
@@ -299,6 +327,7 @@ const CalculatorContext = createContext<CalculatorSharedState>({
   setAvgRet1Depot: () => {}, setAvgRet1Overf: () => {}, setAvgRet1Indbetaling: () => {}, setAvgRet1RentePct: () => {}, setAvgRet1Udbetalingsaar: () => {}, setAvgRet1Garanteret: () => {},
   setAvgRet2Depot: () => {}, setAvgRet2Overf: () => {}, setAvgRet2Indbetaling: () => {}, setAvgRet2RentePct: () => {}, setAvgRet2Udbetalingsaar: () => {}, setAvgRet2Garanteret: () => {},
   setAvgRet3Depot: () => {}, setAvgRet3Overf: () => {}, setAvgRet3Indbetaling: () => {}, setAvgRet3RentePct: () => {}, setAvgRet3Udbetalingsaar: () => {}, setAvgRet3Garanteret: () => {},
+  setInsSalaryRaw: () => {}, setInsContributionRaw: () => {}, setInsCoveragePctRaw: () => {}, setInsLivsPctRaw: () => {}, setInsKritiskRaw: () => {}, setInsIncludeSundhed: () => {}, setInsAnonymize: () => {}, setInsVisibleIds: () => {},
 });
 
 // ─── Provider ─────────────────────────────────────────────────────────────────
@@ -400,6 +429,16 @@ export function CalculatorProvider({ children }: { children: React.ReactNode }) 
   const [avgRet3Udbetalingsaar, setAvgRet3Udbetalingsaar] = useState(DEFAULTS.avgRet3Udbetalingsaar);
   const [avgRet3Garanteret, setAvgRet3Garanteret] = useState(DEFAULTS.avgRet3Garanteret);
 
+  // Forsikringsprisberegner
+  const [insSalaryRaw, setInsSalaryRaw] = useState(DEFAULTS.insSalaryRaw);
+  const [insContributionRaw, setInsContributionRaw] = useState(DEFAULTS.insContributionRaw);
+  const [insCoveragePctRaw, setInsCoveragePctRaw] = useState(DEFAULTS.insCoveragePctRaw);
+  const [insLivsPctRaw, setInsLivsPctRaw] = useState(DEFAULTS.insLivsPctRaw);
+  const [insKritiskRaw, setInsKritiskRaw] = useState(DEFAULTS.insKritiskRaw);
+  const [insIncludeSundhed, setInsIncludeSundhed] = useState(DEFAULTS.insIncludeSundhed);
+  const [insAnonymize, setInsAnonymize] = useState(DEFAULTS.insAnonymize);
+  const [insVisibleIds, setInsVisibleIds] = useState<number[] | null>(DEFAULTS.insVisibleIds);
+
   return (
     <CalculatorContext.Provider
       value={{
@@ -465,6 +504,14 @@ export function CalculatorProvider({ children }: { children: React.ReactNode }) 
         avgRet1Depot, setAvgRet1Depot, avgRet1Overf, setAvgRet1Overf, avgRet1Indbetaling, setAvgRet1Indbetaling, avgRet1RentePct, setAvgRet1RentePct, avgRet1Udbetalingsaar, setAvgRet1Udbetalingsaar, avgRet1Garanteret, setAvgRet1Garanteret,
         avgRet2Depot, setAvgRet2Depot, avgRet2Overf, setAvgRet2Overf, avgRet2Indbetaling, setAvgRet2Indbetaling, avgRet2RentePct, setAvgRet2RentePct, avgRet2Udbetalingsaar, setAvgRet2Udbetalingsaar, avgRet2Garanteret, setAvgRet2Garanteret,
         avgRet3Depot, setAvgRet3Depot, avgRet3Overf, setAvgRet3Overf, avgRet3Indbetaling, setAvgRet3Indbetaling, avgRet3RentePct, setAvgRet3RentePct, avgRet3Udbetalingsaar, setAvgRet3Udbetalingsaar, avgRet3Garanteret, setAvgRet3Garanteret,
+        insSalaryRaw, setInsSalaryRaw,
+        insContributionRaw, setInsContributionRaw,
+        insCoveragePctRaw, setInsCoveragePctRaw,
+        insLivsPctRaw, setInsLivsPctRaw,
+        insKritiskRaw, setInsKritiskRaw,
+        insIncludeSundhed, setInsIncludeSundhed,
+        insAnonymize, setInsAnonymize,
+        insVisibleIds, setInsVisibleIds,
       }}
     >
       {children}

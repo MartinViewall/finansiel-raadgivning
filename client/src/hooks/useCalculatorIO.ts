@@ -94,6 +94,17 @@ export function useAllCalculatorsIO() {
         pensionstillaeg: ctx.capPensionstillaeg,
         atp: ctx.capAtp,
       },
+      // Forsikringsprisberegner
+      forsikring: {
+        salaryRaw: ctx.insSalaryRaw,
+        contributionRaw: ctx.insContributionRaw,
+        coveragePctRaw: ctx.insCoveragePctRaw,
+        livsPctRaw: ctx.insLivsPctRaw,
+        kritiskRaw: ctx.insKritiskRaw,
+        includeSundhed: ctx.insIncludeSundhed,
+        anonymize: ctx.insAnonymize,
+        visibleIds: ctx.insVisibleIds,
+      },
       // Gennemsnitsrenteberegner
       gennemsnitsrente: {
         currentAge: ctx.avgRetCurrentAge,
@@ -247,6 +258,17 @@ export function useAllCalculatorsIO() {
         if (gs3.rentePct !== undefined) ctx.setAvgRet3RentePct(gs3.rentePct);
         if (gs3.udbetalingsaar !== undefined) ctx.setAvgRet3Udbetalingsaar(gs3.udbetalingsaar);
         if (gs3.garanteret !== undefined) ctx.setAvgRet3Garanteret(gs3.garanteret);
+
+        // Forsikringsprisberegner
+        const f = raw.forsikring ?? {};
+        if (f.salaryRaw !== undefined) ctx.setInsSalaryRaw(f.salaryRaw);
+        if (f.contributionRaw !== undefined) ctx.setInsContributionRaw(f.contributionRaw);
+        if (f.coveragePctRaw !== undefined) ctx.setInsCoveragePctRaw(f.coveragePctRaw);
+        if (f.livsPctRaw !== undefined) ctx.setInsLivsPctRaw(f.livsPctRaw);
+        if (f.kritiskRaw !== undefined) ctx.setInsKritiskRaw(f.kritiskRaw);
+        if (f.includeSundhed !== undefined) ctx.setInsIncludeSundhed(f.includeSundhed);
+        if (f.anonymize !== undefined) ctx.setInsAnonymize(f.anonymize);
+        if (f.visibleIds !== undefined) ctx.setInsVisibleIds(f.visibleIds);
 
         const klientNavn = raw._klient ? ` for ${raw._klient}` : "";
         toast.success(`Scenarie${klientNavn} indlæst — alle beregnere opdateret`);
