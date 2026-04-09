@@ -374,3 +374,8 @@
 - [x] InsuranceCalculator er selvstændig (ingen CalculatorContext-integration — data gemmes lokalt)
 - [ ] Integrer i useCalculatorIO (Gem/Hent) — fremtidig fase
 - [x] Opdatér skill efter implementering
+
+## Fase 40 – Forsikringsprisberegner: UI-forbedringer
+- [x] Admin-modul: adgangskodebeskyttelse (Kakao467) med skjult hint via ?-ikon (HotDrinkNumber)
+- [x] Visning-panel kan minimeres (collapsible)
+- [x] "Skjul alternativer" omdøbt til "Skjul selskabsnavne" — alle selskaber anonymiseres som Selskab 1/2/3

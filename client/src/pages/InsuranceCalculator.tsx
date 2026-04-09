@@ -1,6 +1,6 @@
 import { useState, useMemo, useCallback } from "react";
 import { trpc } from "@/lib/trpc";
-import { ChevronDown, ChevronUp, Eye, EyeOff, Settings2, Plus, Trash2, Check } from "lucide-react";
+import { ChevronDown, ChevronUp, Eye, EyeOff, Settings2, Plus, Trash2, Check, HelpCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -424,7 +424,28 @@ export default function InsuranceCalculator() {
   const [anonymize, setAnonymize] = useState(false);
   const [expandedIds, setExpandedIds] = useState<Set<number>>(new Set());
   const [showAdmin, setShowAdmin] = useState(false);
+  const [showAdminPw, setShowAdminPw] = useState(false);
+  const [adminPwInput, setAdminPwInput] = useState("");
+  const [adminPwError, setAdminPwError] = useState(false);
+  const [showHint, setShowHint] = useState(false);
   const [visibleIds, setVisibleIds] = useState<Set<number> | null>(null); // null = all
+  const [visningCollapsed, setVisningCollapsed] = useState(false);
+
+  const handleAdminOpen = () => {
+    setAdminPwInput("");
+    setAdminPwError(false);
+    setShowHint(false);
+    setShowAdminPw(true);
+  };
+
+  const handleAdminPwSubmit = () => {
+    if (adminPwInput === "Kakao467") {
+      setShowAdminPw(false);
+      setShowAdmin(true);
+    } else {
+      setAdminPwError(true);
+    }
+  };
 
   const salary = parseNum(salaryRaw);
   const annualContribution = parseNum(contributionRaw);
@@ -461,7 +482,7 @@ export default function InsuranceCalculator() {
 
   const displayName = useCallback((r: CalcResult, idx: number) => {
     if (!anonymize) return r.companyName;
-    return idx === 0 ? r.companyName : `Alternativ ${idx}`;
+    return `Selskab ${idx + 1}`;
   }, [anonymize]);
 
   const toggleExpand = (id: number) => {
@@ -509,7 +530,7 @@ export default function InsuranceCalculator() {
           <h1 className="text-2xl font-bold">Forsikringsprisberegner</h1>
           <p className="text-muted-foreground text-sm mt-1">Sammenlign forsikringspriser på tværs af selskaber baseret på kundens løn og ønsker.</p>
         </div>
-        <Button variant="outline" size="sm" onClick={() => setShowAdmin(true)} className="gap-2">
+        <Button variant="outline" size="sm" onClick={handleAdminOpen} className="gap-2">
           <Settings2 className="h-4 w-4" />
           Admin
         </Button>
@@ -611,35 +632,47 @@ export default function InsuranceCalculator() {
           </div>
 
           {/* Visningsvalg */}
-          <div className="rounded-xl border border-border bg-card p-4 space-y-3">
-            <h2 className="font-semibold text-sm text-primary uppercase tracking-wide">Visning</h2>
+          <div className="rounded-xl border border-border bg-card p-4">
+            <button
+              onClick={() => setVisningCollapsed(v => !v)}
+              className="w-full flex items-center justify-between"
+            >
+              <h2 className="font-semibold text-sm text-primary uppercase tracking-wide">Visning</h2>
+              {visningCollapsed
+                ? <ChevronDown className="h-4 w-4 text-muted-foreground" />
+                : <ChevronUp className="h-4 w-4 text-muted-foreground" />}
+            </button>
 
-            <div className="flex items-center justify-between">
-              <Label className="text-xs text-muted-foreground flex items-center gap-1.5">
-                <EyeOff className="h-3.5 w-3.5" />
-                Skjul alternativer
-              </Label>
-              <Switch checked={anonymize} onCheckedChange={setAnonymize} />
-            </div>
+            {!visningCollapsed && (
+              <div className="mt-3 space-y-3">
+                <div className="flex items-center justify-between">
+                  <Label className="text-xs text-muted-foreground flex items-center gap-1.5">
+                    <EyeOff className="h-3.5 w-3.5" />
+                    Skjul selskabsnavne
+                  </Label>
+                  <Switch checked={anonymize} onCheckedChange={setAnonymize} />
+                </div>
 
-            <div>
-              <Label className="text-xs text-muted-foreground mb-2 block">Vis selskaber</Label>
-              <div className="flex flex-wrap gap-2">
-                {companies.filter(c => c.isActive === 1).map(c => (
-                  <button
-                    key={c.id}
-                    onClick={() => toggleVisible(c.id)}
-                    className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
-                      isVisible(c.id)
-                        ? "bg-primary/20 border-primary/40 text-primary"
-                        : "bg-muted/20 border-border text-muted-foreground"
-                    }`}
-                  >
-                    {c.name}
-                  </button>
-                ))}
+                <div>
+                  <Label className="text-xs text-muted-foreground mb-2 block">Vis selskaber</Label>
+                  <div className="flex flex-wrap gap-2">
+                    {companies.filter(c => c.isActive === 1).map(c => (
+                      <button
+                        key={c.id}
+                        onClick={() => toggleVisible(c.id)}
+                        className={`text-xs px-2.5 py-1 rounded-full border transition-colors ${
+                          isVisible(c.id)
+                            ? "bg-primary/20 border-primary/40 text-primary"
+                            : "bg-muted/20 border-border text-muted-foreground"
+                        }`}
+                      >
+                        {c.name}
+                      </button>
+                    ))}
+                  </div>
+                </div>
               </div>
-            </div>
+            )}
           </div>
         </div>
 
@@ -688,6 +721,53 @@ export default function InsuranceCalculator() {
           )}
         </div>
       </div>
+
+      {/* Admin password gate */}
+      {showAdminPw && (
+        <div className="fixed inset-0 z-50 bg-black/60 flex items-center justify-center px-4">
+          <div className="bg-card border border-border rounded-2xl w-full max-w-sm shadow-2xl p-6 space-y-4">
+            <div className="flex items-center justify-between">
+              <h2 className="font-semibold text-base flex items-center gap-2">
+                <Settings2 className="h-4 w-4 text-primary" />
+                Admin – adgangskode
+              </h2>
+              <button
+                onClick={() => setShowHint(h => !h)}
+                className="text-muted-foreground hover:text-foreground transition-colors"
+                title=""
+              >
+                <HelpCircle className="h-4 w-4" />
+              </button>
+            </div>
+
+            {showHint && (
+              <p className="text-xs text-muted-foreground italic">{"HotDrinkNumber"}</p>
+            )}
+
+            <div className="space-y-2">
+              <input
+                type="password"
+                value={adminPwInput}
+                onChange={e => { setAdminPwInput(e.target.value); setAdminPwError(false); }}
+                onKeyDown={e => e.key === "Enter" && handleAdminPwSubmit()}
+                placeholder="Adgangskode"
+                autoFocus
+                className={`w-full rounded-lg border px-3 py-2 text-sm bg-background outline-none focus:ring-2 focus:ring-primary/40 ${
+                  adminPwError ? "border-red-500" : "border-border"
+                }`}
+              />
+              {adminPwError && (
+                <p className="text-xs text-red-400">Forkert adgangskode</p>
+              )}
+            </div>
+
+            <div className="flex gap-2 justify-end">
+              <Button variant="ghost" size="sm" onClick={() => setShowAdminPw(false)}>Annuller</Button>
+              <Button size="sm" onClick={handleAdminPwSubmit}>Åbn admin</Button>
+            </div>
+          </div>
+        </div>
+      )}
 
       {/* Admin modal */}
       {showAdmin && (
