@@ -232,12 +232,14 @@ function ResultRow({
 }: {
   label: string;
   value: string;
-  highlight?: "positive" | "neutral";
+  highlight?: "positive" | "neutral" | "loss";
   large?: boolean;
 }) {
   const valueColor =
     highlight === "positive"
       ? "oklch(40% 0.14 155)"
+      : highlight === "loss"
+      ? "oklch(44% 0.18 25)"
       : highlight === "neutral"
       ? "var(--foreground)"
       : "var(--muted-foreground)";
@@ -476,11 +478,10 @@ export default function ReturnDiffCalculator() {
                 />
               </ResultCard>
 
-              {/* Kort 2: Samlet merværdi */}
+              {/* Kort 2: Tab ved lavere afkast */}
               <ResultCard
-                title="Effekt af højere afkast med rentes rente"
+                title="Effekt af lavere afkast med rentes rente"
                 icon={PiggyBank}
-                accent={results.diff > 0}
               >
                 <ResultRow
                   label={`Afkast i dag: ${fmtPct(returnTodayRaw)}%`}
@@ -491,13 +492,13 @@ export default function ReturnDiffCalculator() {
                   value={formatDKK(results.fvNew)}
                 />
                 <ResultRow
-                  label={`Merværdi om ${yearsToPension} år`}
+                  label={`Hvad du går glip af om ${yearsToPension} år`}
                   value={
                     results.diff >= 0
                       ? formatDKK(results.diff)
                       : "−" + formatDKK(Math.abs(results.diff))
                   }
-                  highlight={results.diff > 0 ? "positive" : "neutral"}
+                  highlight={results.diff > 0 ? "loss" : "neutral"}
                   large
                 />
 
@@ -505,20 +506,20 @@ export default function ReturnDiffCalculator() {
                   <div
                     className="mt-4 rounded-lg p-4 text-center"
                     style={{
-                      background: "oklch(94% 0.010 155)",
-                      border: "1px solid oklch(55% 0.10 155 / 0.3)",
+                      background: "oklch(44% 0.18 25 / 0.07)",
+                      border: "1px solid oklch(44% 0.18 25 / 0.28)",
                     }}
                   >
-                    <p className="text-xs text-muted-foreground mb-1">Samlet merværdi ved pension</p>
+                    <p className="text-xs text-muted-foreground mb-1">Hvad du mister til pensionen</p>
                     <p
                       className="text-3xl font-bold tabular-nums"
-                      style={{ color: "oklch(40% 0.14 155)" }}
+                      style={{ color: "oklch(44% 0.18 25)" }}
                     >
                       {formatDKK(results.diff)}
                     </p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      ved at øge afkast fra {fmtPct(returnTodayRaw)}% til {fmtPct(returnNewRaw)}%
-                      {results.diffPct > 0 && ` (+${results.diffPct.toFixed(1).replace(".", ",")}%)`}
+                      ved at beholde {fmtPct(returnTodayRaw)}% frem for {fmtPct(returnNewRaw)}% afkast
+                      {results.diffPct > 0 && ` (${results.diffPct.toFixed(1).replace(".", ",")}% lavere slutdepot)`}
                     </p>
                   </div>
                 )}

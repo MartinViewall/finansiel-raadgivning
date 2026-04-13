@@ -396,3 +396,8 @@
 - [x] CostCalculator: Fjern grøn accent fra ResultCard og ResultRow — brug rød for tab-framing
 - [x] Calculator: Tilføj rød nudge-linje på Nuværende-kort: "Bedste alternativ giver X kr. mere"
 - [x] Ryd op i hardkodede mørke OKLCH-farver i begge beregnere
+
+## Fase 44 – Salgsnudging i Afkastforskelberegner
+- [x] Hero callout: skift fra grøn "Samlet merværdi" til rød "Hvad du mister til pensionen"
+- [x] ResultRow "Merværdi"-label: skift til "Hvad du går glip af" med rød farve (ny highlight="loss" type)
+- [x] Opdatér skill med det nye nudging-mønster for ReturnDiffCalculator
