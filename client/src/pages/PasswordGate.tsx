@@ -27,11 +27,11 @@ export default function PasswordGate() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[oklch(0.16_0.03_255)] via-[oklch(0.20_0.04_255)] to-[oklch(0.14_0.025_255)]">
+    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-[oklch(97%_0.006_60)] via-[oklch(94%_0.008_60)] to-[oklch(96%_0.005_60)]">
       {/* Subtle background pattern */}
-      <div className="absolute inset-0 opacity-5"
+      <div className="absolute inset-0 opacity-30"
         style={{
-          backgroundImage: `radial-gradient(circle at 1px 1px, oklch(0.92 0.008 240) 1px, transparent 0)`,
+          backgroundImage: `radial-gradient(circle at 1px 1px, oklch(88% 0.008 60) 1px, transparent 0)`,
           backgroundSize: "40px 40px",
         }}
       />
@@ -40,28 +40,23 @@ export default function PasswordGate() {
         {/* Logo / Brand */}
         <div className="text-center mb-10">
           <div className="inline-flex items-center justify-center w-16 h-16 rounded-2xl mb-6"
-            style={{ background: "oklch(0.82 0.12 85 / 0.15)", border: "1px solid oklch(0.82 0.12 85 / 0.3)" }}>
-            <TrendingUp className="w-8 h-8" style={{ color: "oklch(0.82 0.12 85)" }} />
+            style={{ background: "oklch(72% 0.12 75 / 0.18)", border: "1px solid oklch(72% 0.12 75 / 0.35)" }}>
+            <TrendingUp className="w-8 h-8" style={{ color: "oklch(72% 0.12 75)" }} />
           </div>
-          <h1 className="text-3xl font-semibold text-white mb-2"
+          <h1 className="text-3xl font-semibold text-foreground mb-2"
             style={{ fontFamily: "'Playfair Display', serif" }}>
             Finansiel Rådgivning
           </h1>
-          <p className="text-sm" style={{ color: "oklch(0.65 0.02 240)" }}>
+          <p className="text-sm" style={{ color: "oklch(42% 0.01 60)" }}>
             Internt rådgivningsværktøj
           </p>
         </div>
 
         {/* Card */}
-        <div className="rounded-2xl p-8"
-          style={{
-            background: "oklch(1 0 0 / 0.04)",
-            border: "1px solid oklch(1 0 0 / 0.1)",
-            backdropFilter: "blur(20px)",
-          }}>
+        <div className="rounded-2xl p-8 bg-card border border-border shadow-sm">
           <div className="flex items-center gap-2 mb-6">
-            <Lock className="w-4 h-4" style={{ color: "oklch(0.65 0.02 240)" }} />
-            <span className="text-sm font-medium" style={{ color: "oklch(0.65 0.02 240)" }}>
+            <Lock className="w-4 h-4" style={{ color: "oklch(42% 0.01 60)" }} />
+            <span className="text-sm font-medium" style={{ color: "oklch(42% 0.01 60)" }}>
               Adgangskode påkrævet
             </span>
           </div>
@@ -74,19 +69,14 @@ export default function PasswordGate() {
               onChange={(e) => setPassword(e.target.value)}
               autoFocus
               className="h-12 text-base"
-              style={{
-                background: "oklch(1 0 0 / 0.06)",
-                border: "1px solid oklch(1 0 0 / 0.15)",
-                color: "white",
-              }}
             />
             <Button
               type="submit"
               disabled={verify.isPending || !password.trim()}
               className="w-full h-12 text-base font-medium"
               style={{
-                background: "oklch(0.82 0.12 85)",
-                color: "oklch(0.16 0.03 255)",
+                background: "oklch(72% 0.12 75)",
+                color: "oklch(13% 0.005 60)",
               }}
             >
               {verify.isPending ? "Verificerer..." : "Log ind"}
@@ -94,7 +84,7 @@ export default function PasswordGate() {
           </form>
         </div>
 
-        <p className="text-center text-xs mt-6" style={{ color: "oklch(0.45 0.015 240)" }}>
+        <p className="text-center text-xs mt-6" style={{ color: "oklch(42% 0.01 60)" }}>
           Kun til intern brug · Uvildig Finansiel Rådgivning
         </p>
       </div>

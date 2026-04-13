@@ -191,8 +191,8 @@ function ResultCard({
     <div
       className="rounded-xl border p-5 shadow-sm"
       style={{
-        background: accent ? "oklch(0.20 0.05 155 / 0.6)" : "var(--card)",
-        borderColor: accent ? "oklch(0.55 0.16 155 / 0.45)" : "var(--border)",
+        background: accent ? "oklch(94% 0.010 155)" : "var(--card)",
+        borderColor: accent ? "oklch(55% 0.10 155 / 0.3)" : "var(--border)",
       }}
     >
       <div className="flex items-center gap-2 mb-4">
@@ -200,14 +200,14 @@ function ResultCard({
           className="h-7 w-7 rounded-lg flex items-center justify-center flex-shrink-0"
           style={{
             background: accent
-              ? "oklch(0.55 0.16 155 / 0.18)"
-              : "oklch(0.82 0.12 85 / 0.15)",
-            border: `1px solid ${accent ? "oklch(0.55 0.16 155 / 0.4)" : "oklch(0.82 0.12 85 / 0.3)"}`,
+              ? "oklch(55% 0.10 155 / 0.15)"
+              : "oklch(72% 0.12 75 / 0.15)",
+            border: `1px solid ${accent ? "oklch(55% 0.10 155 / 0.35)" : "oklch(72% 0.12 75 / 0.3)"}`,
           }}
         >
           <Icon
             className="h-3.5 w-3.5"
-            style={{ color: accent ? "oklch(0.72 0.18 155)" : "oklch(0.82 0.12 85)" }}
+            style={{ color: accent ? "oklch(40% 0.14 155)" : "oklch(72% 0.12 75)" }}
           />
         </div>
         <h3 className="text-sm font-semibold text-foreground">{title}</h3>
@@ -232,9 +232,9 @@ function ResultRow({
 }) {
   const valueColor =
     highlight === "positive"
-      ? "oklch(0.72 0.18 155)"
+      ? "oklch(40% 0.14 155)"
       : highlight === "warning"
-      ? "oklch(0.82 0.12 85)"
+      ? "oklch(42% 0.10 75)"
       : "var(--foreground)";
 
   return (
@@ -268,9 +268,9 @@ function ModeButton({
       onClick={onClick}
       className="flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-all"
       style={{
-        background: active ? "oklch(0.82 0.12 85 / 0.18)" : "transparent",
-        color: active ? "oklch(0.82 0.12 85)" : "var(--muted-foreground)",
-        border: active ? "1px solid oklch(0.82 0.12 85 / 0.35)" : "1px solid transparent",
+        background: active ? "oklch(72% 0.12 75 / 0.18)" : "transparent",
+        color: active ? "oklch(42% 0.10 75)" : "var(--muted-foreground)",
+        border: active ? "1px solid oklch(72% 0.12 75 / 0.35)" : "1px solid transparent",
       }}
     >
       {children}
@@ -405,9 +405,9 @@ export default function GoalCalculator() {
           disabled={!isValid}
           className="flex items-center gap-2 px-4 py-2 rounded-lg text-sm font-semibold transition-all flex-shrink-0 disabled:opacity-40 disabled:cursor-not-allowed"
           style={{
-            background: "oklch(0.82 0.12 85 / 0.15)",
-            border: "1px solid oklch(0.82 0.12 85 / 0.35)",
-            color: "oklch(0.82 0.12 85)",
+            background: "oklch(72% 0.12 75 / 0.15)",
+            border: "1px solid oklch(72% 0.12 75 / 0.35)",
+            color: "oklch(42% 0.10 75)",
           }}
         >
           <FileDown className="h-4 w-4" />
@@ -509,7 +509,7 @@ export default function GoalCalculator() {
               className="rounded-xl border p-8 flex flex-col items-center justify-center text-center h-full min-h-[200px]"
               style={{ background: "var(--card)", borderColor: "var(--border)" }}
             >
-              <Target className="h-8 w-8 mb-3" style={{ color: "oklch(0.82 0.12 85 / 0.5)" }} />
+              <Target className="h-8 w-8 mb-3" style={{ color: "oklch(72% 0.12 75 / 0.6)" }} />
               <p className="text-sm text-muted-foreground">
                 Udfyld alle felter for at se beregningen
               </p>
@@ -559,7 +559,7 @@ export default function GoalCalculator() {
               <ResultCard title="Krævet opsparing" icon={PiggyBank} accent>
                 {results.requiredAnnual <= 0 ? (
                   <div className="py-3 text-center">
-                    <p className="text-sm font-semibold" style={{ color: "oklch(0.72 0.18 155)" }}>
+                    <p className="text-sm font-semibold" style={{ color: "oklch(40% 0.14 155)" }}>
                       Ingen ekstra opsparing nødvendig
                     </p>
                     <p className="text-xs text-muted-foreground mt-1">
@@ -581,10 +581,10 @@ export default function GoalCalculator() {
                     />
                     <div
                       className="mt-4 rounded-lg p-4 text-center"
-                      style={{ background: "oklch(0.55 0.16 155 / 0.12)", border: "1px solid oklch(0.55 0.16 155 / 0.25)" }}
+                      style={{ background: "oklch(94% 0.010 155)", border: "1px solid oklch(55% 0.10 155 / 0.25)" }}
                     >
                       <p className="text-xs text-muted-foreground mb-1">Krævet månedlig indbetaling</p>
-                      <p className="text-3xl font-bold tabular-nums" style={{ color: "oklch(0.72 0.18 155)" }}>
+                      <p className="text-3xl font-bold tabular-nums" style={{ color: "oklch(40% 0.14 155)" }}>
                         {formatDKK(results.requiredMonthly)}
                       </p>
                       {results.mode === "lumpsum" && (

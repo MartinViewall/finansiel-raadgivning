@@ -109,6 +109,7 @@ function SummaryCard({
   baselinePensionValue,
   avgReturn,
   deltaAvgReturn,
+  bestAlternativeDelta,
 }: {
   name: string;
   finalValue: number;
@@ -123,6 +124,7 @@ function SummaryCard({
   baselinePensionValue: number | null;
   avgReturn: number;
   deltaAvgReturn: number | null;
+  bestAlternativeDelta: number | null;
 }) {
   // Pension projection: project from current finalValue (end of horizon) forward to pension
   const pensionValue =
@@ -164,10 +166,20 @@ function SummaryCard({
       {delta !== null && deltaPct !== null && !isBaseline && (
         <p
           className="text-sm mt-1 font-medium"
-          style={{ color: delta >= 0 ? "#16a34a" : "#dc2626" }}
+          style={{ color: delta >= 0 ? "oklch(44% 0.18 145)" : "oklch(44% 0.18 25)" }}
         >
           {delta >= 0 ? "+" : ""}
           {formatDKKFull(delta)} ({formatPct(deltaPct)})
+        </p>
+      )}
+
+      {/* Nudge: bedste alternativ giver X kr. mere — vises kun på baseline-kort */}
+      {isBaseline && bestAlternativeDelta !== null && bestAlternativeDelta > 0 && (
+        <p
+          className="text-sm mt-1 font-medium"
+          style={{ color: "oklch(44% 0.18 25)" }}
+        >
+          Bedste alternativ giver {formatDKKFull(bestAlternativeDelta)} mere
         </p>
       )}
 
@@ -180,7 +192,7 @@ function SummaryCard({
         {deltaAvgReturn !== null && !isBaseline && (
           <span
             className="text-xs font-medium ml-1"
-            style={{ color: deltaAvgReturn >= 0 ? "#16a34a" : "#dc2626" }}
+            style={{ color: deltaAvgReturn >= 0 ? "oklch(44% 0.18 145)" : "oklch(44% 0.18 25)" }}
           >
             ({deltaAvgReturn >= 0 ? "+" : ""}{formatPct(deltaAvgReturn)})
           </span>
@@ -201,7 +213,7 @@ function SummaryCard({
               className="text-sm mt-0.5 font-medium"
               style={{
                 color:
-                  pensionValue - baselinePensionValue >= 0 ? "#16a34a" : "#dc2626",
+                  pensionValue - baselinePensionValue >= 0 ? "oklch(44% 0.18 145)" : "oklch(44% 0.18 25)",
               }}
             >
               {pensionValue - baselinePensionValue >= 0 ? "+" : ""}
@@ -526,8 +538,8 @@ export default function Calculator() {
           disabled={!returnDataForPdf}
           className="flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
           style={{
-            background: returnDataForPdf ? "oklch(0.82 0.12 85)" : "oklch(0.82 0.12 85 / 0.3)",
-            color: "oklch(0.13 0.04 255)",
+            background: returnDataForPdf ? "oklch(72% 0.12 75)" : "oklch(72% 0.12 75 / 0.4)",
+            color: "oklch(13% 0.005 60)",
           }}
           title={returnDataForPdf ? "Generer PDF-rapport" : "Vælg produkter for at generere rapport"}
         >
@@ -727,6 +739,15 @@ export default function Calculator() {
                       }
                     }
 
+                    // Best alternative delta: max finalValue among non-baseline cards
+                    const bestAltFinalValue = idx === 0
+                      ? Math.max(...projectionData.results.slice(1).map((x) => x.finalValue))
+                      : null;
+                    const bestAlternativeDelta =
+                      idx === 0 && projectionData.results.length > 1 && bestAltFinalValue !== null && bestAltFinalValue > r.finalValue
+                        ? bestAltFinalValue - r.finalValue
+                        : null;
+
                     return (
                       <SummaryCard
                         key={r.productId}
@@ -768,6 +789,7 @@ export default function Calculator() {
                               )
                             : null
                         }
+                        bestAlternativeDelta={bestAlternativeDelta}
                       />
                     );
                   })}
@@ -798,20 +820,20 @@ export default function Calculator() {
                   >
                     <CartesianGrid
                       strokeDasharray="3 3"
-                      stroke="oklch(0.88 0.008 240)"
+                      stroke="oklch(88% 0.008 60)"
                       strokeOpacity={0.6}
                     />
                     <XAxis
                       dataKey="year"
                       tickFormatter={(v) => (v === 0 ? "Start" : `År ${v}`)}
-                      tick={{ fontSize: 11, fill: "oklch(0.52 0.018 240)" }}
-                      axisLine={{ stroke: "oklch(0.88 0.008 240)" }}
+                      tick={{ fontSize: 11, fill: "oklch(42% 0.01 60)" }}
+                       axisLine={{ stroke: "oklch(88% 0.008 60)" }}
                       tickLine={false}
                     />
                     <YAxis
                       tickFormatter={(v) => formatDKK(v)}
-                      tick={{ fontSize: 11, fill: "oklch(0.52 0.018 240)" }}
-                      axisLine={false}
+                      tick={{ fontSize: 11, fill: "oklch(42% 0.01 60)" }}
+                       axisLine={false}
                       tickLine={false}
                       width={80}
                       domain={yAxisDomain ?? ["auto", "auto"]}
@@ -820,7 +842,7 @@ export default function Calculator() {
                     <Legend
                       wrapperStyle={{ fontSize: "12px", paddingTop: "16px" }}
                       formatter={(value) => (
-                        <span style={{ color: "oklch(0.52 0.018 240)" }}>{value}</span>
+                        <span style={{ color: "oklch(42% 0.01 60)" }}>{value}</span>
                       )}
                     />
                     {projectionData?.results.map((r) => (

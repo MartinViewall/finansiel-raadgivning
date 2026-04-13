@@ -192,34 +192,34 @@ function ResultCard({
   title,
   icon: Icon,
   children,
-  accent,
+  loss,
 }: {
   title: string;
   icon: React.ElementType;
   children: React.ReactNode;
-  accent?: boolean;
+  loss?: boolean;
 }) {
   return (
     <div
       className="rounded-xl border p-5 shadow-sm"
       style={{
-      background: accent ? "oklch(0.20 0.05 155 / 0.6)" : "var(--card)",
-      borderColor: accent ? "oklch(0.55 0.16 155 / 0.45)" : "var(--border)",
+        background: loss ? "oklch(97% 0.008 25)" : "var(--card)",
+        borderColor: loss ? "oklch(44% 0.18 25 / 0.3)" : "var(--border)",
       }}
     >
       <div className="flex items-center gap-2 mb-4">
         <div
           className="h-7 w-7 rounded-lg flex items-center justify-center flex-shrink-0"
           style={{
-            background: accent
-              ? "oklch(0.55 0.16 155 / 0.18)"
-              : "oklch(0.82 0.12 85 / 0.15)",
-            border: `1px solid ${accent ? "oklch(0.55 0.16 155 / 0.4)" : "oklch(0.82 0.12 85 / 0.3)"}`,
+            background: loss
+              ? "oklch(44% 0.18 25 / 0.1)"
+              : "oklch(72% 0.12 75 / 0.15)",
+            border: `1px solid ${loss ? "oklch(44% 0.18 25 / 0.3)" : "oklch(72% 0.12 75 / 0.3)"}`,
           }}
         >
           <Icon
             className="h-3.5 w-3.5"
-            style={{ color: accent ? "oklch(0.72 0.18 155)" : "oklch(0.82 0.12 85)" }}
+            style={{ color: loss ? "oklch(44% 0.18 25)" : "oklch(72% 0.12 75)" }}
           />
         </div>
         <h3 className="text-sm font-semibold text-foreground">{title}</h3>
@@ -239,12 +239,12 @@ function ResultRow({
 }: {
   label: string;
   value: string;
-  highlight?: "positive" | "neutral";
+  highlight?: "loss" | "neutral";
   large?: boolean;
 }) {
   const valueColor =
-    highlight === "positive"
-      ? "#16a34a"
+    highlight === "loss"
+      ? "oklch(44% 0.18 25)"
       : highlight === "neutral"
       ? "var(--foreground)"
       : "var(--muted-foreground)";
@@ -402,8 +402,8 @@ export default function CostCalculator() {
           disabled={!costDataForPdf}
           className="flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed flex-shrink-0"
           style={{
-            background: costDataForPdf ? "oklch(0.82 0.12 85)" : "oklch(0.82 0.12 85 / 0.3)",
-            color: "oklch(0.13 0.04 255)",
+            background: costDataForPdf ? "oklch(72% 0.12 75)" : "oklch(72% 0.12 75 / 0.4)",
+            color: "oklch(13% 0.005 60)",
           }}
           title={costDataForPdf ? "Generer PDF-rapport" : "Udfyld beregneren for at generere rapport"}
         >
@@ -425,9 +425,9 @@ export default function CostCalculator() {
               onClick={handleTransfer}
               className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-md border transition-colors"
               style={{
-                background: transferred ? "oklch(0.82 0.12 85 / 0.1)" : "var(--card)",
-                borderColor: transferred ? "oklch(0.82 0.12 85 / 0.35)" : "var(--border)",
-                color: transferred ? "oklch(0.52 0.12 85)" : "var(--muted-foreground)",
+                background: transferred ? "oklch(72% 0.12 75 / 0.12)" : "var(--card)",
+                borderColor: transferred ? "oklch(72% 0.12 75 / 0.4)" : "var(--border)",
+                color: transferred ? "oklch(42% 0.10 75)" : "var(--muted-foreground)",
               }}
               title="Hent depot, indbetaling og horisont fra Afkastberegneren"
             >
@@ -487,13 +487,13 @@ export default function CostCalculator() {
           <div
             className="rounded-lg p-3 flex gap-2.5"
             style={{
-              background: "oklch(0.82 0.12 85 / 0.08)",
-              border: "1px solid oklch(0.82 0.12 85 / 0.2)",
+              background: "oklch(72% 0.12 75 / 0.08)",
+              border: "1px solid oklch(72% 0.12 75 / 0.25)",
             }}
           >
             <Info
               className="h-3.5 w-3.5 flex-shrink-0 mt-0.5"
-              style={{ color: "oklch(0.62 0.12 85)" }}
+              style={{ color: "oklch(42% 0.10 75)" }}
             />
             <p className="text-xs text-muted-foreground leading-relaxed">
               Beregningen anvender et fast afkast på{" "}
@@ -517,8 +517,8 @@ export default function CostCalculator() {
             </div>
           ) : results ? (
             <>
-              {/* Kort 1: Årlig besparelse */}
-              <ResultCard title="Årlig besparelse (i dag)" icon={TrendingDown}>
+              {/* Kort 1: Hvad du betaler for meget */}
+              <ResultCard title="Hvad du betaler for meget om året" icon={TrendingDown} loss={results.annualSaving > 0}>
                 <ResultRow
                   label="Årlige omkostninger i dag"
                   value={formatDKK(results.annualCostToday)}
@@ -528,22 +528,22 @@ export default function CostCalculator() {
                   value={formatDKK(results.annualCostNew)}
                 />
                 <ResultRow
-                  label="Årlig besparelse"
+                  label="Du betaler for meget om året"
                   value={
                     results.annualSaving >= 0
                       ? formatDKK(results.annualSaving)
                       : "−" + formatDKK(Math.abs(results.annualSaving))
                   }
-                  highlight={results.annualSaving >= 0 ? "positive" : "neutral"}
+                  highlight={results.annualSaving > 0 ? "loss" : "neutral"}
                   large
                 />
               </ResultCard>
 
-              {/* Kort 2: Effekt med rentes rente */}
+              {/* Kort 2: Hvad du mister til pensionen */}
               <ResultCard
-                title="Effekt af besparelse med rentes rente"
+                title="Hvad du mister til pensionen"
                 icon={PiggyBank}
-                accent={results.compoundValue > 0}
+                loss={results.compoundValue > 0}
               >
                 <ResultRow
                   label={`Depotværdi om ${yearsToPension} år (ÅOP ${fmtPct(costTodayRaw)}%)`}
@@ -554,13 +554,13 @@ export default function CostCalculator() {
                   value={formatDKK(results.fvNew)}
                 />
                 <ResultRow
-                  label={`Værdi af besparelse om ${yearsToPension} år`}
+                  label={`Hvad du mister til pensionen om ${yearsToPension} år`}
                   value={
                     results.compoundValue >= 0
                       ? formatDKK(results.compoundValue)
                       : "−" + formatDKK(Math.abs(results.compoundValue))
                   }
-                  highlight={results.compoundValue > 0 ? "positive" : "neutral"}
+                  highlight={results.compoundValue > 0 ? "loss" : "neutral"}
                   large
                 />
 
@@ -568,19 +568,19 @@ export default function CostCalculator() {
                   <div
                     className="mt-4 rounded-lg p-4 text-center"
                     style={{
-                      background: "oklch(0.55 0.16 155 / 0.15)",
-                      border: "1px solid oklch(0.55 0.16 155 / 0.35)",
+                      background: "oklch(44% 0.18 25 / 0.08)",
+                      border: "1px solid oklch(44% 0.18 25 / 0.3)",
                     }}
                   >
-                    <p className="text-xs text-muted-foreground mb-1">Samlet merværdi ved pension</p>
+                    <p className="text-xs text-muted-foreground mb-1">Hvad du mister til pensionen</p>
                     <p
                       className="text-3xl font-bold tabular-nums"
-                      style={{ color: "oklch(0.75 0.18 155)" }}
+                      style={{ color: "oklch(44% 0.18 25)" }}
                     >
                       {formatDKK(results.compoundValue)}
                     </p>
                     <p className="text-xs text-muted-foreground mt-1">
-                      ved at reducere ÅOP fra {fmtPct(costTodayRaw)}% til {fmtPct(costNewRaw)}%
+                      ved at beholde ÅOP på {fmtPct(costTodayRaw)}% frem for {fmtPct(costNewRaw)}%
                     </p>
                   </div>
                 )}
@@ -624,7 +624,7 @@ export default function CostCalculator() {
                             key={row.year}
                             className="border-t border-border/50"
                             style={{
-                              background: i % 2 === 0 ? "var(--card)" : "oklch(0.97 0.005 240 / 0.5)",
+                              background: i % 2 === 0 ? "var(--card)" : "oklch(94% 0.006 60)",
                             }}
                           >
                             <td className="px-4 py-2 tabular-nums text-muted-foreground font-medium">

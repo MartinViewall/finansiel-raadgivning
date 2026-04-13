@@ -196,8 +196,8 @@ function ResultCard({
     <div
       className="rounded-xl border p-5 shadow-sm"
       style={{
-        background: accent ? "oklch(0.20 0.05 155 / 0.6)" : "var(--card)",
-        borderColor: accent ? "oklch(0.55 0.16 155 / 0.45)" : "var(--border)",
+        background: accent ? "oklch(94% 0.010 155)" : "var(--card)",
+        borderColor: accent ? "oklch(55% 0.10 155 / 0.3)" : "var(--border)",
       }}
     >
       <div className="flex items-center gap-2 mb-4">
@@ -205,14 +205,14 @@ function ResultCard({
           className="h-7 w-7 rounded-lg flex items-center justify-center flex-shrink-0"
           style={{
             background: accent
-              ? "oklch(0.55 0.16 155 / 0.18)"
-              : "oklch(0.82 0.12 85 / 0.15)",
-            border: `1px solid ${accent ? "oklch(0.55 0.16 155 / 0.4)" : "oklch(0.82 0.12 85 / 0.3)"}`,
+              ? "oklch(55% 0.10 155 / 0.15)"
+              : "oklch(72% 0.12 75 / 0.15)",
+            border: `1px solid ${accent ? "oklch(55% 0.10 155 / 0.35)" : "oklch(72% 0.12 75 / 0.3)"}`,
           }}
         >
           <Icon
             className="h-3.5 w-3.5"
-            style={{ color: accent ? "oklch(0.72 0.18 155)" : "oklch(0.82 0.12 85)" }}
+            style={{ color: accent ? "oklch(40% 0.14 155)" : "oklch(72% 0.12 75)" }}
           />
         </div>
         <h3 className="text-sm font-semibold text-foreground">{title}</h3>
@@ -237,7 +237,7 @@ function ResultRow({
 }) {
   const valueColor =
     highlight === "positive"
-      ? "#16a34a"
+      ? "oklch(40% 0.14 155)"
       : highlight === "neutral"
       ? "var(--foreground)"
       : "var(--muted-foreground)";
@@ -340,8 +340,8 @@ export default function ReturnDiffCalculator() {
           disabled
           className="flex items-center gap-2 px-4 py-2 text-sm font-semibold rounded-lg opacity-40 cursor-not-allowed flex-shrink-0"
           style={{
-            background: "oklch(0.82 0.12 85 / 0.3)",
-            color: "oklch(0.13 0.04 255)",
+            background: "oklch(72% 0.12 75)",
+            color: "oklch(13% 0.005 60)",
           }}
           title="PDF-rapport kommer snart"
         >
@@ -363,9 +363,9 @@ export default function ReturnDiffCalculator() {
               onClick={handleTransfer}
               className="flex items-center gap-1.5 text-xs px-2.5 py-1 rounded-md border transition-colors"
               style={{
-                background: transferred ? "oklch(0.82 0.12 85 / 0.1)" : "var(--card)",
-                borderColor: transferred ? "oklch(0.82 0.12 85 / 0.35)" : "var(--border)",
-                color: transferred ? "oklch(0.52 0.12 85)" : "var(--muted-foreground)",
+                background: transferred ? "oklch(72% 0.12 75 / 0.12)" : "var(--card)",
+                borderColor: transferred ? "oklch(72% 0.12 75 / 0.4)" : "var(--border)",
+                color: transferred ? "oklch(42% 0.10 75)" : "var(--muted-foreground)",
               }}
               title="Hent depot, indbetaling og horisont fra Afkastberegneren"
             >
@@ -425,13 +425,13 @@ export default function ReturnDiffCalculator() {
           <div
             className="rounded-lg p-3 flex gap-2.5"
             style={{
-              background: "oklch(0.82 0.12 85 / 0.08)",
-              border: "1px solid oklch(0.82 0.12 85 / 0.2)",
+              background: "oklch(72% 0.12 75 / 0.08)",
+              border: "1px solid oklch(72% 0.12 75 / 0.25)",
             }}
           >
             <Info
               className="h-3.5 w-3.5 flex-shrink-0 mt-0.5"
-              style={{ color: "oklch(0.62 0.12 85)" }}
+              style={{ color: "oklch(42% 0.10 75)" }}
             />
             <p className="text-xs text-muted-foreground leading-relaxed">
               Begge scenarier bruger de afkastprocenter du angiver.
@@ -505,14 +505,14 @@ export default function ReturnDiffCalculator() {
                   <div
                     className="mt-4 rounded-lg p-4 text-center"
                     style={{
-                      background: "oklch(0.55 0.16 155 / 0.15)",
-                      border: "1px solid oklch(0.55 0.16 155 / 0.35)",
+                      background: "oklch(94% 0.010 155)",
+                      border: "1px solid oklch(55% 0.10 155 / 0.3)",
                     }}
                   >
                     <p className="text-xs text-muted-foreground mb-1">Samlet merværdi ved pension</p>
                     <p
                       className="text-3xl font-bold tabular-nums"
-                      style={{ color: "oklch(0.75 0.18 155)" }}
+                      style={{ color: "oklch(40% 0.14 155)" }}
                     >
                       {formatDKK(results.diff)}
                     </p>
@@ -562,7 +562,7 @@ export default function ReturnDiffCalculator() {
                             key={row.year}
                             className="border-t border-border/50"
                             style={{
-                              background: i % 2 === 0 ? "var(--card)" : "oklch(0.97 0.005 240 / 0.5)",
+                              background: i % 2 === 0 ? "var(--card)" : "oklch(94% 0.006 60)",
                             }}
                           >
                             <td className="px-4 py-2 tabular-nums text-muted-foreground font-medium">
@@ -576,7 +576,7 @@ export default function ReturnDiffCalculator() {
                             </td>
                             <td
                               className="px-4 py-2 tabular-nums text-right font-semibold"
-                              style={{ color: row.diff >= 0 ? "#16a34a" : "#dc2626" }}
+                              style={{ color: row.diff >= 0 ? "oklch(40% 0.14 155)" : "oklch(44% 0.18 25)" }}
                             >
                               {row.diff >= 0
                                 ? formatDKK(row.diff)

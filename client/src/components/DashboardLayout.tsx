@@ -126,8 +126,8 @@ function DashboardLayoutContent({
           <SidebarHeader className="h-16 justify-center border-b border-sidebar-border">
             <div className="flex items-center gap-3 px-2 transition-all w-full">
               <div className="h-8 w-8 flex items-center justify-center rounded-lg flex-shrink-0"
-                style={{ background: "oklch(0.82 0.12 85 / 0.15)", border: "1px solid oklch(0.82 0.12 85 / 0.3)" }}>
-                <TrendingUp className="h-4 w-4" style={{ color: "oklch(0.82 0.12 85)" }} />
+                style={{ background: "oklch(72% 0.12 75 / 0.18)", border: "1px solid oklch(72% 0.12 75 / 0.35)" }}>
+                <TrendingUp className="h-4 w-4" style={{ color: "oklch(72% 0.12 75)" }} />
               </div>
               {!isCollapsed ? (
                 <div className="flex items-center justify-between flex-1 min-w-0">

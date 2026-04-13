@@ -346,7 +346,7 @@
 >
 > Skill-opdatering sker som næstsidste trin inden checkpoint.
 
-- [ ] Opdatér skill efter næste større fase
+- [x] Opdatér skill efter næste større fase
 
 ## Fase 39 – Forsikringsprisberegner
 
@@ -372,7 +372,7 @@
 - [x] Rute /insurance-calculator i App.tsx
 - [x] Sidebar-link "Forsikringspriser" i DashboardLayout.tsx
 - [x] InsuranceCalculator er selvstændig (ingen CalculatorContext-integration — data gemmes lokalt)
-- [ ] Integrer i useCalculatorIO (Gem/Hent) — fremtidig fase
+- [x] Integrer i useCalculatorIO (Gem/Hent) — gennemført i Fase 41
 - [x] Opdatér skill efter implementering
 
 ## Fase 40 – Forsikringsprisberegner: UI-forbedringer
@@ -388,3 +388,11 @@
 
 ## Fase 42 – Bugfix: InsuranceCalculator visibleIds uendelig re-render
 - [x] Fix infinite loop ved toggle af selskabssynlighed (visibleIds useEffect ↔ ctx.setInsVisibleIds)
+
+## Fase 43 – Lys palette + salgsnudging
+- [x] index.css: Skift til lys varm off-white palette (bruger forslag med 3 justeringer)
+- [x] CostCalculator: Omdøb "Årlig besparelse (i dag)" → "Hvad du betaler for meget om året"
+- [x] CostCalculator: Omdøb "Samlet merværdi ved pension" → "Hvad du mister til pensionen" (rød hero-callout)
+- [x] CostCalculator: Fjern grøn accent fra ResultCard og ResultRow — brug rød for tab-framing
+- [x] Calculator: Tilføj rød nudge-linje på Nuværende-kort: "Bedste alternativ giver X kr. mere"
+- [x] Ryd op i hardkodede mørke OKLCH-farver i begge beregnere

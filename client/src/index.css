@@ -45,102 +45,103 @@
 :root {
   --radius: 0.5rem;
 
-  /* ── Deep navy financial palette ──────────────────────────────────────────
-     Base: very dark navy (#0a0f1e ≈ oklch 0.13 0.04 255)
-     Cards: slightly lighter navy (#111827 ≈ oklch 0.17 0.035 255)
-     Borders: subtle navy glow
-     Accent: warm gold for CTAs and highlights
+  /* ── Warm off-white financial palette ─────────────────────────────────────
+     Base: near-white warm paper (#F8F7F5 ≈ oklch 98.5% 0.003 60)
+     Cards: warm off-white (#F4F1EC ≈ oklch 96% 0.005 60)
+     Primary: near-black warm (#111110 ≈ oklch 13% 0.005 60)
+     Accent: bronze/gold for CTAs
+     Destructive/loss: clear red for sales nudging
   ──────────────────────────────────────────────────────────────────────── */
 
-  /* Page background — deep navy */
-  --background: oklch(0.13 0.04 255);
-  --foreground: oklch(0.93 0.008 240);
+  /* Page background — warm near-white (not harsh pure white) */
+  --background: oklch(98.5% 0.003 60);
+  --foreground: oklch(13% 0.005 60);
 
-  /* Cards — slightly lighter navy */
-  --card: oklch(0.17 0.038 255);
-  --card-foreground: oklch(0.93 0.008 240);
+  /* Cards — warm off-white, stands out from background */
+  --card: oklch(96% 0.005 60);
+  --card-foreground: oklch(13% 0.005 60);
 
   /* Popovers / dropdowns */
-  --popover: oklch(0.19 0.04 255);
-  --popover-foreground: oklch(0.93 0.008 240);
+  --popover: oklch(96% 0.005 60);
+  --popover-foreground: oklch(13% 0.005 60);
 
-  /* Primary — gold accent for buttons and active states */
-  --primary: oklch(0.82 0.12 85);
-  --primary-foreground: oklch(0.13 0.04 255);
+  /* Primary — near-black for buttons and active states */
+  --primary: oklch(13% 0.005 60);
+  --primary-foreground: oklch(96% 0.005 60);
 
-  /* Secondary — muted navy */
-  --secondary: oklch(0.22 0.045 255);
-  --secondary-foreground: oklch(0.85 0.01 240);
+  /* Secondary — slightly darker warm off-white */
+  --secondary: oklch(94% 0.006 60);
+  --secondary-foreground: oklch(32% 0.008 60);
 
-  /* Muted — subtle navy for backgrounds */
-  --muted: oklch(0.20 0.04 255);
-  --muted-foreground: oklch(0.60 0.018 240);
+  /* Muted — subtle warm background */
+  --muted: oklch(94% 0.006 60);
+  --muted-foreground: oklch(42% 0.01 60);
 
-  /* Accent — gold */
-  --accent: oklch(0.82 0.12 85);
-  --accent-foreground: oklch(0.13 0.04 255);
+  /* Accent — bronze/gold (continuity with previous design) */
+  --accent: oklch(72% 0.12 75);
+  --accent-foreground: oklch(13% 0.005 60);
 
-  /* Destructive */
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.985 0 0);
+  /* Destructive — clear red for loss-aversion nudging */
+  --destructive: oklch(44% 0.18 25);
+  --destructive-foreground: oklch(98% 0 0);
 
   /* Borders and inputs */
-  --border: oklch(0.28 0.05 255);
-  --input: oklch(0.22 0.045 255);
-  --ring: oklch(0.82 0.12 85);
+  --border: oklch(88% 0.008 60);
+  --input: oklch(98% 0.003 60);
+  --ring: oklch(13% 0.005 60);
 
-  /* Chart colours — blues and gold on dark background */
-  --chart-1: oklch(0.65 0.18 255);
-  --chart-2: oklch(0.82 0.12 85);
-  --chart-3: oklch(0.55 0.16 155);
-  --chart-4: oklch(0.70 0.18 200);
-  --chart-5: oklch(0.60 0.20 300);
+  /* Chart colours — red for loss, bronze neutral, steel-blue alt, olive third, charcoal ref */
+  --chart-1: oklch(44% 0.18 25);
+  --chart-2: oklch(72% 0.12 75);
+  --chart-3: oklch(55% 0.10 200);
+  --chart-4: oklch(60% 0.08 140);
+  --chart-5: oklch(42% 0.01 60);
 
-  /* Sidebar — darkest navy, almost black-blue */
-  --sidebar: oklch(0.10 0.035 255);
-  --sidebar-foreground: oklch(0.88 0.008 240);
-  --sidebar-primary: oklch(0.82 0.12 85);
-  --sidebar-primary-foreground: oklch(0.10 0.035 255);
-  --sidebar-accent: oklch(0.17 0.038 255);
-  --sidebar-accent-foreground: oklch(0.93 0.008 240);
-  --sidebar-border: oklch(0.20 0.04 255);
-  --sidebar-ring: oklch(0.82 0.12 85);
+  /* Sidebar — same warm off-white family */
+  --sidebar: oklch(94% 0.006 60);
+  --sidebar-foreground: oklch(32% 0.008 60);
+  --sidebar-primary: oklch(13% 0.005 60);
+  --sidebar-primary-foreground: oklch(96% 0.005 60);
+  --sidebar-accent: oklch(100% 0 0);
+  --sidebar-accent-foreground: oklch(32% 0.008 60);
+  --sidebar-border: oklch(88% 0.008 60);
+  --sidebar-ring: oklch(13% 0.005 60);
 }
 
 .dark {
-  /* Mirror the :root navy palette exactly so dark mode is consistent */
-  --background: oklch(0.13 0.04 255);
-  --foreground: oklch(0.93 0.008 240);
-  --card: oklch(0.17 0.038 255);
-  --card-foreground: oklch(0.93 0.008 240);
-  --popover: oklch(0.19 0.04 255);
-  --popover-foreground: oklch(0.93 0.008 240);
-  --primary: oklch(0.82 0.12 85);
-  --primary-foreground: oklch(0.13 0.04 255);
-  --secondary: oklch(0.22 0.045 255);
-  --secondary-foreground: oklch(0.85 0.01 240);
-  --muted: oklch(0.20 0.04 255);
-  --muted-foreground: oklch(0.60 0.018 240);
-  --accent: oklch(0.82 0.12 85);
-  --accent-foreground: oklch(0.13 0.04 255);
-  --destructive: oklch(0.577 0.245 27.325);
-  --destructive-foreground: oklch(0.985 0 0);
-  --border: oklch(0.28 0.05 255);
-  --input: oklch(0.22 0.045 255);
-  --ring: oklch(0.82 0.12 85);
-  --chart-1: oklch(0.65 0.18 255);
-  --chart-2: oklch(0.82 0.12 85);
-  --chart-3: oklch(0.55 0.16 155);
-  --chart-4: oklch(0.70 0.18 200);
-  --chart-5: oklch(0.60 0.20 300);
-  --sidebar: oklch(0.10 0.035 255);
-  --sidebar-foreground: oklch(0.88 0.008 240);
-  --sidebar-primary: oklch(0.82 0.12 85);
-  --sidebar-primary-foreground: oklch(0.10 0.035 255);
-  --sidebar-accent: oklch(0.17 0.038 255);
-  --sidebar-accent-foreground: oklch(0.93 0.008 240);
-  --sidebar-border: oklch(0.20 0.04 255);
-  --sidebar-ring: oklch(0.82 0.12 85);
+  /* Dark mode mirrors the light palette for now — app is always light */
+  --background: oklch(98.5% 0.003 60);
+  --foreground: oklch(13% 0.005 60);
+  --card: oklch(96% 0.005 60);
+  --card-foreground: oklch(13% 0.005 60);
+  --popover: oklch(96% 0.005 60);
+  --popover-foreground: oklch(13% 0.005 60);
+  --primary: oklch(13% 0.005 60);
+  --primary-foreground: oklch(96% 0.005 60);
+  --secondary: oklch(94% 0.006 60);
+  --secondary-foreground: oklch(32% 0.008 60);
+  --muted: oklch(94% 0.006 60);
+  --muted-foreground: oklch(42% 0.01 60);
+  --accent: oklch(72% 0.12 75);
+  --accent-foreground: oklch(13% 0.005 60);
+  --destructive: oklch(44% 0.18 25);
+  --destructive-foreground: oklch(98% 0 0);
+  --border: oklch(88% 0.008 60);
+  --input: oklch(98% 0.003 60);
+  --ring: oklch(13% 0.005 60);
+  --chart-1: oklch(44% 0.18 25);
+  --chart-2: oklch(72% 0.12 75);
+  --chart-3: oklch(55% 0.10 200);
+  --chart-4: oklch(60% 0.08 140);
+  --chart-5: oklch(42% 0.01 60);
+  --sidebar: oklch(94% 0.006 60);
+  --sidebar-foreground: oklch(32% 0.008 60);
+  --sidebar-primary: oklch(13% 0.005 60);
+  --sidebar-primary-foreground: oklch(96% 0.005 60);
+  --sidebar-accent: oklch(100% 0 0);
+  --sidebar-accent-foreground: oklch(32% 0.008 60);
+  --sidebar-border: oklch(88% 0.008 60);
+  --sidebar-ring: oklch(13% 0.005 60);
 }
 
 @layer base {
@@ -172,42 +173,14 @@
 @layer components {
   /**
    * Custom container utility that centers content and adds responsive padding.
-   *
-   * This overrides Tailwind's default container behavior to:
-   * - Auto-center content (mx-auto)
-   * - Add responsive horizontal padding
-   * - Set max-width for large screens
-   *
-   * Usage: <div className="container">...</div>
-   *
-   * For custom widths, use max-w-* utilities directly:
-   * <div className="max-w-6xl mx-auto px-4">...</div>
    */
   .container {
-    width: 100%;
-    margin-left: auto;
-    margin-right: auto;
-    padding-left: 1rem; /* 16px - mobile padding */
-    padding-right: 1rem;
+    @apply mx-auto px-4 sm:px-6 lg:px-8;
+    max-width: 1280px;
   }
 
   .flex {
-    min-height: 0;
     min-width: 0;
-  }
-
-  @media (min-width: 640px) {
-    .container {
-      padding-left: 1.5rem; /* 24px - tablet padding */
-      padding-right: 1.5rem;
-    }
-  }
-
-  @media (min-width: 1024px) {
-    .container {
-      padding-left: 2rem; /* 32px - desktop padding */
-      padding-right: 2rem;
-      max-width: 1280px; /* Standard content width */
-    }
+    min-height: 0;
   }
 }
