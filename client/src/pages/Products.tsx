@@ -531,53 +531,7 @@ export default function Products() {
     }
   };
 
-  if (!unlocked) {
-    return (
-      <div className="min-h-[60vh] flex items-center justify-center">
-        <div className="bg-card border border-border rounded-2xl w-full max-w-sm shadow-lg p-8 space-y-5">
-          <div className="flex items-center justify-between">
-            <div className="flex items-center gap-2">
-              <Lock className="h-5 w-5 text-muted-foreground" />
-              <h2 className="font-semibold text-base">Produkter – adgangskode</h2>
-            </div>
-            <button
-              onClick={() => setShowHint((h) => !h)}
-              className="text-muted-foreground hover:text-foreground transition-colors"
-              title="Hjælp"
-            >
-              <HelpCircle className="h-4 w-4" />
-            </button>
-          </div>
-          {showHint && (
-            <p className="text-xs text-muted-foreground italic">{ADMIN_HINT}</p>
-          )}
-          <p className="text-sm text-muted-foreground">
-            Denne side kræver en adgangskode for at beskytte produktdata.
-          </p>
-          <div className="space-y-2">
-            <input
-              type="password"
-              value={pwInput}
-              autoFocus
-              onChange={(e) => { setPwInput(e.target.value); setPwError(false); }}
-              onKeyDown={(e) => e.key === "Enter" && handleUnlock()}
-              placeholder="Adgangskode"
-              className={`w-full rounded-lg border px-3 py-2 text-sm bg-background outline-none focus:ring-2 focus:ring-primary/30 ${
-                pwError ? "border-destructive" : "border-border"
-              }`}
-            />
-            {pwError && (
-              <p className="text-xs text-destructive">Forkert adgangskode</p>
-            )}
-          </div>
-          <Button className="w-full" onClick={handleUnlock}>
-            Log ind
-          </Button>
-        </div>
-      </div>
-    );
-  }
-
+  // ── All other state (must be declared before any early return) ───────────
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [editProduct, setEditProduct] = useState<ProductWithReturns | null>(null);
   const [deleteProductId, setDeleteProductId] = useState<number | null>(null);
@@ -711,6 +665,54 @@ export default function Products() {
     utils.products.list.invalidate();
     utils.products.listMeta.invalidate();
   };
+
+  // ── Password gate early return (after all hooks) ────────────────────
+  if (!unlocked) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <div className="bg-card border border-border rounded-2xl w-full max-w-sm shadow-lg p-8 space-y-5">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Lock className="h-5 w-5 text-muted-foreground" />
+              <h2 className="font-semibold text-base">Produkter – adgangskode</h2>
+            </div>
+            <button
+              onClick={() => setShowHint((h) => !h)}
+              className="text-muted-foreground hover:text-foreground transition-colors"
+              title="Hjælp"
+            >
+              <HelpCircle className="h-4 w-4" />
+            </button>
+          </div>
+          {showHint && (
+            <p className="text-xs text-muted-foreground italic">{ADMIN_HINT}</p>
+          )}
+          <p className="text-sm text-muted-foreground">
+            Denne side kræver en adgangskode for at beskytte produktdata.
+          </p>
+          <div className="space-y-2">
+            <input
+              type="password"
+              value={pwInput}
+              autoFocus
+              onChange={(e) => { setPwInput(e.target.value); setPwError(false); }}
+              onKeyDown={(e) => e.key === "Enter" && handleUnlock()}
+              placeholder="Adgangskode"
+              className={`w-full rounded-lg border px-3 py-2 text-sm bg-background outline-none focus:ring-2 focus:ring-primary/30 ${
+                pwError ? "border-destructive" : "border-border"
+              }`}
+            />
+            {pwError && (
+              <p className="text-xs text-destructive">Forkert adgangskode</p>
+            )}
+          </div>
+          <Button className="w-full" onClick={handleUnlock}>
+            Log ind
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   const handleExportAll = () => {
     if (!products || products.length === 0) {
