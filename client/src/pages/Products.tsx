@@ -22,7 +22,7 @@ import {
 } from "@/components/ui/alert-dialog";
 import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
-import { Plus, Pencil, Trash2, ChevronDown, ChevronUp, TrendingUp, TrendingDown, Upload, FileSpreadsheet, CheckCircle2, AlertCircle, X } from "lucide-react";
+import { Plus, Pencil, Trash2, ChevronDown, ChevronUp, TrendingUp, TrendingDown, Upload, FileSpreadsheet, CheckCircle2, AlertCircle, X, HelpCircle, Lock, Download } from "lucide-react";
 
 const PRESET_COLORS = [
   "#1e3a5f", "#c9a84c", "#2e7d52", "#c0392b", "#7b3fa0",
@@ -510,9 +510,73 @@ function ProductCard({ product, onEdit, onDelete }: { product: ProductWithReturn
 // -----------------------------------------------------------------------
 // Main page
 // -----------------------------------------------------------------------
+const ADMIN_PASSWORD = "Kakao467";
+const ADMIN_HINT = "HotDrinkNumber";
+
 export default function Products() {
   const { data: products, isLoading, refetch } = trpc.products.list.useQuery();
   const utils = trpc.useUtils();
+
+  // ── Password gate ─────────────────────────────────────────────────────────
+  const [unlocked, setUnlocked] = useState(false);
+  const [pwInput, setPwInput] = useState("");
+  const [pwError, setPwError] = useState(false);
+  const [showHint, setShowHint] = useState(false);
+
+  const handleUnlock = () => {
+    if (pwInput === ADMIN_PASSWORD) {
+      setUnlocked(true);
+    } else {
+      setPwError(true);
+    }
+  };
+
+  if (!unlocked) {
+    return (
+      <div className="min-h-[60vh] flex items-center justify-center">
+        <div className="bg-card border border-border rounded-2xl w-full max-w-sm shadow-lg p-8 space-y-5">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center gap-2">
+              <Lock className="h-5 w-5 text-muted-foreground" />
+              <h2 className="font-semibold text-base">Produkter – adgangskode</h2>
+            </div>
+            <button
+              onClick={() => setShowHint((h) => !h)}
+              className="text-muted-foreground hover:text-foreground transition-colors"
+              title="Hjælp"
+            >
+              <HelpCircle className="h-4 w-4" />
+            </button>
+          </div>
+          {showHint && (
+            <p className="text-xs text-muted-foreground italic">{ADMIN_HINT}</p>
+          )}
+          <p className="text-sm text-muted-foreground">
+            Denne side kræver en adgangskode for at beskytte produktdata.
+          </p>
+          <div className="space-y-2">
+            <input
+              type="password"
+              value={pwInput}
+              autoFocus
+              onChange={(e) => { setPwInput(e.target.value); setPwError(false); }}
+              onKeyDown={(e) => e.key === "Enter" && handleUnlock()}
+              placeholder="Adgangskode"
+              className={`w-full rounded-lg border px-3 py-2 text-sm bg-background outline-none focus:ring-2 focus:ring-primary/30 ${
+                pwError ? "border-destructive" : "border-border"
+              }`}
+            />
+            {pwError && (
+              <p className="text-xs text-destructive">Forkert adgangskode</p>
+            )}
+          </div>
+          <Button className="w-full" onClick={handleUnlock}>
+            Log ind
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   const [showCreateDialog, setShowCreateDialog] = useState(false);
   const [editProduct, setEditProduct] = useState<ProductWithReturns | null>(null);
@@ -648,6 +712,55 @@ export default function Products() {
     utils.products.listMeta.invalidate();
   };
 
+  const handleExportAll = () => {
+    if (!products || products.length === 0) {
+      toast.error("Ingen produkter at eksportere");
+      return;
+    }
+    const rows: string[] = [];
+    // Collect all years across all products
+    const allYears = Array.from(
+      new Set((products as ProductWithReturns[]).flatMap((p) => p.returns.map((r) => r.year)))
+    ).sort((a, b) => a - b);
+
+    // Header row
+    rows.push(
+      ["NHM_ID", "Name", "Company", "ProductLine", "Risk", "YearsToPension", "AOP", ...allYears].join(";")
+    );
+
+    // Data rows
+    for (const p of products as ProductWithReturns[]) {
+      const returnMap = new Map(p.returns.map((r) => [r.year, r.returnPct]));
+      const yearValues = allYears.map((y) => {
+        const v = returnMap.get(y);
+        return v != null ? parseFloat(v).toFixed(2).replace(".", ",") : "";
+      });
+      rows.push(
+        [
+          p.nhmId ?? "",
+          p.name,
+          p.company ?? "",
+          p.productLine ?? "",
+          p.riskLevel ?? "",
+          p.yearsToPension ?? "",
+          p.aop != null ? parseFloat(p.aop).toFixed(2).replace(".", ",") : "",
+          ...yearValues,
+        ].join(";")
+      );
+    }
+
+    const bom = "\uFEFF"; // UTF-8 BOM for Excel
+    const csv = bom + rows.join("\n");
+    const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = `produkter-afkast-${new Date().toISOString().slice(0, 10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
+    toast.success(`${(products as ProductWithReturns[]).length} produkter eksporteret`);
+  };
+
   return (
     <div className="max-w-3xl mx-auto">
       {/* Header */}
@@ -658,10 +771,16 @@ export default function Products() {
             Administrer produkter og historiske årsafkast
           </p>
         </div>
-        <Button onClick={openCreate} className="gap-2">
-          <Plus className="w-4 h-4" />
-          Nyt produkt
-        </Button>
+        <div className="flex items-center gap-2">
+          <Button variant="outline" onClick={handleExportAll} className="gap-2" disabled={isLoading}>
+            <Download className="w-4 h-4" />
+            Hent alle
+          </Button>
+          <Button onClick={openCreate} className="gap-2">
+            <Plus className="w-4 h-4" />
+            Nyt produkt
+          </Button>
+        </div>
       </div>
 
       {/* Excel upload panel */}

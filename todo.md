@@ -401,3 +401,7 @@
 - [x] Hero callout: skift fra grøn "Samlet merværdi" til rød "Hvad du mister til pensionen"
 - [x] ResultRow "Merværdi"-label: skift til "Hvad du går glip af" med rød farve (ny highlight="loss" type)
 - [x] Opdatér skill med det nye nudging-mønster for ReturnDiffCalculator
+
+## Fase 45 – Produkter: adgangskodegate + Hent alle
+- [x] Adgangskodegate på Produkter-siden (Kakao467, hint via ?-ikon: HotDrinkNumber)
+- [x] "Hent alle"-knap: eksportér alle produkters afkastdata til én samlet CSV-fil (semikolon-separeret, UTF-8 BOM for Excel)
