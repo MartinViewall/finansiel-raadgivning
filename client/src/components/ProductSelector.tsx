@@ -36,6 +36,8 @@ interface ProductSelectorProps {
   onToggle: (id: number) => void;
   onReorder: (newIds: number[]) => void;
   maxSelections?: number;
+  /** Optional label override for chips — used for anonymisation */
+  chipLabel?: (productId: number, originalName: string) => string;
 }
 
 // ─── Color dot ────────────────────────────────────────────────────────────────
@@ -120,7 +122,7 @@ function SortableChip({ id, name, color, isFirst, onRemove }: SortableChipProps)
 
 // ─── Main Component ───────────────────────────────────────────────────────────
 
-export function ProductSelector({ selectedIds, onToggle, onReorder, maxSelections = 3 }: ProductSelectorProps) {
+export function ProductSelector({ selectedIds, onToggle, onReorder, maxSelections = 3, chipLabel }: ProductSelectorProps) {
   const { data: products = [] } = trpc.products.listMeta.useQuery();
   const [expandedCompany, setExpandedCompany] = useState<string | null>(null);
   const [expandedRisk, setExpandedRisk] = useState<string | null>(null);
@@ -193,7 +195,7 @@ export function ProductSelector({ selectedIds, onToggle, onReorder, maxSelection
                 <SortableChip
                   key={p.id}
                   id={p.id}
-                  name={p.name}
+                  name={chipLabel ? chipLabel(p.id, p.name) : p.name}
                   color={p.color}
                   isFirst={idx === 0}
                   onRemove={() => onToggle(p.id)}

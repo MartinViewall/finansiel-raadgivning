@@ -405,3 +405,8 @@
 ## Fase 45 – Produkter: adgangskodegate + Hent alle
 - [x] Adgangskodegate på Produkter-siden (Kakao467, hint via ?-ikon: HotDrinkNumber)
 - [x] "Hent alle"-knap: eksportér alle produkters afkastdata til én samlet CSV-fil (semikolon-separeret, UTF-8 BOM for Excel)
+
+## Fase 46 – Bugfix: Afkastberegner "Skjul alternativer"
+- [x] Chips/tags øverst viser stadig rigtige produktnavne når "Skjul alternativer" er aktiv — anonymisér til "Alternativ 1/2/3"
+- [x] "Skjul alternativer"-tilstand gemmes ikke i CalculatorContext og nulstilles ved navigation
+- [x] Underoverskrift: "fremtidigt afkast" → "historisk afkast"

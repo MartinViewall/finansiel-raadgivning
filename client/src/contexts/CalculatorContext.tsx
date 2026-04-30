@@ -40,6 +40,8 @@ interface CalculatorSharedState {
   setCalcParamsOpen: (v: boolean) => void;
   setCalcProductsOpen: (v: boolean) => void;
   setCalcPensionOpen: (v: boolean) => void;
+  calcAnonymize: boolean;
+  setCalcAnonymize: (v: boolean) => void;
 
   // ── Omkostningsberegner ─────────────────────────────────────────────────────
   costDepot: number;
@@ -194,6 +196,7 @@ const DEFAULTS = {
   calcParamsOpen: true,
   calcProductsOpen: true,
   calcPensionOpen: true,
+  calcAnonymize: false,
   // Omkostningsberegner
   costDepot: 2_000_000,
   costAnnualContribution: 100_000,
@@ -276,6 +279,8 @@ const CalculatorContext = createContext<CalculatorSharedState>({
   setCalcParamsOpen: () => {},
   setCalcProductsOpen: () => {},
   setCalcPensionOpen: () => {},
+  calcAnonymize: false,
+  setCalcAnonymize: () => {},
   setCostDepot: () => {},
   setCostAnnualContribution: () => {},
   setCostYearsToPension: () => {},
@@ -347,6 +352,7 @@ export function CalculatorProvider({ children }: { children: React.ReactNode }) 
   const [calcParamsOpen, setCalcParamsOpen] = useState(true);
   const [calcProductsOpen, setCalcProductsOpen] = useState(true);
   const [calcPensionOpen, setCalcPensionOpen] = useState(true);
+  const [calcAnonymize, setCalcAnonymize] = useState(false);
 
   // Omkostningsberegner
   const [costDepot, setCostDepot] = useState(DEFAULTS.costDepot);
@@ -453,6 +459,7 @@ export function CalculatorProvider({ children }: { children: React.ReactNode }) 
         calcParamsOpen, setCalcParamsOpen,
         calcProductsOpen, setCalcProductsOpen,
         calcPensionOpen, setCalcPensionOpen,
+        calcAnonymize, setCalcAnonymize,
         costDepot, setCostDepot,
         costAnnualContribution, setCostAnnualContribution,
         costYearsToPension, setCostYearsToPension,

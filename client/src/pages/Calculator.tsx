@@ -445,18 +445,21 @@ export default function Calculator() {
   const baselineResult = projectionData?.results[0];
 
   const [pdfOpen, setPdfOpen] = useState(false);
-  const [anonymize, setAnonymize] = useState(false);
 
-  // Panel collapse state (persisted in context so state survives navigation)
-  const { calcParamsOpen, setCalcParamsOpen, calcProductsOpen, setCalcProductsOpen, calcPensionOpen, setCalcPensionOpen } = ctx;
+  // Panel collapse state + anonymize (persisted in context so state survives navigation)
+  const { calcParamsOpen, setCalcParamsOpen, calcProductsOpen, setCalcProductsOpen, calcPensionOpen, setCalcPensionOpen, calcAnonymize: anonymize, setCalcAnonymize: setAnonymize } = ctx;
 
   // Helper: mask product name — first selected product keeps its name, rest become "Alternativ N"
+  // Also used for chips in ProductSelector
   const maskName = (productId: number, originalName: string): string => {
     if (!anonymize) return originalName;
     const idx = selectedProductIds.indexOf(productId);
     if (idx <= 0) return originalName;
     return `Alternativ ${idx}`;
   };
+
+  // Chip label resolver passed to ProductSelector so chips also anonymise
+  const chipLabel = (productId: number, originalName: string): string => maskName(productId, originalName);
 
   // Masked chart data for display — keys use maskName so Line dataKey matches
   const maskedChartData = useMemo(() => {
@@ -530,7 +533,7 @@ export default function Calculator() {
         <div>
           <h1 className="text-2xl font-semibold text-foreground">Afkastberegner</h1>
           <p className="text-sm text-muted-foreground mt-1">
-            Sammenlign fremtidigt afkast på tværs af investeringsprodukter
+            Sammenlign historisk afkast på tværs af investeringsprodukter
           </p>
         </div>
         <button
@@ -625,6 +628,7 @@ export default function Calculator() {
                   onToggle={toggleProduct}
                   onReorder={handleSetSelectedProductIds}
                   maxSelections={3}
+                  chipLabel={chipLabel}
                 />
                 {/* Anonymize toggle */}
                 <label className="flex items-center gap-2 cursor-pointer select-none group">
