@@ -410,3 +410,7 @@
 - [x] Chips/tags øverst viser stadig rigtige produktnavne når "Skjul alternativer" er aktiv — anonymisér til "Alternativ 1/2/3"
 - [x] "Skjul alternativer"-tilstand gemmes ikke i CalculatorContext og nulstilles ved navigation
 - [x] Underoverskrift: "fremtidigt afkast" → "historisk afkast"
+
+## Fase 47 – Afkastberegner: korrekt ekstrapolering ved manglende data
+- [x] routers.ts: erstat cyklisk gentagelse med gennemsnitligt afkast for år uden data; returner availableYears og isExtrapolated
+- [x] Calculator.tsx SummaryCard: vis amber-advarsel "Kun X års data — år Y–Z ekstrapoleret med gennemsnitligt afkast på Z% p.a." når availableYears < horizonYears

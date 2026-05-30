@@ -29,8 +29,9 @@ import { publicProcedure, router } from "./_core/trpc";
  *  - initialCapital: starting amount in DKK
  *  - annualContribution: yearly deposit added at the START of each year
  *  - historicalReturns: array of annual return percentages in chronological order
- *    (e.g. [11.7, -10.8, 9.2]). Applied sequentially; repeats cyclically if horizon
- *    exceeds the available history.
+ *    (e.g. [11.7, -10.8, 9.2]). Applied sequentially for known years; if horizon
+ *    exceeds available history, the remaining years use the average annual return
+ *    (no cyclic repetition — avoids single-year distortion).
  *  - horizonYears: number of years to project forward
  *
  * Returns an array of { year, value } objects starting from year 0 (initial capital).
@@ -44,8 +45,11 @@ function projectPortfolio(
   const points: { year: number; value: number }[] = [{ year: 0, value: initialCapital }];
   let value = initialCapital;
   const n = historicalReturns.length;
+  // Average rate used for extrapolation when horizon exceeds available data
+  const avgRate = n > 0 ? historicalReturns.reduce((s, r) => s + r, 0) / n / 100 : 0;
   for (let i = 0; i < horizonYears; i++) {
-    const rate = n > 0 ? (historicalReturns[i % n] ?? 0) / 100 : 0;
+    // Use actual historical return for known years; fall back to average for extrapolated years
+    const rate = i < n ? (historicalReturns[i] ?? 0) / 100 : avgRate;
     // Contribution added at start of year, then actual return applied
     value = (value + annualContribution) * (1 + rate);
     points.push({ year: i + 1, value: Math.round(value) });
@@ -193,13 +197,18 @@ export const appRouter = router({
           // For the graph: use the last N years matching the horizon (most recent history)
           const horizonReturns = projectionReturns.slice(-input.horizonYears);
 
-          // Project using actual yearly returns cyclically
+          // Project: actual returns for known years, avg-rate extrapolation for the rest
+          const returnsForProjection = horizonReturns.length > 0 ? horizonReturns : projectionReturns;
           const projection = projectPortfolio(
             input.initialCapital,
             input.annualContribution,
-            horizonReturns.length > 0 ? horizonReturns : projectionReturns,
+            returnsForProjection,
             input.horizonYears
           );
+
+          // How many years of real data are used in the projection window
+          const availableYears = returnsForProjection.length;
+          const isExtrapolated = availableYears < input.horizonYears;
 
           // Full-period average (all years excl. current) — for display only
           const avgReturn =
@@ -223,6 +232,8 @@ export const appRouter = router({
             finalValue: projection[projection.length - 1]?.value ?? input.initialCapital,
             avgAnnualReturn: Math.round(avgReturn * 100) / 100,
             avgAnnualReturnHorizon: Math.round(avgReturnHorizon * 100) / 100,
+            availableYears,
+            isExtrapolated,
             // All historical returns for the table (including current year for display)
             historicalReturns: allSorted.map((r) => ({
               year: r.year,

@@ -110,6 +110,8 @@ function SummaryCard({
   avgReturn,
   deltaAvgReturn,
   bestAlternativeDelta,
+  availableYears,
+  horizonYears,
 }: {
   name: string;
   finalValue: number;
@@ -125,6 +127,8 @@ function SummaryCard({
   avgReturn: number;
   deltaAvgReturn: number | null;
   bestAlternativeDelta: number | null;
+  availableYears: number;
+  horizonYears: number;
 }) {
   // Pension projection: project from current finalValue (end of horizon) forward to pension
   const pensionValue =
@@ -180,6 +184,13 @@ function SummaryCard({
           style={{ color: "oklch(44% 0.18 25)" }}
         >
           Bedste alternativ giver {formatDKKFull(bestAlternativeDelta)} mere
+        </p>
+      )}
+
+      {/* Extrapolation warning — shown when product has fewer years of data than horizon */}
+      {availableYears < horizonYears && (
+        <p className="text-xs mt-2 text-amber-700 bg-amber-50 border border-amber-200 rounded px-2 py-1 leading-snug">
+          Kun {availableYears} års data tilgængelig. År {availableYears + 1}–{horizonYears} er ekstrapoleret med gennemsnitligt afkast på {formatPct(avgReturn)} p.a.
         </p>
       )}
 
@@ -794,6 +805,8 @@ export default function Calculator() {
                             : null
                         }
                         bestAlternativeDelta={bestAlternativeDelta}
+                        availableYears={r.availableYears}
+                        horizonYears={projectionData.horizonYears}
                       />
                     );
                   })}
