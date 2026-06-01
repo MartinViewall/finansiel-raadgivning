@@ -22,6 +22,11 @@ export function useAllCalculatorsIO() {
 
   // ── Export ──────────────────────────────────────────────────────────────────
   function exportAll(clientName = "") {
+    // Flush any focused input so its latest typed value is committed to context
+    // before we read ctx.* values below.
+    if (document.activeElement instanceof HTMLElement) {
+      document.activeElement.blur();
+    }
     const payload = {
       _type: FILE_TYPE,
       _version: FILE_VERSION,
