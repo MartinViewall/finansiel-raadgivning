@@ -41,6 +41,7 @@ export function useAllCalculatorsIO() {
         pensionReturnOverride: ctx.pensionReturnOverride,
         tableYearFrom: ctx.tableYearFrom,
         tableYearTo: ctx.tableYearTo,
+        anonymize: ctx.calcAnonymize,
       },
       // Omkostningsberegner
       omkostning: {
@@ -173,6 +174,7 @@ export function useAllCalculatorsIO() {
         if (a.pensionReturnOverride !== undefined) ctx.setPensionReturnOverride(a.pensionReturnOverride);
         if (a.tableYearFrom !== undefined) ctx.setTableYearFrom(a.tableYearFrom);
         if (a.tableYearTo !== undefined) ctx.setTableYearTo(a.tableYearTo);
+        if (a.anonymize !== undefined) ctx.setCalcAnonymize(a.anonymize);
 
         // Omkostningsberegner
         const o = raw.omkostning ?? {};
