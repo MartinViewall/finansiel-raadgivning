@@ -414,3 +414,8 @@
 ## Fase 47 – Afkastberegner: korrekt ekstrapolering ved manglende data
 - [x] routers.ts: erstat cyklisk gentagelse med gennemsnitligt afkast for år uden data; returner availableYears og isExtrapolated
 - [x] Calculator.tsx SummaryCard: vis amber-advarsel "Kun X års data — år Y–Z ekstrapoleret med gennemsnitligt afkast på Z% p.a." når availableYears < horizonYears
+
+## Fase 48 – Bugfix: Gem/Indlæs scenarie
+- [x] NumberInput: tilføj focused-state + useEffect sync i Calculator.tsx, CostCalculator.tsx, GoalCalculator.tsx, ReturnDiffCalculator.tsx
+- [x] useCalculatorIO: tilføj calcAnonymize i exportAll() og handleFile() under afkast-sektion (committet fra GitHub)
+- [x] useCalculatorIO: blur-flush (document.activeElement.blur()) som første linje i exportAll() (committet fra GitHub)

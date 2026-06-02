@@ -265,8 +265,14 @@ function NumberInput({
   hint?: string;
 }) {
   const [raw, setRaw] = useState(() => fmtThousands(value));
+  const [focused, setFocused] = useState(false);
+
+  useEffect(() => {
+    if (!focused) setRaw(fmtThousands(value));
+  }, [value, focused]);
 
   const handleBlur = () => {
+    setFocused(false);
     const parsed = parseRaw(raw);
     if (!isNaN(parsed) && parsed >= min) {
       onChange(parsed);
@@ -287,7 +293,7 @@ function NumberInput({
           value={raw}
           onChange={(e) => setRaw(e.target.value)}
           onBlur={handleBlur}
-          onFocus={(e) => e.target.select()}
+          onFocus={(e) => { setFocused(true); e.target.select(); }}
           className="pr-10"
         />
         {suffix && (
