@@ -51,7 +51,7 @@ function projectWithRate(
   const r = annualReturnPct / 100;
   let value = initialCapital;
   for (let i = 0; i < years; i++) {
-    value = value * (1 + r) + annualContribution;
+    value = (value + annualContribution) * (1 + r); // primo: indbetaling ved årets start
   }
   return Math.round(value);
 }

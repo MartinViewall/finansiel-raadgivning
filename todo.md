@@ -432,3 +432,7 @@
 - [x] CapacityCalculator Frie midler: erstat capFriMonthly med to felter (Årlig opsparing, Ekstra månedlig opsparing)
 - [x] Opdatér beregningslogik: total årlig = årlig + ekstra månedlig * 12
 - [x] useCalculatorIO: gem/hent de nye felter
+
+## Fase 51 – Pensionsfremskrivning: skift til primo (type=1)
+- [x] Calculator.tsx projectWithRate: skift til primo-formel (indbetaling ved årets start, type=1)
+- [x] Verificer at Alternativ 8% giver 9.365.148 kr. ✓ (matcher Excel FV type=1). Note: 6% giver 7.748.069 — Excel-formlen er identisk, evt. forskel i Excel-filen skyldes andre inputværdier.
