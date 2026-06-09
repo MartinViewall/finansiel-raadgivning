@@ -94,12 +94,18 @@ interface CalculatorSharedState {
   capDesiredMonthly: number;
   capCivilStatus: CivilStatus;
   capPensionWealth: number;
-  capPensionMonthly: number;
+  capPensionAarligIndbetaling: number;
+  setCapPensionAarligIndbetaling: (v: number) => void;
+  capPensionEkstraMaanedlig: number;
+  setCapPensionEkstraMaanedlig: (v: number) => void;
   capPensionReturn: number;
   capPalTax: number;
   capPensionTax: number;
   capFriWealth: number;
-  capFriMonthly: number;
+  capFriAarligIndbetaling: number;
+  setCapFriAarligIndbetaling: (v: number) => void;
+  capFriEkstraMaanedlig: number;
+  setCapFriEkstraMaanedlig: (v: number) => void;
   capFriReturn: number;
   capFriTax: number;
   capFrivaerdiMode: FrivaerdiMode;
@@ -123,12 +129,10 @@ interface CalculatorSharedState {
   setCapDesiredMonthly: (v: number) => void;
   setCapCivilStatus: (v: CivilStatus) => void;
   setCapPensionWealth: (v: number) => void;
-  setCapPensionMonthly: (v: number) => void;
   setCapPensionReturn: (v: number) => void;
   setCapPalTax: (v: number) => void;
   setCapPensionTax: (v: number) => void;
   setCapFriWealth: (v: number) => void;
-  setCapFriMonthly: (v: number) => void;
   setCapFriReturn: (v: number) => void;
   setCapFriTax: (v: number) => void;
   setCapFrivaerdiMode: (v: FrivaerdiMode) => void;
@@ -226,12 +230,14 @@ const DEFAULTS = {
   capDesiredMonthly: 30_000,
   capCivilStatus: "enlig" as CivilStatus,
   capPensionWealth: 0,
-  capPensionMonthly: 0,
+  capPensionAarligIndbetaling: 0,
+  capPensionEkstraMaanedlig: 0,
   capPensionReturn: 6.0,
   capPalTax: 15.3,
   capPensionTax: 38,
   capFriWealth: 0,
-  capFriMonthly: 0,
+  capFriAarligIndbetaling: 0,
+  capFriEkstraMaanedlig: 0,
   capFriReturn: 6.0,
   capFriTax: 27,
   capFrivaerdiMode: "beregn" as FrivaerdiMode,
@@ -307,12 +313,14 @@ const CalculatorContext = createContext<CalculatorSharedState>({
   setCapDesiredMonthly: () => {},
   setCapCivilStatus: () => {},
   setCapPensionWealth: () => {},
-  setCapPensionMonthly: () => {},
+  setCapPensionAarligIndbetaling: () => {},
+  setCapPensionEkstraMaanedlig: () => {},
   setCapPensionReturn: () => {},
   setCapPalTax: () => {},
   setCapPensionTax: () => {},
   setCapFriWealth: () => {},
-  setCapFriMonthly: () => {},
+  setCapFriAarligIndbetaling: () => {},
+  setCapFriEkstraMaanedlig: () => {},
   setCapFriReturn: () => {},
   setCapFriTax: () => {},
   setCapFrivaerdiMode: () => {},
@@ -388,12 +396,14 @@ export function CalculatorProvider({ children }: { children: React.ReactNode }) 
   const [capDesiredMonthly, setCapDesiredMonthly] = useState(DEFAULTS.capDesiredMonthly);
   const [capCivilStatus, setCapCivilStatus] = useState<CivilStatus>(DEFAULTS.capCivilStatus);
   const [capPensionWealth, setCapPensionWealth] = useState(DEFAULTS.capPensionWealth);
-  const [capPensionMonthly, setCapPensionMonthly] = useState(DEFAULTS.capPensionMonthly);
+  const [capPensionAarligIndbetaling, setCapPensionAarligIndbetaling] = useState(DEFAULTS.capPensionAarligIndbetaling);
+  const [capPensionEkstraMaanedlig, setCapPensionEkstraMaanedlig] = useState(DEFAULTS.capPensionEkstraMaanedlig);
   const [capPensionReturn, setCapPensionReturn] = useState(DEFAULTS.capPensionReturn);
   const [capPalTax, setCapPalTax] = useState(DEFAULTS.capPalTax);
   const [capPensionTax, setCapPensionTax] = useState(DEFAULTS.capPensionTax);
   const [capFriWealth, setCapFriWealth] = useState(DEFAULTS.capFriWealth);
-  const [capFriMonthly, setCapFriMonthly] = useState(DEFAULTS.capFriMonthly);
+  const [capFriAarligIndbetaling, setCapFriAarligIndbetaling] = useState(DEFAULTS.capFriAarligIndbetaling);
+  const [capFriEkstraMaanedlig, setCapFriEkstraMaanedlig] = useState(DEFAULTS.capFriEkstraMaanedlig);
   const [capFriReturn, setCapFriReturn] = useState(DEFAULTS.capFriReturn);
   const [capFriTax, setCapFriTax] = useState(DEFAULTS.capFriTax);
   const [capFrivaerdiMode, setCapFrivaerdiMode] = useState<FrivaerdiMode>(DEFAULTS.capFrivaerdiMode);
@@ -488,12 +498,14 @@ export function CalculatorProvider({ children }: { children: React.ReactNode }) 
         capDesiredMonthly, setCapDesiredMonthly,
         capCivilStatus, setCapCivilStatus,
         capPensionWealth, setCapPensionWealth,
-        capPensionMonthly, setCapPensionMonthly,
+        capPensionAarligIndbetaling, setCapPensionAarligIndbetaling,
+        capPensionEkstraMaanedlig, setCapPensionEkstraMaanedlig,
         capPensionReturn, setCapPensionReturn,
         capPalTax, setCapPalTax,
         capPensionTax, setCapPensionTax,
         capFriWealth, setCapFriWealth,
-        capFriMonthly, setCapFriMonthly,
+        capFriAarligIndbetaling, setCapFriAarligIndbetaling,
+        capFriEkstraMaanedlig, setCapFriEkstraMaanedlig,
         capFriReturn, setCapFriReturn,
         capFriTax, setCapFriTax,
         capFrivaerdiMode, setCapFrivaerdiMode,

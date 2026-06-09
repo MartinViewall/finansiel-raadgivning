@@ -425,3 +425,10 @@
 - [x] Fix projectWithRate: start fra depot (initialCapital), ikke finalValue
 - [x] Vis "Ved pension om X år" på nuværende-kort og "Ved pension om X år, med Y% i yderligere afkast" på alternativ-kort
 - [x] Opdatér useCalculatorIO til at gemme/hente pensionBaseRate
+
+## Fase 50 – Kapacitetsberegner: Nuværende + Årlig indbetaling + Ekstra månedlig indbetaling
+- [x] CalculatorContext: tilføj capPensionAarligIndbetaling, capPensionEkstraMaanedlig, capFriAarligIndbetaling, capFriEkstraMaanedlig
+- [x] CapacityCalculator Pension: erstat capPensionMonthly med to felter (Årlig indbetaling, Ekstra månedlig indbetaling)
+- [x] CapacityCalculator Frie midler: erstat capFriMonthly med to felter (Årlig opsparing, Ekstra månedlig opsparing)
+- [x] Opdatér beregningslogik: total årlig = årlig + ekstra månedlig * 12
+- [x] useCalculatorIO: gem/hent de nye felter

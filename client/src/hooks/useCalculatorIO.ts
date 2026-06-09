@@ -77,12 +77,14 @@ export function useAllCalculatorsIO() {
         desiredMonthly: ctx.capDesiredMonthly,
         civilStatus: ctx.capCivilStatus,
         pensionWealth: ctx.capPensionWealth,
-        pensionMonthly: ctx.capPensionMonthly,
+        pensionAarligIndbetaling: ctx.capPensionAarligIndbetaling,
+        pensionEkstraMaanedlig: ctx.capPensionEkstraMaanedlig,
         pensionReturn: ctx.capPensionReturn,
         palTax: ctx.capPalTax,
         pensionTax: ctx.capPensionTax,
         friWealth: ctx.capFriWealth,
-        friMonthly: ctx.capFriMonthly,
+        friAarligIndbetaling: ctx.capFriAarligIndbetaling,
+        friEkstraMaanedlig: ctx.capFriEkstraMaanedlig,
         friReturn: ctx.capFriReturn,
         friTax: ctx.capFriTax,
         frivaerdiMode: ctx.capFrivaerdiMode,
@@ -211,12 +213,14 @@ export function useAllCalculatorsIO() {
         if (k.desiredMonthly !== undefined) ctx.setCapDesiredMonthly(k.desiredMonthly);
         if (k.civilStatus !== undefined) ctx.setCapCivilStatus(k.civilStatus);
         if (k.pensionWealth !== undefined) ctx.setCapPensionWealth(k.pensionWealth);
-        if (k.pensionMonthly !== undefined) ctx.setCapPensionMonthly(k.pensionMonthly);
+        if (k.pensionAarligIndbetaling !== undefined) ctx.setCapPensionAarligIndbetaling(k.pensionAarligIndbetaling);
+        if (k.pensionEkstraMaanedlig !== undefined) ctx.setCapPensionEkstraMaanedlig(k.pensionEkstraMaanedlig);
         if (k.pensionReturn !== undefined) ctx.setCapPensionReturn(k.pensionReturn);
         if (k.palTax !== undefined) ctx.setCapPalTax(k.palTax);
         if (k.pensionTax !== undefined) ctx.setCapPensionTax(k.pensionTax);
         if (k.friWealth !== undefined) ctx.setCapFriWealth(k.friWealth);
-        if (k.friMonthly !== undefined) ctx.setCapFriMonthly(k.friMonthly);
+        if (k.friAarligIndbetaling !== undefined) ctx.setCapFriAarligIndbetaling(k.friAarligIndbetaling);
+        if (k.friEkstraMaanedlig !== undefined) ctx.setCapFriEkstraMaanedlig(k.friEkstraMaanedlig);
         if (k.friReturn !== undefined) ctx.setCapFriReturn(k.friReturn);
         if (k.friTax !== undefined) ctx.setCapFriTax(k.friTax);
         if (k.frivaerdiMode !== undefined) ctx.setCapFrivaerdiMode(k.frivaerdiMode);

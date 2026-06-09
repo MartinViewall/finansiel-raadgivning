@@ -226,13 +226,15 @@ interface ScenarioState {
   civilStatus: "enlig" | "par";
   // Pension
   pensionWealth: number;
-  pensionMonthly: number;
+  pensionAarligIndbetaling: number;
+  pensionEkstraMaanedlig: number;
   pensionReturn: number;
   palTax: number;
   pensionTax: number;
   // Frie midler
   friWealth: number;
-  friMonthly: number;
+  friAarligIndbetaling: number;
+  friEkstraMaanedlig: number;
   friReturn: number;
   friTax: number;
   // Friværdi
@@ -264,12 +266,14 @@ const defaultState = (civilStatus: "enlig" | "par" = "enlig"): ScenarioState => 
   desiredMonthly: 30000,
   civilStatus,
   pensionWealth: 0,
-  pensionMonthly: 0,
+  pensionAarligIndbetaling: 0,
+  pensionEkstraMaanedlig: 0,
   pensionReturn: 6.0,
   palTax: 15.3,
   pensionTax: 38,
   friWealth: 0,
-  friMonthly: 0,
+  friAarligIndbetaling: 0,
+  friEkstraMaanedlig: 0,
   friReturn: 6.0,
   friTax: 27,
   frivaerdiMode: "beregn",
@@ -294,9 +298,10 @@ const defaultState = (civilStatus: "enlig" | "par" = "enlig"): ScenarioState => 
 function calcResults(s: ScenarioState) {
   // ── Pension ──────────────────────────────────────────────────────────────────
   // Excel: FV(rate*(1-PAL), years, -annualContrib, -depot, 1)
-  // Annual indbetaling = månedlig * 12
+  // Annual indbetaling = årlig + ekstra månedlig * 12
   const palNetRate = (s.pensionReturn * (1 - s.palTax / 100)) / 100;
-  const pensionFV = calcFV(s.pensionWealth, s.pensionMonthly * 12, palNetRate, s.yearsToPension);
+  const pensionAnnualContrib = s.pensionAarligIndbetaling + s.pensionEkstraMaanedlig * 12;
+  const pensionFV = calcFV(s.pensionWealth, pensionAnnualContrib, palNetRate, s.yearsToPension);
   // Excel: PMT(rate*(1-PAL), payoutYears, -FV, 0, 1) → annual gross payout
   const pensionAnnualGross = annualPayoutDue(pensionFV, palNetRate, s.payoutYears);
   // Monthly net = annual * (1-skat) / 12
@@ -306,7 +311,8 @@ function calcResults(s: ScenarioState) {
   // ── Frie midler ──────────────────────────────────────────────────────────────
   // Net rate after ongoing tax on returns
   const friNetRate = (s.friReturn * (1 - s.friTax / 100)) / 100;
-  const friFV = calcFV(s.friWealth, s.friMonthly * 12, friNetRate, s.yearsToPension);
+  const friAnnualContrib = s.friAarligIndbetaling + s.friEkstraMaanedlig * 12;
+  const friFV = calcFV(s.friWealth, friAnnualContrib, friNetRate, s.yearsToPension);
   // Payout: return already taxed, so payout is tax-free
   const friAnnualPayout = annualPayoutDue(friFV, friNetRate, s.payoutYears);
   const friNet = friAnnualPayout / 12;
@@ -424,8 +430,11 @@ function ScenarioInputs({
         <Row label="Nuværende pensionsformue">
           <NumberInput value={s.pensionWealth} onChange={(v) => set({ pensionWealth: v })} />
         </Row>
-        <Row label="Månedlig indbetaling">
-          <NumberInput value={s.pensionMonthly} onChange={(v) => set({ pensionMonthly: v })} />
+        <Row label="Årlig indbetaling">
+          <NumberInput value={s.pensionAarligIndbetaling} onChange={(v) => set({ pensionAarligIndbetaling: v })} />
+        </Row>
+        <Row label="Ekstra månedlig indbetaling">
+          <NumberInput value={s.pensionEkstraMaanedlig} onChange={(v) => set({ pensionEkstraMaanedlig: v })} />
         </Row>
         <Row label="Forventet afkast (brutto)">
           <PctInput value={s.pensionReturn} onChange={(v) => set({ pensionReturn: v })} />
@@ -443,8 +452,11 @@ function ScenarioInputs({
         <Row label="Nuværende frie midler">
           <NumberInput value={s.friWealth} onChange={(v) => set({ friWealth: v })} />
         </Row>
-        <Row label="Månedlig opsparing">
-          <NumberInput value={s.friMonthly} onChange={(v) => set({ friMonthly: v })} />
+        <Row label="Årlig opsparing">
+          <NumberInput value={s.friAarligIndbetaling} onChange={(v) => set({ friAarligIndbetaling: v })} />
+        </Row>
+        <Row label="Ekstra månedlig opsparing">
+          <NumberInput value={s.friEkstraMaanedlig} onChange={(v) => set({ friEkstraMaanedlig: v })} />
         </Row>
         <Row label="Forventet afkast (brutto)">
           <PctInput value={s.friReturn} onChange={(v) => set({ friReturn: v })} />
@@ -782,12 +794,14 @@ export default function CapacityCalculator() {
     desiredMonthly: ctx.capDesiredMonthly,
     civilStatus: ctx.capCivilStatus,
     pensionWealth: ctx.capPensionWealth,
-    pensionMonthly: ctx.capPensionMonthly,
+    pensionAarligIndbetaling: ctx.capPensionAarligIndbetaling,
+    pensionEkstraMaanedlig: ctx.capPensionEkstraMaanedlig,
     pensionReturn: ctx.capPensionReturn,
     palTax: ctx.capPalTax,
     pensionTax: ctx.capPensionTax,
     friWealth: ctx.capFriWealth,
-    friMonthly: ctx.capFriMonthly,
+    friAarligIndbetaling: ctx.capFriAarligIndbetaling,
+    friEkstraMaanedlig: ctx.capFriEkstraMaanedlig,
     friReturn: ctx.capFriReturn,
     friTax: ctx.capFriTax,
     frivaerdiMode: ctx.capFrivaerdiMode,
@@ -818,12 +832,14 @@ export default function CapacityCalculator() {
     if (partial.desiredMonthly !== undefined) ctx.setCapDesiredMonthly(partial.desiredMonthly);
     if (partial.civilStatus !== undefined) ctx.setCapCivilStatus(partial.civilStatus);
     if (partial.pensionWealth !== undefined) ctx.setCapPensionWealth(partial.pensionWealth);
-    if (partial.pensionMonthly !== undefined) ctx.setCapPensionMonthly(partial.pensionMonthly);
+    if (partial.pensionAarligIndbetaling !== undefined) ctx.setCapPensionAarligIndbetaling(partial.pensionAarligIndbetaling);
+    if (partial.pensionEkstraMaanedlig !== undefined) ctx.setCapPensionEkstraMaanedlig(partial.pensionEkstraMaanedlig);
     if (partial.pensionReturn !== undefined) ctx.setCapPensionReturn(partial.pensionReturn);
     if (partial.palTax !== undefined) ctx.setCapPalTax(partial.palTax);
     if (partial.pensionTax !== undefined) ctx.setCapPensionTax(partial.pensionTax);
     if (partial.friWealth !== undefined) ctx.setCapFriWealth(partial.friWealth);
-    if (partial.friMonthly !== undefined) ctx.setCapFriMonthly(partial.friMonthly);
+    if (partial.friAarligIndbetaling !== undefined) ctx.setCapFriAarligIndbetaling(partial.friAarligIndbetaling);
+    if (partial.friEkstraMaanedlig !== undefined) ctx.setCapFriEkstraMaanedlig(partial.friEkstraMaanedlig);
     if (partial.friReturn !== undefined) ctx.setCapFriReturn(partial.friReturn);
     if (partial.friTax !== undefined) ctx.setCapFriTax(partial.friTax);
     if (partial.frivaerdiMode !== undefined) ctx.setCapFrivaerdiMode(partial.frivaerdiMode);
