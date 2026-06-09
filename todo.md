@@ -436,3 +436,12 @@
 ## Fase 51 – Pensionsfremskrivning: skift til primo (type=1)
 - [x] Calculator.tsx projectWithRate: skift til primo-formel (indbetaling ved årets start, type=1)
 - [x] Verificer at Alternativ 8% giver 9.365.148 kr. ✓ (matcher Excel FV type=1). Note: 6% giver 7.748.069 — Excel-formlen er identisk, evt. forskel i Excel-filen skyldes andre inputværdier.
+
+## Fase 52 – Afkastberegner: udvid til 4 produkter
+- [x] Calculator.tsx: hæv maks fra 3 til 4 valgte produkter (toggleProduct + ProductSelector maxSelections)
+- [x] ProductSelector.tsx: maxSelections=4 via prop — ingen ændring i selve komponenten nødvendig
+- [x] CalculatorContext: selectedProductIds er et array uden grænse — ingen ændring nødvendig
+- [x] useCalculatorIO: gem/hent er array-baseret og bagudkompatibel — ingen ændring nødvendig
+- [x] SummaryCards: grid opdateret til grid-cols-2 xl:grid-cols-4 for 4 produkter
+- [x] Placeholder-tekst opdateret til "1–4 investeringsprodukter"
+- [x] TypeScript: 0 fejl

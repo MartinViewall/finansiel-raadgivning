@@ -410,7 +410,7 @@ export default function Calculator() {
     handleSetSelectedProductIds(
       selectedProductIds.includes(id)
         ? selectedProductIds.filter((x) => x !== id)
-        : selectedProductIds.length >= 3
+        : selectedProductIds.length >= 4
         ? selectedProductIds
         : [...selectedProductIds, id]
     );
@@ -660,7 +660,7 @@ export default function Calculator() {
                   selectedIds={selectedProductIds}
                   onToggle={toggleProduct}
                   onReorder={handleSetSelectedProductIds}
-                  maxSelections={3}
+                  maxSelections={4}
                   chipLabel={chipLabel}
                 />
                 {/* Anonymize toggle */}
@@ -749,7 +749,7 @@ export default function Calculator() {
               </div>
               <h3 className="font-medium text-foreground mb-1">Vælg mindst ét produkt</h3>
               <p className="text-sm text-muted-foreground max-w-xs">
-                Vælg 1–3 investeringsprodukter til venstre for at se en fremskrivning
+                Vælg 1–4 investeringsprodukter til venstre for at se en fremskrivning
               </p>
             </div>
           ) : (
@@ -762,7 +762,9 @@ export default function Calculator() {
                       ? "grid-cols-1"
                       : projectionData.results.length === 2
                       ? "grid-cols-2"
-                      : "grid-cols-3"
+                      : projectionData.results.length === 3
+                      ? "grid-cols-3"
+                      : "grid-cols-2 xl:grid-cols-4"
                   }`}
                 >
                   {projectionData.results.map((r, idx) => {
