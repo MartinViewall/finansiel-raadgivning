@@ -112,6 +112,8 @@ function SummaryCard({
   bestAlternativeDelta,
   availableYears,
   horizonYears,
+  pensionRateForDisplay,
+  pensionBaseRateNum,
 }: {
   name: string;
   finalValue: number;
@@ -121,6 +123,8 @@ function SummaryCard({
   isBaseline: boolean;
   pensionYears: number | null;
   pensionReturnPct: number | null;
+  pensionRateForDisplay: number | null;
+  pensionBaseRateNum: number;
   initialCapital: number;
   annualContribution: number;
   baselinePensionValue: number | null;
@@ -130,12 +134,11 @@ function SummaryCard({
   availableYears: number;
   horizonYears: number;
 }) {
-  // Pension projection: project from current finalValue (end of horizon) forward to pension
+  // Pension projection: project from current depot (initialCapital) forward to pension
   const pensionValue =
     pensionYears !== null && pensionReturnPct !== null && pensionYears > 0
-      ? projectWithRate(finalValue, annualContribution, pensionReturnPct, pensionYears)
+      ? projectWithRate(initialCapital, annualContribution, pensionReturnPct, pensionYears)
       : null;
-  void initialCapital; // used via finalValue (which is projected from it)
 
   return (
     <div
@@ -214,7 +217,12 @@ function SummaryCard({
       {pensionValue !== null && pensionYears !== null && (
         <div className="mt-3 pt-3 border-t border-border/60">
           <p className="text-xs text-muted-foreground mb-0.5">
-            Ved pension om {pensionYears} år
+            {isBaseline
+              ? `Ved pension om ${pensionYears} år`
+              : pensionRateForDisplay !== null
+                ? `Ved pension om ${pensionYears} år, med ${String(pensionRateForDisplay).replace(".", ",")}% i yderligere afkast`
+                : `Ved pension om ${pensionYears} år`
+            }
           </p>
           <p className="text-base font-semibold text-foreground tabular-nums">
             {formatDKKFull(pensionValue)}
@@ -360,6 +368,7 @@ export default function Calculator() {
   const [tableYearFrom, setTableYearFrom] = useState<number>(() => ctx.tableYearFrom);
   const [tableYearTo, setTableYearTo] = useState<number>(() => ctx.tableYearTo);
   const [pensionYearsRaw, setPensionYearsRaw] = useState<string>(() => ctx.pensionYearsRaw);
+  const [pensionBaseRate, setPensionBaseRate] = useState<string>(() => ctx.pensionBaseRate);
   const [pensionReturnOverride, setPensionReturnOverride] = useState<string>(() => ctx.pensionReturnOverride);
 
   // Sync local state from context when context changes (e.g. after import)
@@ -370,6 +379,7 @@ export default function Calculator() {
   useEffect(() => { setTableYearFrom(ctx.tableYearFrom); }, [ctx.tableYearFrom]);
   useEffect(() => { setTableYearTo(ctx.tableYearTo); }, [ctx.tableYearTo]);
   useEffect(() => { setPensionYearsRaw(ctx.pensionYearsRaw); }, [ctx.pensionYearsRaw]);
+  useEffect(() => { setPensionBaseRate(ctx.pensionBaseRate); }, [ctx.pensionBaseRate]);
   useEffect(() => { setPensionReturnOverride(ctx.pensionReturnOverride); }, [ctx.pensionReturnOverride]);
 
   // Write back to context on every change so values persist when navigating away
@@ -380,6 +390,7 @@ export default function Calculator() {
   const handleSetTableYearFrom = (v: number) => { setTableYearFrom(v); ctx.setTableYearFrom(v); };
   const handleSetTableYearTo = (v: number) => { setTableYearTo(v); ctx.setTableYearTo(v); };
   const handleSetPensionYearsRaw = (v: string) => { setPensionYearsRaw(v); ctx.setPensionYearsRaw(v); };
+  const handleSetPensionBaseRate = (v: string) => { setPensionBaseRate(v); ctx.setPensionBaseRate(v); };
   const handleSetPensionReturnOverride = (v: string) => { setPensionReturnOverride(v); ctx.setPensionReturnOverride(v); };
 
   const canProject = selectedProductIds.length >= 1;
@@ -410,9 +421,14 @@ export default function Calculator() {
   const validPensionYears =
     pensionYears !== null && !isNaN(pensionYears) && pensionYears > 0 ? pensionYears : null;
 
-  // For each product, compute the effective pension return rate:
-  // - if override is set, use that for all products
-  // - otherwise use the horizon-based avg for each product individually
+  // Base rate for pension projection (user-editable, default 6%)
+  const pensionBaseRateNum =
+    pensionBaseRate !== ""
+      ? parseFloat(pensionBaseRate.replace(",", "."))
+      : 6;
+  const validPensionBaseRate = !isNaN(pensionBaseRateNum) ? pensionBaseRateNum : 6;
+
+  // Afkastforskel (differential added to base rate for alternatives)
   const pensionReturnOverrideNum =
     pensionReturnOverride !== ""
       ? parseFloat(pensionReturnOverride.replace(",", "."))
@@ -697,6 +713,14 @@ export default function Calculator() {
                   />
                 </div>
                 <DecimalInput
+                  label="Basisafkast %"
+                  hint="Forventet afkast for nuværende produkt (standard: 6%)"
+                  value={pensionBaseRate}
+                  onChange={handleSetPensionBaseRate}
+                  suffix="%"
+                  placeholder="F.eks. 6"
+                />
+                <DecimalInput
                   label="Afkastforskel % (valgfri)"
                   hint={
                     projectionData && projectionData.results.length >= 2
@@ -742,21 +766,23 @@ export default function Calculator() {
                   }`}
                 >
                   {projectionData.results.map((r, idx) => {
-                    // Pension return rate for this card:
-                    // If override is set and valid, use it as a differential applied to baseline
-                    // Otherwise use each product's own horizon-based avg
+                    // Pension return rate:
+                    // Baseline uses validPensionBaseRate.
+                    // Alternatives use validPensionBaseRate + override (if set).
                     let pensionRate: number | null = null;
+                    let pensionRateForDisplay: number | null = null;
                     if (validPensionYears !== null) {
                       if (
                         pensionReturnOverrideNum !== null &&
                         !isNaN(pensionReturnOverrideNum)
                       ) {
-                        // Override is the differential — baseline uses its own avg,
-                        // others use baseline avg + override
-                        const baseAvg = projectionData.results[0].avgAnnualReturnHorizon;
-                        pensionRate = idx === 0 ? baseAvg : baseAvg + pensionReturnOverrideNum;
+                        pensionRate = idx === 0
+                          ? validPensionBaseRate
+                          : validPensionBaseRate + pensionReturnOverrideNum;
+                        pensionRateForDisplay = idx === 0 ? null : pensionReturnOverrideNum;
                       } else {
-                        pensionRate = r.avgAnnualReturnHorizon;
+                        pensionRate = validPensionBaseRate;
+                        pensionRateForDisplay = null;
                       }
                     }
 
@@ -798,14 +824,16 @@ export default function Calculator() {
                         }
                         pensionYears={validPensionYears}
                         pensionReturnPct={pensionRate}
+                        pensionRateForDisplay={pensionRateForDisplay}
+                        pensionBaseRateNum={validPensionBaseRate}
                         initialCapital={initialCapital}
                         annualContribution={annualContribution}
                         baselinePensionValue={
-                          validPensionYears !== null && idx > 0 && projectionData.results[0]
+                          validPensionYears !== null && idx > 0
                             ? projectWithRate(
-                                projectionData.results[0].finalValue,
+                                initialCapital,
                                 annualContribution,
-                                projectionData.results[0].avgAnnualReturnHorizon,
+                                validPensionBaseRate,
                                 validPensionYears
                               )
                             : null

@@ -20,6 +20,7 @@ interface CalculatorSharedState {
   horizonYears: number;
   selectedProductIds: number[];
   pensionYearsRaw: string;
+  pensionBaseRate: string;
   pensionReturnOverride: string;
   tableYearFrom: number;
   tableYearTo: number;
@@ -28,8 +29,9 @@ interface CalculatorSharedState {
   setAnnualContribution: (v: number) => void;
   setHorizonYears: (v: number) => void;
   setSelectedProductIds: (v: number[]) => void;
-  setPensionYearsRaw: (v: string) => void;
-  setPensionReturnOverride: (v: string) => void;
+  setPensionYearsRaw: (_: string) => void;
+  setPensionBaseRate: (_: string) => void;
+  setPensionReturnOverride: (_: string) => void;
   setTableYearFrom: (v: number) => void;
   setTableYearTo: (v: number) => void;
 
@@ -189,6 +191,7 @@ const DEFAULTS = {
   horizonYears: 5,
   selectedProductIds: [] as number[],
   pensionYearsRaw: "",
+  pensionBaseRate: "6",
   pensionReturnOverride: "",
   tableYearFrom: 2010,
   tableYearTo: new Date().getFullYear() - 1,
@@ -273,6 +276,7 @@ const CalculatorContext = createContext<CalculatorSharedState>({
   setHorizonYears: () => {},
   setSelectedProductIds: () => {},
   setPensionYearsRaw: () => {},
+  setPensionBaseRate: () => {},
   setPensionReturnOverride: () => {},
   setTableYearFrom: () => {},
   setTableYearTo: () => {},
@@ -344,6 +348,7 @@ export function CalculatorProvider({ children }: { children: React.ReactNode }) 
   const [horizonYears, setHorizonYears] = useState(DEFAULTS.horizonYears);
   const [selectedProductIds, setSelectedProductIds] = useState<number[]>(DEFAULTS.selectedProductIds);
   const [pensionYearsRaw, setPensionYearsRaw] = useState(DEFAULTS.pensionYearsRaw);
+  const [pensionBaseRate, setPensionBaseRate] = useState(DEFAULTS.pensionBaseRate);
   const [pensionReturnOverride, setPensionReturnOverride] = useState(DEFAULTS.pensionReturnOverride);
   const [tableYearFrom, setTableYearFrom] = useState(DEFAULTS.tableYearFrom);
   const [tableYearTo, setTableYearTo] = useState(DEFAULTS.tableYearTo);
@@ -453,6 +458,7 @@ export function CalculatorProvider({ children }: { children: React.ReactNode }) 
         horizonYears, setHorizonYears,
         selectedProductIds, setSelectedProductIds,
         pensionYearsRaw, setPensionYearsRaw,
+        pensionBaseRate, setPensionBaseRate,
         pensionReturnOverride, setPensionReturnOverride,
         tableYearFrom, setTableYearFrom,
         tableYearTo, setTableYearTo,

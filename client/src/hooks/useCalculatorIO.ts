@@ -38,6 +38,7 @@ export function useAllCalculatorsIO() {
         horizonYears: ctx.horizonYears,
         selectedProductIds: ctx.selectedProductIds,
         pensionYearsRaw: ctx.pensionYearsRaw,
+        pensionBaseRate: ctx.pensionBaseRate,
         pensionReturnOverride: ctx.pensionReturnOverride,
         tableYearFrom: ctx.tableYearFrom,
         tableYearTo: ctx.tableYearTo,
@@ -171,6 +172,7 @@ export function useAllCalculatorsIO() {
         if (a.horizonYears !== undefined) ctx.setHorizonYears(a.horizonYears);
         if (a.selectedProductIds !== undefined) ctx.setSelectedProductIds(a.selectedProductIds);
         if (a.pensionYearsRaw !== undefined) ctx.setPensionYearsRaw(a.pensionYearsRaw);
+        if (a.pensionBaseRate !== undefined) ctx.setPensionBaseRate(a.pensionBaseRate);
         if (a.pensionReturnOverride !== undefined) ctx.setPensionReturnOverride(a.pensionReturnOverride);
         if (a.tableYearFrom !== undefined) ctx.setTableYearFrom(a.tableYearFrom);
         if (a.tableYearTo !== undefined) ctx.setTableYearTo(a.tableYearTo);

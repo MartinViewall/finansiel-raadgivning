@@ -419,3 +419,9 @@
 - [x] NumberInput: tilføj focused-state + useEffect sync i Calculator.tsx, CostCalculator.tsx, GoalCalculator.tsx, ReturnDiffCalculator.tsx
 - [x] useCalculatorIO: tilføj calcAnonymize i exportAll() og handleFile() under afkast-sektion (committet fra GitHub)
 - [x] useCalculatorIO: blur-flush (document.activeElement.blur()) som første linje i exportAll() (committet fra GitHub)
+
+## Fase 49 – Pensionsfremskrivning: korrekt beregning og visning
+- [x] Tilføj pensionBaseRate-felt til CalculatorContext og Calculator UI (forudfyldt med 6%)
+- [x] Fix projectWithRate: start fra depot (initialCapital), ikke finalValue
+- [x] Vis "Ved pension om X år" på nuværende-kort og "Ved pension om X år, med Y% i yderligere afkast" på alternativ-kort
+- [x] Opdatér useCalculatorIO til at gemme/hente pensionBaseRate
